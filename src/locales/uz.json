@@ -1,0 +1,25 @@
+{
+    "common": {
+        "welcomeBack": "Xush qaytibsiz",
+        "totalBalance": "Umumiy balans",
+        "accounts": "Hisoblar",
+        "account_one": "{{count}} hisob",
+        "account_other": "{{count}} hisob",
+        "default": "Asosiy",
+        "error": "Xato",
+        "loading": "Yuklanmoqda...",
+        "recentTransactions": "So'nggi tranzaksiyalar",
+        "viewAll": "Barchasini ko'rish",
+        "noTransactions": "Hali tranzaksiya yo'q",
+        "history": "Tarix",
+        "income": "Daromad",
+        "expense": "Xarajat",
+        "backToHome": "Bosh sahifaga qaytish"
+    },
+    "errors": {
+        "failedToLoad": "Ma'lumotlarni yuklashda xatolik",
+        "noTelegramUser": "Telegram foydalanuvchi ma'lumotlari mavjud emas",
+        "sessionExpired": "Sessiya tugadi. Qaytadan urinib ko'ring.",
+        "authenticationFailed": "Autentifikatsiya xatosi"
+    }
+}

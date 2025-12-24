@@ -1,0 +1,25 @@
+{
+    "common": {
+        "welcomeBack": "Welcome back",
+        "totalBalance": "Total Balance",
+        "accounts": "Accounts",
+        "account_one": "{{count}} account",
+        "account_other": "{{count}} accounts",
+        "default": "Default",
+        "error": "Error",
+        "loading": "Loading...",
+        "recentTransactions": "Recent Transactions",
+        "viewAll": "View All",
+        "noTransactions": "No transactions yet",
+        "history": "History",
+        "income": "Income",
+        "expense": "Expense",
+        "backToHome": "Back to Home"
+    },
+    "errors": {
+        "failedToLoad": "Failed to load data",
+        "noTelegramUser": "No Telegram user data available",
+        "sessionExpired": "Session expired. Please try again.",
+        "authenticationFailed": "Failed to authenticate"
+    }
+}

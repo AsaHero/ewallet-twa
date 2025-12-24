@@ -1,0 +1,27 @@
+{
+    "common": {
+        "welcomeBack": "С возвращением",
+        "totalBalance": "Общий баланс",
+        "accounts": "Счета",
+        "account_one": "{{count}} счёт",
+        "account_few": "{{count}} счёта",
+        "account_many": "{{count}} счётов",
+        "account_other": "{{count}} счётов",
+        "default": "По умолчанию",
+        "error": "Ошибка",
+        "loading": "Загрузка...",
+        "recentTransactions": "Последние транзакции",
+        "viewAll": "Посмотреть все",
+        "noTransactions": "Транзакций пока нет",
+        "history": "История",
+        "income": "Доход",
+        "expense": "Расход",
+        "backToHome": "Вернуться на главную"
+    },
+    "errors": {
+        "failedToLoad": "Не удалось загрузить данные",
+        "noTelegramUser": "Данные пользователя Telegram недоступны",
+        "sessionExpired": "Сессия истекла. Попробуйте снова.",
+        "authenticationFailed": "Ошибка аутентификации"
+    }
+}
