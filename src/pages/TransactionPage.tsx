@@ -159,10 +159,10 @@ function TransactionPage() {
   const validateBeforeSubmit = useCallback((data: ParsedTransaction) => {
     data.currency = user?.currency_code || data.currency || "USD";
     if (!data.amount || data.amount <= 0) {
-      return { ok: false, msg: t('errors.invalidAmount') || 'Amount must be greater than 0' };
+      return { ok: false, msg: t('errors.invalidAmount') };
     }
     if (!data.account_id) {
-      return { ok: false, msg: t('errors.selectAccount') || 'Please select an account' };
+      return { ok: false, msg: t('errors.selectAccount') };
     }
     return { ok: true as const };
   }, [t, user]);
@@ -196,13 +196,13 @@ function TransactionPage() {
         });
 
         WebApp.HapticFeedback.notificationOccurred('success');
-        WebApp.showAlert(t('transaction.updated') || 'Transaction updated! Check your bot.', () => {
+        WebApp.showAlert(t('transaction.updated'), () => {
             WebApp.close();
         });
     } catch (err) {
         console.error('Failed to send data:', err);
         WebApp.HapticFeedback.notificationOccurred('error');
-        WebApp.showAlert(t('errors.saveFailed') || 'Failed to send data');
+        WebApp.showAlert(t('errors.saveFailed'));
     } finally {
         WebApp.MainButton.hideProgress();
     }
@@ -211,7 +211,7 @@ function TransactionPage() {
   // MainButton
   useEffect(() => {
     if (!isReady) return;
-    const buttonText = t('common.done') || 'Done';
+    const buttonText = t('common.done');
     WebApp.MainButton.setText(buttonText);
     WebApp.MainButton.show();
 
@@ -266,10 +266,10 @@ function TransactionPage() {
         <div className="sticky top-0 bg-background/80 backdrop-blur-lg border-b border-border/40 z-10">
           <div className="max-w-md mx-auto px-4 py-4">
             <h1 className="text-2xl font-bold text-foreground">
-              {mode === 'edit' ? (t('transaction.edit') || 'Edit Transaction') : (t('transaction.new') || 'New Transaction')}
+              {mode === 'edit' ? t('transaction.edit') : t('transaction.new')}
             </h1>
             <p className="text-xs text-muted-foreground mt-1">
-              {t('transaction.currency') || 'Currency'}: <span className="font-medium">{user?.currency_code}</span>
+              {t('transaction.currency')}: <span className="font-medium">{user?.currency_code}</span>
             </p>
           </div>
         </div>
@@ -279,8 +279,8 @@ function TransactionPage() {
           <AmountInput />
 
           <SearchableSelect
-            label={t('transaction.category') || 'Category'}
-            placeholder={t('transaction.selectCategory') || 'Select category...'}
+            label={t('transaction.category')}
+            placeholder={t('transaction.selectCategory')}
             icon={<Tag className="inline w-3 h-3 mr-1" />}
             items={categoryItems}
             value={categoryId}
@@ -298,11 +298,11 @@ function TransactionPage() {
           />
 
           <SearchableSelect
-            label={t('transaction.subcategory') || 'Subcategory'}
+            label={t('transaction.subcategory')}
             placeholder={
                categoryId
-               ? (filteredSubcategoryItems.length > 0 ? (t('transaction.selectSubcategory') || 'Select subcategory...') : (t('transaction.noSubcategories') || 'No subcategories'))
-               : (t('transaction.allSubcategories') || 'All subcategories...')
+               ? (filteredSubcategoryItems.length > 0 ? t('transaction.selectSubcategory') : t('transaction.noSubcategories'))
+               : t('transaction.allSubcategories')
             }
             icon={<Tag className="inline w-3 h-3 mr-1" />}
             items={categoryId ? filteredSubcategoryItems : allSubcategoryItems}
@@ -330,7 +330,7 @@ function TransactionPage() {
             <CardContent className="p-4">
               <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3 block">
                 <Wallet className="inline w-3 h-3 mr-1" />
-                {t('transaction.account') || 'Account'}
+                {t('transaction.account')}
               </label>
 
               <select
@@ -341,7 +341,7 @@ function TransactionPage() {
                   formState.errors.account_id ? "border-red-500" : "border-transparent"
                 )}
               >
-                <option value="">{t('transaction.selectAccount') || 'Select account...'}</option>
+                <option value="">{t('transaction.selectAccount')}</option>
                 {accounts.map(acc => (
                   <option key={acc.id} value={acc.id}>
                     {acc.is_default ? '⭐ ' : ''}{acc.name}
@@ -350,7 +350,7 @@ function TransactionPage() {
               </select>
 
               {formState.errors.account_id ? (
-                <p className="text-xs text-red-500 mt-2">{t('errors.selectAccount') || 'Please select an account'}</p>
+                <p className="text-xs text-red-500 mt-2">{t('errors.selectAccount')}</p>
               ) : null}
             </CardContent>
           </Card>
@@ -360,12 +360,12 @@ function TransactionPage() {
             <CardContent className="p-4">
               <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3 block">
                 <FileText className="inline w-3 h-3 mr-1" />
-                {t('transaction.note') || 'Note'} ({t('common.optional') || 'optional'})
+                {t('transaction.note')} ({t('common.optional')})
               </label>
 
               <textarea
                 {...register("note")}
-                placeholder={t('transaction.notePlaceholder') || 'Add a note...'}
+                placeholder={t('transaction.notePlaceholder')}
                 rows={3}
                 className="w-full px-4 py-3 bg-background rounded-xl border-2 border-transparent focus:outline-none focus:border-primary resize-none"
               />

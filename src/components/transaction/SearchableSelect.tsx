@@ -143,7 +143,7 @@ export function SearchableSelect({
                         <div className="p-2 space-y-1">
                             {filteredItems.length === 0 ? (
                                 <div className="p-4 text-center text-sm text-muted-foreground">
-                                    {t('common.noResults') || "No results found"}
+                                    {t('common.noResults')}
                                 </div>
                             ) : (
                                 filteredItems.map((item) => (

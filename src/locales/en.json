@@ -16,7 +16,9 @@
         "expense": "Expense",
         "backToHome": "Back to Home",
         "done": "Done",
-        "optional": "optional"
+        "optional": "optional",
+        "noResults": "No results found",
+        "timezone": "Timezone"
     },
     "errors": {
         "failedToLoad": "Failed to load data",
@@ -38,9 +40,21 @@
         "selectCategory": "Select category...",
         "account": "Account",
         "selectAccount": "Select account...",
+
         "note": "Note",
         "notePlaceholder": "Add a note...",
         "date": "Date",
-        "updated": "Transaction updated! Check your bot."
+        "updated": "Transaction updated! Check your bot.",
+        "exchangeDetails": "Exchange details",
+        "originalAmount": "Original amount",
+        "receipt": "Receipt",
+        "fxRate": "FX rate",
+        "userCurrency": "User currency",
+        "convertedPreview": "Converted",
+        "fxHint": "Tip: set FX rate to auto-update amounts",
+        "subcategory": "Subcategory",
+        "selectSubcategory": "Select subcategory...",
+        "noSubcategories": "No subcategories",
+        "allSubcategories": "All subcategories..."
     }
 }

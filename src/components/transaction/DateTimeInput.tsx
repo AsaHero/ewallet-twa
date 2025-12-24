@@ -124,7 +124,7 @@ export function DateTimeInput() {
       <CardContent className="p-4">
         <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3 block">
           <Calendar className="inline w-3 h-3 mr-1" />
-          {t('transaction.date') || 'Date'}
+          {t('transaction.date')}
         </label>
 
         <Controller
@@ -156,7 +156,7 @@ export function DateTimeInput() {
           }}
         />
         <p className="text-[11px] text-muted-foreground mt-2">
-           {t('common.timezone') || 'Timezone'}: {userTimezone}
+           {t('common.timezone')}: {userTimezone}
         </p>
       </CardContent>
     </Card>

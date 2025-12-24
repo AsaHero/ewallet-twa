@@ -52,7 +52,7 @@ export function AmountInput() {
       <CardContent className="p-4 space-y-3">
         <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide block">
           <DollarSign className="inline w-3 h-3 mr-1" />
-          {t('transaction.amount') || 'Amount'} ({user?.currency_code})
+          {t('transaction.amount')} ({user?.currency_code})
         </label>
 
         <Controller
@@ -80,7 +80,7 @@ export function AmountInput() {
         />
 
         {formState.errors.amount ? (
-          <p className="text-xs text-red-500">{t('errors.invalidAmount') || 'Amount must be greater than 0'}</p>
+          <p className="text-xs text-red-500">{t('errors.invalidAmount')}</p>
         ) : null}
 
         <Collapsible open={fxOpen || shouldShowFx} onOpenChange={setFxOpen}>
@@ -88,7 +88,7 @@ export function AmountInput() {
             <CollapsibleTrigger asChild>
               <Button type="button" variant="ghost" className="px-2">
                 <ArrowLeftRight className="w-4 h-4 mr-2" />
-                {t('transaction.exchangeDetails') || 'Exchange details'}
+                {t('transaction.exchangeDetails')}
               </Button>
             </CollapsibleTrigger>
             <div className="text-xs text-muted-foreground">
@@ -100,7 +100,7 @@ export function AmountInput() {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2 block">
-                  {t('transaction.originalAmount') || 'Original amount'}
+                  {t('transaction.originalAmount')}
                 </label>
                 <Controller
                   control={control}
@@ -120,13 +120,13 @@ export function AmountInput() {
                   )}
                 />
                 <p className="text-[11px] text-muted-foreground mt-1">
-                  {t('transaction.receipt') || 'Receipt'} {getValues("original_currency") ? `(${getValues("original_currency")})` : ''}
+                  {t('transaction.receipt')} {getValues("original_currency") ? `(${getValues("original_currency")})` : ''}
                 </p>
               </div>
 
               <div>
                 <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2 block">
-                  {t('transaction.fxRate') || 'FX rate'}
+                  {t('transaction.fxRate')}
                 </label>
                 <Controller
                   control={control}
@@ -147,15 +147,15 @@ export function AmountInput() {
                   )}
                 />
                 <p className="text-[11px] text-muted-foreground mt-1">
-                  {t('transaction.userCurrency') || 'User currency'}: {user?.currency_code}
+                  {t('transaction.userCurrency')}: {user?.currency_code}
                 </p>
               </div>
             </div>
 
             <div className="text-xs text-muted-foreground">
               {fxRate && originalAmount
-                ? `${t('transaction.convertedPreview') || 'Converted'} ≈ ${round2(originalAmount * fxRate)} ${user?.currency_code}`
-                : (t('transaction.fxHint') || 'Tip: set FX rate to auto-update amounts')}
+                ? `${t('transaction.convertedPreview')} ≈ ${round2(originalAmount * fxRate)} ${user?.currency_code}`
+                : t('transaction.fxHint')}
             </div>
           </CollapsibleContent>
         </Collapsible>

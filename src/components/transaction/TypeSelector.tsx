@@ -14,7 +14,7 @@ export function TypeSelector() {
     <Card className="border-0 bg-card/50 backdrop-blur-sm">
       <CardContent className="p-4">
         <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3 block">
-          {t('transaction.type') || 'Type'}
+          {t('transaction.type')}
         </label>
         <div className="flex gap-2">
           <Button
@@ -27,7 +27,7 @@ export function TypeSelector() {
                 : "bg-red-500/10 text-red-500 hover:bg-red-500/20"
             )}
           >
-            📤 {t('transaction.expense') || 'Expense'}
+            📤 {t('transaction.expense')}
           </Button>
           <Button
             type="button"
@@ -39,7 +39,7 @@ export function TypeSelector() {
                 : "bg-green-500/10 text-green-500 hover:bg-green-500/20"
             )}
           >
-            📥 {t('transaction.income') || 'Income'}
+            📥 {t('transaction.income')}
           </Button>
         </div>
       </CardContent>
