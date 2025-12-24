@@ -7,7 +7,7 @@ import { useAuth } from '../contexts/AuthContext';
 import type { Account, Category } from '../core/types';
 import { Card, CardContent } from '../components/ui/card';
 import { Skeleton } from '../components/ui/skeleton';
-import { Calendar, DollarSign, Tag, Wallet, FileText, Trash2 } from 'lucide-react';
+import { Calendar, DollarSign, Tag, Wallet, FileText } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 interface TransactionFormData {
@@ -105,7 +105,7 @@ function TransactionPage() {
   useEffect(() => {
     if (!isReady) return;
 
-    const buttonText = mode === 'edit' ? t('common.save') || 'Save Changes' : t('common.create') || 'Create Transaction';
+    const buttonText = t('common.done') || 'Done';
     WebApp.MainButton.setText(buttonText);
     WebApp.MainButton.show();
     WebApp.MainButton.enable();
@@ -158,7 +158,7 @@ function TransactionPage() {
     return Object.keys(newErrors).length === 0;
   };
 
-  // Submit form
+  // Submit form - send data back to bot instead of saving
   const submitForm = async () => {
     if (!validateForm()) {
       WebApp.HapticFeedback.notificationOccurred('error');
@@ -168,53 +168,22 @@ function TransactionPage() {
     WebApp.MainButton.showProgress();
 
     try {
-      if (mode === 'edit' && transactionId) {
-        // Update existing transaction
-        await apiClient.updateTransaction(transactionId, formData);
-        WebApp.HapticFeedback.notificationOccurred('success');
-        WebApp.showAlert(t('transaction.updated') || 'Transaction updated!', () => {
-          WebApp.close();
-        });
-      } else {
-        // Create new transaction
-        await apiClient.createTransaction(formData);
-        WebApp.HapticFeedback.notificationOccurred('success');
-        WebApp.showAlert(t('transaction.created') || 'Transaction created!', () => {
-          WebApp.close();
-        });
-      }
+      // Send updated data back to bot
+      // The bot will update the confirmation message with new data
+      const dataToSend = JSON.stringify(formData);
+
+      WebApp.HapticFeedback.notificationOccurred('success');
+      WebApp.sendData(dataToSend);
+      // WebApp will automatically close after sendData
     } catch (err) {
-      console.error('Failed to save transaction:', err);
+      console.error('Failed to send data:', err);
       WebApp.HapticFeedback.notificationOccurred('error');
-      WebApp.showAlert(t('errors.saveFailed') || 'Failed to save transaction');
-    } finally {
+      WebApp.showAlert(t('errors.saveFailed') || 'Failed to send data');
       WebApp.MainButton.hideProgress();
     }
   };
 
-  // Handle delete
-  const handleDelete = () => {
-    if (!transactionId) return;
 
-    WebApp.showConfirm(
-      t('transaction.confirmDelete') || 'Delete this transaction? This cannot be undone.',
-      async (confirmed) => {
-        if (confirmed) {
-          try {
-            await apiClient.deleteTransaction(transactionId);
-            WebApp.HapticFeedback.notificationOccurred('success');
-            WebApp.showAlert(t('transaction.deleted') || 'Transaction deleted', () => {
-              WebApp.close();
-            });
-          } catch (err) {
-            console.error('Failed to delete transaction:', err);
-            WebApp.HapticFeedback.notificationOccurred('error');
-            WebApp.showAlert(t('errors.deleteFailed') || 'Failed to delete transaction');
-          }
-        }
-      }
-    );
-  };
 
   // Update form field
   const updateField = <K extends keyof TransactionFormData>(field: K, value: TransactionFormData[K]) => {
@@ -403,18 +372,7 @@ function TransactionPage() {
           </CardContent>
         </Card>
 
-        {/* Delete Button (only in edit mode) */}
-        {mode === 'edit' && (
-          <button
-            type="button"
-            onClick={handleDelete}
-            className="w-full py-4 flex items-center justify-center gap-2
-                       text-red-500 hover:text-red-600 font-medium transition-colors"
-          >
-            <Trash2 className="w-4 h-4" />
-            {t('transaction.delete') || 'Delete Transaction'}
-          </button>
-        )}
+        {/* No delete button - we're only editing parsed data */}
       </div>
     </div>
   );
