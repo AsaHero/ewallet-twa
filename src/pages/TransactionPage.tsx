@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useCallback } from 'react';
+import { useEffect, useCallback, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useForm, FormProvider } from 'react-hook-form';
@@ -12,22 +12,13 @@ import type { Account, Category, ParsedTransaction, Subcategory } from '../core/
 
 import { Card, CardContent } from '../components/ui/card';
 import { Skeleton } from '../components/ui/skeleton';
-import { Tag, Wallet, FileText } from 'lucide-react';
-import { cn } from '../lib/utils'; // Keep for some inline usage or check if needed
+import { Wallet, FileText } from 'lucide-react';
+import { cn } from '../lib/utils';
 
-import { FieldRow } from '../components/transaction/FieldRow';
-import { PickerDialog, type PickerItem } from '../components/transaction/PickerDialog';
 import { TypeSelector } from '../components/transaction/TypeSelector';
 import { AmountInput } from '../components/transaction/AmountInput';
 import { DateTimeInput } from '../components/transaction/DateTimeInput';
-// import { useMoneySync } from '../hooks/useMoneySync'; // Not need directly here
-// No, AmountInput uses it internally now. But TransactionPage needs to know about updates?
-// Actually AmountInput handles the sync logic locally for the form.
-
-// Wait, TypeSelector and AmountInput are nice, but what about Category/Account/Note?
-// I will keep them in the page or Refactor further?
-// Plan said "Cleanup Redesign.tsx". I should use the new components structure.
-// I can keep Account/Note/Category logic in the Page for now to avoid over-abstracting the data fetching part.
+import { CategoryCombobox } from '../components/transaction/CategoryCombobox';
 
 function TransactionPage() {
   const { t } = useTranslation();
@@ -46,10 +37,6 @@ function TransactionPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
 
-  // picker state
-  const [catPickerOpen, setCatPickerOpen] = useState(false);
-  const [subPickerOpen, setSubPickerOpen] = useState(false);
-
   const form = useForm<ParsedTransaction>({
     defaultValues: {
       type: 'withdrawal',
@@ -65,54 +52,6 @@ function TransactionPage() {
 
   const categoryId = watch("category_id");
   const subcategoryId = watch("subcategory_id");
-  // const accountId = watch("account_id"); // Used for display logic if needed
-
-  // Memoized data helpers
-  const subcatsByCatId = useMemo(() => {
-    const map = new Map<number, Subcategory[]>();
-    for (const s of subcategories) {
-      const arr = map.get(s.category_id) ?? [];
-      arr.push(s);
-      map.set(s.category_id, arr);
-    }
-    for (const [k, arr] of map) {
-      arr.sort((a, b) => (a.position ?? 9999) - (b.position ?? 9999) || a.name.localeCompare(b.name));
-      map.set(k, arr);
-    }
-    return map;
-  }, [subcategories]);
-
-  const catById = useMemo(() => new Map(categories.map(c => [c.id, c])), [categories]);
-  const subcatById = useMemo(() => new Map(subcategories.map(s => [s.id, s])), [subcategories]);
-
-  const categoryItems: PickerItem[] = useMemo(
-    () => categories.map(c => ({
-      id: c.id,
-      label: `${c.emoji ?? ""} ${c.name}`.trim(),
-    })),
-    [categories]
-  );
-
-  const subcategoryItems: PickerItem[] = useMemo(() => {
-    if (!categoryId) return [];
-    const subcats = subcatsByCatId.get(categoryId) ?? [];
-    return subcats.map(s => ({
-      id: s.id,
-      label: `${s.emoji ?? ""} ${s.name}`.trim(),
-    }));
-  }, [categoryId, subcatsByCatId]);
-
-  const selectedCategoryLabel = useMemo(() => {
-    if (!categoryId) return "";
-    const c = catById.get(categoryId);
-    return c ? `${c.emoji ?? ""} ${c.name}`.trim() : "";
-  }, [categoryId, catById]);
-
-  const selectedSubcategoryLabel = useMemo(() => {
-    if (!subcategoryId) return "";
-    const s = subcatById.get(subcategoryId);
-    return s ? `${s.emoji ?? ""} ${s.name}`.trim() : "";
-  }, [subcategoryId, subcatById]);
 
   // Load initial data
   useEffect(() => {
@@ -271,26 +210,10 @@ function TransactionPage() {
     };
   }, [isReady, mode, navigate, WebApp]);
 
-  // Pickers Callbacks
-  const onPickCategory = useCallback((catId: number) => {
-    setValue("category_id", catId, { shouldDirty: true });
-    // clear sub if not valid
-    const currentSubId = getValues("subcategory_id");
-    if (currentSubId) {
-      const allowed = (subcatsByCatId.get(catId) ?? []).some(s => s.id === currentSubId);
-      if (!allowed) setValue("subcategory_id", undefined, { shouldDirty: true });
-    }
-    // open sub picker if needed
-    const subcats = subcatsByCatId.get(catId) ?? [];
-    if (subcats.length > 0) {
-      setSubPickerOpen(true);
-    }
-  }, [getValues, setValue, subcatsByCatId]);
-
-  const onPickSubcategory = useCallback((subId: number) => {
-    setValue("subcategory_id", subId, { shouldDirty: true });
+  const onSelectCategory = useCallback((catId: number, subId?: number) => {
+      setValue("category_id", catId, { shouldDirty: true });
+      setValue("subcategory_id", subId, { shouldDirty: true });
   }, [setValue]);
-
 
   if (authLoading || loading) {
     return (
@@ -323,33 +246,13 @@ function TransactionPage() {
           <TypeSelector />
           <AmountInput />
 
-          {/* Category */}
-          <Card className="border-0 bg-card/50 backdrop-blur-sm">
-            <CardContent className="p-4 space-y-4">
-              <FieldRow
-                label={t('transaction.category') || 'Category'}
-                icon={<Tag className="inline w-3 h-3 mr-1" />}
-                value={selectedCategoryLabel}
-                placeholder={t('transaction.selectCategory') || 'Select category...'}
-                onClick={() => setCatPickerOpen(true)}
-              />
-
-              <FieldRow
-                label={t('transaction.subcategory') || 'Subcategory'}
-                icon={<Tag className="inline w-3 h-3 mr-1" />}
-                value={selectedSubcategoryLabel}
-                placeholder={
-                  categoryId
-                    ? (subcategoryItems.length > 0 ? (t('transaction.selectSubcategory') || 'Select subcategory...') : (t('transaction.noSubcategories') || 'No subcategories'))
-                    : (t('transaction.selectCategoryFirst') || 'Select category first')
-                }
-                onClick={() => {
-                  if (!categoryId) setCatPickerOpen(true);
-                  else if (subcategoryItems.length > 0) setSubPickerOpen(true);
-                }}
-              />
-            </CardContent>
-          </Card>
+          <CategoryCombobox
+             categories={categories}
+             subcategories={subcategories}
+             selectedCategoryId={categoryId}
+             selectedSubcategoryId={subcategoryId}
+             onSelect={onSelectCategory}
+          />
 
           {/* Account */}
           <Card className="border-0 bg-card/50 backdrop-blur-sm">
@@ -401,25 +304,6 @@ function TransactionPage() {
           {/* Date */}
           <DateTimeInput />
         </div>
-
-        {/* Pickers */}
-        <PickerDialog
-          open={catPickerOpen}
-          onOpenChange={setCatPickerOpen}
-          title={t('transaction.selectCategory') || 'Select category'}
-          items={categoryItems}
-          value={categoryId}
-          onPick={onPickCategory}
-        />
-
-        <PickerDialog
-          open={subPickerOpen}
-          onOpenChange={setSubPickerOpen}
-          title={t('transaction.selectSubcategory') || 'Select subcategory'}
-          items={subcategoryItems}
-          value={subcategoryId}
-          onPick={onPickSubcategory}
-        />
       </div>
     </FormProvider>
   );
