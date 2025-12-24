@@ -173,9 +173,8 @@ function TransactionPage() {
       console.log('Sending data to bot:', dataToSend);
 
       WebApp.sendData(dataToSend);
-
-      // Force close needed for some clients or if sendData is slow
-      WebApp.close();
+      console.log('sendData called - WebApp should close automatically');
+      // WebApp will close automatically if opened via keyboard button
     } catch (err) {
       console.error('Failed to send data:', err);
       WebApp.HapticFeedback.notificationOccurred('error');
