@@ -14,12 +14,33 @@
         "history": "History",
         "income": "Income",
         "expense": "Expense",
-        "backToHome": "Back to Home"
+        "backToHome": "Back to Home",
+        "done": "Done",
+        "optional": "optional"
     },
     "errors": {
         "failedToLoad": "Failed to load data",
         "noTelegramUser": "No Telegram user data available",
         "sessionExpired": "Session expired. Please try again.",
-        "authenticationFailed": "Failed to authenticate"
+        "authenticationFailed": "Failed to authenticate",
+        "invalidAmount": "Amount must be greater than 0",
+        "selectAccount": "Please select an account",
+        "saveFailed": "Failed to send data"
+    },
+    "transaction": {
+        "edit": "Edit Transaction",
+        "new": "New Transaction",
+        "type": "Type",
+        "expense": "Expense",
+        "income": "Income",
+        "amount": "Amount",
+        "category": "Category",
+        "selectCategory": "Select category...",
+        "account": "Account",
+        "selectAccount": "Select account...",
+        "note": "Note",
+        "notePlaceholder": "Add a note...",
+        "date": "Date",
+        "updated": "Transaction updated! Check your bot."
     }
 }

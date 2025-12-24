@@ -14,12 +14,33 @@
         "history": "Tarix",
         "income": "Daromad",
         "expense": "Xarajat",
-        "backToHome": "Bosh sahifaga qaytish"
+        "backToHome": "Bosh sahifaga qaytish",
+        "done": "Tayyor",
+        "optional": "ixtiyoriy"
     },
     "errors": {
         "failedToLoad": "Ma'lumotlarni yuklashda xatolik",
         "noTelegramUser": "Telegram foydalanuvchi ma'lumotlari mavjud emas",
         "sessionExpired": "Sessiya tugadi. Qaytadan urinib ko'ring.",
-        "authenticationFailed": "Autentifikatsiya xatosi"
+        "authenticationFailed": "Autentifikatsiya xatosi",
+        "invalidAmount": "Summa 0 dan katta bo'lishi kerak",
+        "selectAccount": "Hisobni tanlang",
+        "saveFailed": "Ma'lumotlarni yuborishda xatolik"
+    },
+    "transaction": {
+        "edit": "Tranzaksiyani tahrirlash",
+        "new": "Yangi tranzaksiya",
+        "type": "Tur",
+        "expense": "Xarajat",
+        "income": "Daromad",
+        "amount": "Summa",
+        "category": "Kategoriya",
+        "selectCategory": "Kategoriyani tanlang...",
+        "account": "Hisob",
+        "selectAccount": "Hisobni tanlang...",
+        "note": "Izoh",
+        "notePlaceholder": "Izoh qoldiring...",
+        "date": "Sana",
+        "updated": "Tranzaksiya yangilandi! Botni tekshiring."
     }
 }

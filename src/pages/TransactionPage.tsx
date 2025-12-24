@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { apiClient } from '../api/client';
+import { botClient } from '../api/bot';
 import { useTelegramWebApp } from '../hooks/useTelegramWebApp';
 import { useAuth } from '../contexts/AuthContext';
 import type { Account, Category } from '../core/types';
@@ -158,7 +159,7 @@ function TransactionPage() {
     return Object.keys(newErrors).length === 0;
   };
 
-  // Submit form - send data back to bot instead of saving
+  // Submit form - send data to Express server
   const submitForm = async () => {
     if (!validateForm()) {
       WebApp.HapticFeedback.notificationOccurred('error');
@@ -168,13 +169,12 @@ function TransactionPage() {
     WebApp.MainButton.showProgress();
 
     try {
-      // Send updated data back to bot
-      const dataToSend = JSON.stringify(formData);
-      console.log('Sending data to bot:', dataToSend);
-
-      WebApp.sendData(dataToSend);
-      console.log('sendData called - WebApp should close automatically');
-      // WebApp will close automatically if opened via keyboard button
+      console.log('Sending data to server:', formData);
+      await botClient.sendWebAppData({ data: formData });
+      WebApp.HapticFeedback.notificationOccurred('success');
+      WebApp.showAlert(t('transaction.updated') || 'Transaction updated! Check your bot.', () => {
+        WebApp.close();
+      });
     } catch (err) {
       console.error('Failed to send data:', err);
       WebApp.HapticFeedback.notificationOccurred('error');
@@ -184,7 +184,6 @@ function TransactionPage() {
       WebApp.MainButton.hideProgress();
     }
   };
-
 
 
   // Update form field

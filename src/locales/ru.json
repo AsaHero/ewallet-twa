@@ -16,12 +16,33 @@
         "history": "История",
         "income": "Доход",
         "expense": "Расход",
-        "backToHome": "Вернуться на главную"
+        "backToHome": "Вернуться на главную",
+        "done": "Готово",
+        "optional": "необязательно"
     },
     "errors": {
         "failedToLoad": "Не удалось загрузить данные",
         "noTelegramUser": "Данные пользователя Telegram недоступны",
         "sessionExpired": "Сессия истекла. Попробуйте снова.",
-        "authenticationFailed": "Ошибка аутентификации"
+        "authenticationFailed": "Ошибка аутентификации",
+        "invalidAmount": "Сумма должна быть больше 0",
+        "selectAccount": "Выберите счет",
+        "saveFailed": "Не удалось отправить данные"
+    },
+    "transaction": {
+        "edit": "Редактировать транзакцию",
+        "new": "Новая транзакция",
+        "type": "Тип",
+        "expense": "Расход",
+        "income": "Доход",
+        "amount": "Сумма",
+        "category": "Категория",
+        "selectCategory": "Выберите категорию...",
+        "account": "Счет",
+        "selectAccount": "Выберите счет...",
+        "note": "Заметка",
+        "notePlaceholder": "Добавить заметку...",
+        "date": "Дата",
+        "updated": "Транзакция обновлена! Проверьте бота."
     }
 }
