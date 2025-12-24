@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useState } from 'react';
+import { useEffect, useCallback, useState, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useForm, FormProvider } from 'react-hook-form';
@@ -12,13 +12,13 @@ import type { Account, Category, ParsedTransaction, Subcategory } from '../core/
 
 import { Card, CardContent } from '../components/ui/card';
 import { Skeleton } from '../components/ui/skeleton';
-import { Wallet, FileText } from 'lucide-react';
+import { Wallet, FileText, Tag } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 import { TypeSelector } from '../components/transaction/TypeSelector';
 import { AmountInput } from '../components/transaction/AmountInput';
 import { DateTimeInput } from '../components/transaction/DateTimeInput';
-import { CategoryCombobox } from '../components/transaction/CategoryCombobox';
+import { SearchableSelect } from '../components/transaction/SearchableSelect';
 
 function TransactionPage() {
   const { t } = useTranslation();
@@ -52,6 +52,41 @@ function TransactionPage() {
 
   const categoryId = watch("category_id");
   const subcategoryId = watch("subcategory_id");
+
+  // Memoized Items
+  const categoryItems = useMemo(() =>
+    categories
+      .sort((a, b) => (a.position ?? 999) - (b.position ?? 999))
+      .map(c => ({
+        id: c.id,
+        label: c.name,
+        emoji: c.emoji
+      })),
+    [categories]
+  );
+
+  const allSubcategoryItems = useMemo(() =>
+    subcategories
+      .sort((a, b) => (a.position ?? 999) - (b.position ?? 999))
+      .map(s => ({
+        id: s.id,
+        label: s.name,
+        emoji: s.emoji
+      })),
+    [subcategories]
+  );
+
+  const filteredSubcategoryItems = useMemo(() => {
+    if (!categoryId) return [];
+    return subcategories
+      .filter(s => s.category_id === categoryId)
+      .sort((a, b) => (a.position ?? 999) - (b.position ?? 999))
+      .map(s => ({
+        id: s.id,
+        label: s.name,
+        emoji: s.emoji
+      }));
+  }, [subcategories, categoryId]);
 
   // Load initial data
   useEffect(() => {
@@ -210,10 +245,7 @@ function TransactionPage() {
     };
   }, [isReady, mode, navigate, WebApp]);
 
-  const onSelectCategory = useCallback((catId: number, subId?: number) => {
-      setValue("category_id", catId, { shouldDirty: true });
-      setValue("subcategory_id", subId, { shouldDirty: true });
-  }, [setValue]);
+
 
   if (authLoading || loading) {
     return (
@@ -246,12 +278,51 @@ function TransactionPage() {
           <TypeSelector />
           <AmountInput />
 
-          <CategoryCombobox
-             categories={categories}
-             subcategories={subcategories}
-             selectedCategoryId={categoryId}
-             selectedSubcategoryId={subcategoryId}
-             onSelect={onSelectCategory}
+          <SearchableSelect
+            label={t('transaction.category') || 'Category'}
+            placeholder={t('transaction.selectCategory') || 'Select category...'}
+            icon={<Tag className="inline w-3 h-3 mr-1" />}
+            items={categoryItems}
+            value={categoryId}
+            onSelect={(id) => {
+               // Logic: Category Change -> Reset Subcategory
+               const newCatId = typeof id === 'number' ? id : undefined;
+
+               // Only reset if actually changed? Or always?
+               // User said "Category: transport -> Food; Subcategory: taxi -> Reset (Null)"
+               // So if we Pick a Category, we should probably reset subcategory to be safe
+               // UNLESS the current subcategory belongs to new category (unlikely unless same name/id)
+               setValue("category_id", newCatId, { shouldDirty: true });
+               setValue("subcategory_id", undefined, { shouldDirty: true });
+            }}
+          />
+
+          <SearchableSelect
+            label={t('transaction.subcategory') || 'Subcategory'}
+            placeholder={
+               categoryId
+               ? (filteredSubcategoryItems.length > 0 ? (t('transaction.selectSubcategory') || 'Select subcategory...') : (t('transaction.noSubcategories') || 'No subcategories'))
+               : (t('transaction.allSubcategories') || 'All subcategories...')
+            }
+            icon={<Tag className="inline w-3 h-3 mr-1" />}
+            items={categoryId ? filteredSubcategoryItems : allSubcategoryItems}
+            value={subcategoryId}
+            onSelect={(id) => {
+               const newSubId = typeof id === 'number' ? id : undefined;
+               setValue("subcategory_id", newSubId, { shouldDirty: true });
+
+               // Logic: Subcategory Change -> Auto-set Category if needed
+               if (newSubId) {
+                  const sub = subcategories.find(s => s.id === newSubId);
+                  if (sub) {
+                      // If category is already set and matches parent, do nothing
+                      // If category is Null or different, set it to parent
+                      if (categoryId !== sub.category_id) {
+                          setValue("category_id", sub.category_id, { shouldDirty: true });
+                      }
+                  }
+               }
+            }}
           />
 
           {/* Account */}
