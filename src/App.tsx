@@ -11,6 +11,7 @@ import { Wallet, ChevronDown, ArrowRight } from 'lucide-react';
 import { formatCurrency } from './lib/formatters';
 import { cn } from './lib/utils';
 import HistoryPage from './pages/HistoryPage';
+import TransactionPage from './pages/TransactionPage';
 
 function HomePage() {
   const { t, i18n } = useTranslation();
@@ -363,6 +364,7 @@ function App() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/history" element={<HistoryPage />} />
+        <Route path="/transaction" element={<TransactionPage />} />
       </Routes>
     </BrowserRouter>
   );

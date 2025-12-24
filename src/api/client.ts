@@ -75,6 +75,24 @@ class APIClient {
         return res.data;
     }
 
+    async createCategory(data: { name: string; emoji: string }): Promise<Category> {
+        const res = await this.client.post<Category>('/categories', data);
+        return res.data;
+    }
+
+    async createSubcategory(data: { category_id: number; name: string; emoji: string }): Promise<Subcategory> {
+        const res = await this.client.post<Subcategory>('/subcategories', data);
+        return res.data;
+    }
+
+    async deleteCategory(id: string): Promise<void> {
+        await this.client.delete(`/categories/${id}`);
+    }
+
+    async deleteSubcategory(id: string): Promise<void> {
+        await this.client.delete(`/subcategories/${id}`);
+    }
+
     // --- Transactions ---
     async getTransactions(params?: { limit?: number; offset?: number }): Promise<TransactionsResponse> {
         const res = await this.client.get<TransactionsResponse>('/transactions', { params });
