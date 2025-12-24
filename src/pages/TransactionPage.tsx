@@ -169,18 +169,19 @@ function TransactionPage() {
 
     try {
       // Send updated data back to bot
-      // The bot will update the confirmation message with new data
       const dataToSend = JSON.stringify(formData);
-      console.log('Processing data:', dataToSend);
-      WebApp.HapticFeedback.notificationOccurred('success');
-      console.log('Data processed successfully');
+      console.log('Sending data to bot:', dataToSend);
+
       WebApp.sendData(dataToSend);
-      console.log('Data sent successfully');
-      // WebApp will automatically close after sendData
+
+      // Force close needed for some clients or if sendData is slow
+      WebApp.close();
     } catch (err) {
       console.error('Failed to send data:', err);
       WebApp.HapticFeedback.notificationOccurred('error');
       WebApp.showAlert(t('errors.saveFailed') || 'Failed to send data');
+    } finally {
+      // Always stop the spinner
       WebApp.MainButton.hideProgress();
     }
   };
