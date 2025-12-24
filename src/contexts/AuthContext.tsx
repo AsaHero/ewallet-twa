@@ -4,6 +4,7 @@ import { apiClient } from '../api/client';
 import { authService } from '../services/auth.service';
 import { useTelegramWebApp } from '../hooks/useTelegramWebApp';
 import type { User } from '../core/types';
+import i18n from '../i18n/config';
 
 interface AuthContextType {
   user: User | null;
@@ -54,6 +55,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       // 3. Fetch user data
       const userData = await apiClient.getMe();
+      if (userData.language_code) {
+        i18n.changeLanguage(userData.language_code);
+      }
       setUser(userData);
     } catch (err) {
       console.error('Authentication failed:', err);

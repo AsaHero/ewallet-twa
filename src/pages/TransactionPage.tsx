@@ -170,7 +170,7 @@ function TransactionPage() {
 
     try {
       console.log('Sending data to server:', formData);
-      await botClient.sendWebAppData({ data: formData });
+      await botClient.sendWebAppData({ data: formData, queryId: WebApp.initDataUnsafe?.query_id });
       WebApp.HapticFeedback.notificationOccurred('success');
       WebApp.showAlert(t('transaction.updated') || 'Transaction updated! Check your bot.', () => {
         WebApp.close();
