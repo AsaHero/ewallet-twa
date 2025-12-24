@@ -171,9 +171,11 @@ function TransactionPage() {
       // Send updated data back to bot
       // The bot will update the confirmation message with new data
       const dataToSend = JSON.stringify(formData);
-
+      console.log('Processing data:', dataToSend);
       WebApp.HapticFeedback.notificationOccurred('success');
+      console.log('Data processed successfully');
       WebApp.sendData(dataToSend);
+      console.log('Data sent successfully');
       // WebApp will automatically close after sendData
     } catch (err) {
       console.error('Failed to send data:', err);
