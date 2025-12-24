@@ -79,7 +79,11 @@ export function SearchableSelect({
   };
 
   return (
-    <Card className={cn("border-0 bg-card/50 backdrop-blur-sm z-20 overflow-visible", className)}>
+    <Card className={cn(
+        "border-0 bg-card/50 backdrop-blur-sm overflow-visible transition-all",
+        open ? "z-50 relative" : "z-20 relative",
+        className
+    )}>
         <CardContent className="p-4 relative" ref={containerRef}>
              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3 block">
                 {icon}
