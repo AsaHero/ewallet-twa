@@ -5,28 +5,18 @@ import { apiClient } from '../api/client';
 import { botClient } from '../api/bot';
 import { useTelegramWebApp } from '../hooks/useTelegramWebApp';
 import { useAuth } from '../contexts/AuthContext';
-import type { Account, Category } from '../core/types';
+import type { Account, Category, ParsedTransaction } from '../core/types';
 import { Card, CardContent } from '../components/ui/card';
 import { Skeleton } from '../components/ui/skeleton';
 import { Calendar, DollarSign, Tag, Wallet, FileText } from 'lucide-react';
 import { cn } from '../lib/utils';
 
-interface TransactionFormData {
-  type: 'withdrawal' | 'deposit';
-  amount: number;
-  currency_code?: string;
-  category_id?: number;
-  subcategory_id?: number;
-  account_id: string;
-  note?: string;
-  performed_at?: string;
-}
-
 function TransactionPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { WebApp, isReady } = useTelegramWebApp();
+  // Get Telegram user
+  const { WebApp, isReady, user: tgUser } = useTelegramWebApp();
   const { user, loading: authLoading } = useAuth();
 
   // Determine mode and get data
@@ -38,10 +28,14 @@ function TransactionPage() {
   const [loading, setLoading] = useState(true);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [formData, setFormData] = useState<TransactionFormData>({
+
+  // Initialize with defaults for ParsedTransaction
+  const [formData, setFormData] = useState<ParsedTransaction>({
     type: 'withdrawal',
     amount: 0,
-    account_id: '',
+    currency: user?.currency_code || 'USD',
+    confidence: 1,
+    account_id: ''
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -67,12 +61,13 @@ function TransactionPage() {
           setFormData({
             type: transaction.type,
             amount: transaction.amount,
-            currency_code: transaction.currency_code,
+            currency: transaction.currency_code,
             category_id: transaction.category_id,
             subcategory_id: transaction.subcategory_id,
             account_id: transaction.account_id,
             note: transaction.note,
             performed_at: transaction.performed_at || transaction.created_at,
+            confidence: 1,
           });
         } else if (mode === 'create' && dataParam) {
           // Create with parsed data
@@ -80,16 +75,23 @@ function TransactionPage() {
           setFormData({
             type: parsedData.type || 'withdrawal',
             amount: parsedData.amount || 0,
-            currency_code: parsedData.currency,
+            currency: parsedData.currency || 'USD',
             category_id: parsedData.category_id,
             account_id: parsedData.account_id || accountsData.find(a => a.is_default)?.id || accountsData[0]?.id,
             note: parsedData.note,
             performed_at: parsedData.performed_at,
+            confidence: parsedData.confidence || 1,
+            original_amount: parsedData.original_amount,
+            original_currency: parsedData.original_currency,
           });
         } else {
           // New transaction - set default account
           const defaultAccount = accountsData.find(a => a.is_default) || accountsData[0];
-          setFormData(prev => ({ ...prev, account_id: defaultAccount?.id || '' }));
+          setFormData(prev => ({
+            ...prev,
+            account_id: defaultAccount?.id || '',
+            currency: user.currency_code || 'USD'
+          }));
         }
       } catch (err) {
         console.error('Failed to load data:', err);
@@ -166,11 +168,27 @@ function TransactionPage() {
       return;
     }
 
+    if (!tgUser) {
+      WebApp.showAlert('No Telegram user data available');
+      return;
+    }
+
     WebApp.MainButton.showProgress();
 
     try {
       console.log('Sending data to server:', formData);
-      await botClient.sendWebAppData({ data: formData, queryId: WebApp.initDataUnsafe?.query_id });
+
+      await botClient.updateTransaction({
+        from: {
+          id: tgUser.id,
+          first_name: tgUser.first_name,
+          last_name: tgUser.last_name || '',
+          username: tgUser.username || '',
+          language_code: tgUser.language_code || 'en'
+        },
+        data: formData
+      });
+
       WebApp.HapticFeedback.notificationOccurred('success');
       WebApp.showAlert(t('transaction.updated') || 'Transaction updated! Check your bot.', () => {
         WebApp.close();
@@ -187,7 +205,7 @@ function TransactionPage() {
 
 
   // Update form field
-  const updateField = <K extends keyof TransactionFormData>(field: K, value: TransactionFormData[K]) => {
+  const updateField = <K extends keyof ParsedTransaction>(field: K, value: ParsedTransaction[K]) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     // Clear error for this field
     if (errors[field]) {

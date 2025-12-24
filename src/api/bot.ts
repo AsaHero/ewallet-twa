@@ -1,3 +1,4 @@
+import type { BotUpdateTransactionRequest } from '@/core/types';
 import axios, { type AxiosInstance } from 'axios';
 
 class BotClient {
@@ -10,8 +11,8 @@ class BotClient {
         });
     }
 
-    async sendWebAppData(data: any): Promise<void> {
-        await this.client.post('/webapp-data', data);
+    async updateTransaction(data: BotUpdateTransactionRequest): Promise<void> {
+        await this.client.post('/miniapp/transactions/callback', data);
     }
 }
 

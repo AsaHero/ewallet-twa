@@ -78,3 +78,30 @@ export interface CategoryStat {
     category_emoji?: string;
     total: number;
 }
+
+export interface ParsedTransaction {
+  type: 'withdrawal' | 'deposit';
+  amount: number;
+  currency: string;
+  original_amount?: number;
+  original_currency?: string;
+  fx_rate?: number;
+  account_id?: string;
+  category_id?: number;
+  subcategory_id?: number;
+  note?: string;
+  confidence: number;
+  performed_at?: string;
+}
+
+
+export interface BotUpdateTransactionRequest {
+  from: {
+    id: number;
+    first_name: string;
+    last_name: string;
+    username: string;
+    language_code: string;
+  };
+  data: ParsedTransaction;
+}
