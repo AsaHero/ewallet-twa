@@ -2,9 +2,8 @@ import { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { apiClient } from './api/client';
-import { authService } from './services/auth.service';
 import { useTelegramWebApp } from './hooks/useTelegramWebApp';
-import type { Account, User, Transaction } from './core/types';
+import type { Account, Transaction } from './core/types';
 import { Card, CardContent } from './components/ui/card';
 import { Skeleton } from './components/ui/skeleton';
 import { Wallet, ChevronDown, ArrowRight } from 'lucide-react';
@@ -12,12 +11,14 @@ import { formatCurrency } from './lib/formatters';
 import { cn } from './lib/utils';
 import HistoryPage from './pages/HistoryPage';
 import TransactionPage from './pages/TransactionPage';
+import { useAuth } from './contexts/AuthContext';
 
 function HomePage() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
-  const { user: tgUser, isReady, initData } = useTelegramWebApp();
-  const [user, setUser] = useState<User | null>(null);
+  const { user: tgUser } = useTelegramWebApp();
+  const { user, loading: authLoading, error: authError } = useAuth();
+
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [recentTransactions, setRecentTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
@@ -25,80 +26,50 @@ function HomePage() {
   const [totalBalance, setTotalBalance] = useState(0);
   const [isAccountsExpanded, setIsAccountsExpanded] = useState(false);
 
+  // Load data once user is authenticated
   useEffect(() => {
-    if (!isReady) return;
+    if (authLoading || !user) return;
 
-    const init = async () => {
+    const loadData = async () => {
       try {
-        // 1. Check for token in URL (bot-provided)
-        let token = authService.getTokenFromURL();
-
-        // 2. If no token, authenticate with initData or user ID
-        if (!token) {
-          token = authService.getToken();
-
-          if (!token && initData) {
-            // Try initData authentication
-            try {
-              await authService.authenticateWithInitData(initData);
-            } catch (err) {
-              // Fallback to user ID authentication
-              if (tgUser) {
-                await authService.authenticateWithUserId(tgUser.id, {
-                  first_name: tgUser.first_name,
-                  last_name: tgUser.last_name,
-                  username: tgUser.username,
-                  language_code: tgUser.language_code,
-                });
-              } else {
-                throw new Error('No Telegram user data available');
-              }
-            }
-          }
-        }
-
-        // 3. Fetch user, accounts, and recent transactions
-        const [userData, accountsData, transactionsResponse] = await Promise.all([
-          apiClient.getMe(),
+        // Fetch accounts and recent transactions
+        const [accountsData, transactionsResponse] = await Promise.all([
           apiClient.getAccounts(),
-          apiClient.getTransactions({ limit: 5 }) // Get last 5 transactions
+          apiClient.getTransactions({ limit: 5 })
         ]);
 
-        setUser(userData);
         setAccounts(accountsData);
         setRecentTransactions(transactionsResponse.items);
 
-        // 4. Set language from user settings
-        if (userData.language_code) {
-          // Map language codes (e.g., 'en-US' -> 'en')
-          const langCode = userData.language_code.split('-')[0].toLowerCase();
+        // Set language from user settings
+        if (user.language_code) {
+          const langCode = user.language_code.split('-')[0].toLowerCase();
           if (['en', 'ru', 'uz'].includes(langCode)) {
             i18n.changeLanguage(langCode);
           }
         } else if (tgUser?.language_code) {
-          // Fallback to Telegram language
           const langCode = tgUser.language_code.split('-')[0].toLowerCase();
           if (['en', 'ru', 'uz'].includes(langCode)) {
             i18n.changeLanguage(langCode);
           }
         }
 
-        // 5. Calculate total balance
+        // Calculate total balance
         const total = accountsData.reduce((sum, acc) => sum + acc.balance, 0);
         setTotalBalance(total);
 
       } catch (err) {
-        console.error('Initialization failed:', err);
+        console.error('Failed to load data:', err);
         setError(err instanceof Error ? err.message : 'Failed to load data');
       } finally {
         setLoading(false);
       }
     };
 
-    init();
-  }, [isReady, initData, tgUser]);
+    loadData();
+  }, [user, authLoading]);
 
-  if (loading) {
+  if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <div className="w-full max-w-md space-y-8">
@@ -116,13 +87,13 @@ function HomePage() {
     );
   }
 
-  if (error) {
+  if (authError || error) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <div className="text-center space-y-4">
           <div className="text-4xl">⚠️</div>
           <h2 className="text-xl font-semibold text-foreground">{t('common.error')}</h2>
-          <p className="text-muted-foreground">{error}</p>
+          <p className="text-muted-foreground">{authError || error}</p>
         </div>
       </div>
     );

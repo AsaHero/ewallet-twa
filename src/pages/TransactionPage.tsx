@@ -3,6 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { apiClient } from '../api/client';
 import { useTelegramWebApp } from '../hooks/useTelegramWebApp';
+import { useAuth } from '../contexts/AuthContext';
 import type { Account, Category } from '../core/types';
 import { Card, CardContent } from '../components/ui/card';
 import { Skeleton } from '../components/ui/skeleton';
@@ -25,6 +26,7 @@ function TransactionPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { WebApp, isReady } = useTelegramWebApp();
+  const { user, loading: authLoading } = useAuth();
 
   // Determine mode and get data
   const transactionId = searchParams.get('id');
@@ -44,7 +46,7 @@ function TransactionPage() {
 
   // Load initial data
   useEffect(() => {
-    if (!isReady) return;
+    if (!isReady || authLoading || !user) return;
 
     const loadData = async () => {
       try {
@@ -97,7 +99,7 @@ function TransactionPage() {
     };
 
     loadData();
-  }, [isReady, mode, transactionId, dataParam]);
+  }, [isReady, authLoading, user, mode, transactionId, dataParam]);
 
   // Setup Telegram MainButton
   useEffect(() => {
@@ -227,7 +229,7 @@ function TransactionPage() {
     }
   };
 
-  if (loading) {
+  if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-background p-4">
         <div className="max-w-md mx-auto space-y-4">
