@@ -1,3 +1,5 @@
+import moment from 'moment-timezone';
+
 export function formatCurrency(
     amount: number,
     currencyCode: string = 'USD',
@@ -11,67 +13,136 @@ export function formatCurrency(
     }).format(amount);
 }
 
-export function formatDate(
-    date: string | Date,
-    timezone?: string,
-    locale?: string
-): string {
-    const dateObj = typeof date === 'string' ? new Date(date) : date;
+// Convert timezone string to minutes
+// Supports legacy "UTC+5" format AND standard IANA "Asia/Tashkent" format
+export function getTimezoneOffsetMinutes(timezone?: string): number {
+  if (!timezone) return 0;
 
-    return new Intl.DateTimeFormat(locale || 'en-US', {
-        timeZone: timezone,
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-    }).format(dateObj);
+  // 1. Try legacy "UTC+N" parsing
+  if (timezone.toUpperCase().startsWith('UTC') || timezone.toUpperCase().startsWith('GMT')) {
+    const cleaned = timezone.toUpperCase().replace('UTC', '').replace('GMT', '').trim();
+    if (!cleaned) return 0;
+
+    const match = cleaned.match(/^([+-]?)(\d{1,2})(?::?(\d{2}))?$/);
+    if (match) {
+      const sign = match[1] === '-' ? -1 : 1;
+      const hours = parseInt(match[2], 10) || 0;
+      const minutes = parseInt(match[3] || '0', 10) || 0;
+      return sign * (hours * 60 + minutes);
+    }
+  }
+
+  // 2. Try IANA timezone (e.g. "Asia/Tashkent") using moment-timezone
+  if (moment.tz.zone(timezone)) {
+      return moment.tz(timezone).utcOffset();
+  }
+
+  return 0;
+}
+
+// Convert a date to user's timezone (offset-based) while keeping backend values in UTC
+export function convertToTimezone(
+  dateInput: string | number | Date,
+  timezone?: string,
+): Date {
+  const baseDate =
+    typeof dateInput === 'string' || typeof dateInput === 'number'
+      ? new Date(dateInput)
+      : new Date(dateInput.getTime());
+
+  const timestamp = baseDate.getTime();
+  if (Number.isNaN(timestamp)) {
+    return new Date();
+  }
+
+  const offsetMinutes = getTimezoneOffsetMinutes(timezone);
+  // We add the offset to the UTC timestamp to create a "shifted" date object
+  // where the UTC components match the local time in target timezone.
+  // Note: This date object's UTC get methods should be used to read the local time values.
+  return new Date(timestamp + offsetMinutes * 60 * 1000);
+}
+
+// Format date to readable format
+export function formatDate(
+  dateInput: string | Date,
+  options: { timezone?: string; locale?: string } | string = {},
+  legacyLocale?: string
+): string {
+  return formatDateCompatible(dateInput, options, legacyLocale);
+}
+
+function formatDateCompatible(
+    dateInput: string | Date,
+    timezoneOrOptions?: string | { timezone?: string; locale?: string },
+    localeArg?: string
+): string {
+  let timezone: string | undefined;
+  let locale = 'en-US';
+
+  if (typeof timezoneOrOptions === 'string') {
+      timezone = timezoneOrOptions;
+      if (localeArg) locale = localeArg;
+  } else if (timezoneOrOptions) {
+      timezone = timezoneOrOptions.timezone;
+      if (timezoneOrOptions.locale) locale = timezoneOrOptions.locale;
+  }
+
+  // Shift to the user's timezone first, then format in UTC to avoid host timezone side effects
+  const date = convertToTimezone(dateInput, timezone);
+  const now = convertToTimezone(new Date(), timezone);
+
+  const dateKey = date.toISOString().slice(0, 10);
+  const todayKey = now.toISOString().slice(0, 10);
+
+  const yesterday = new Date(now);
+  yesterday.setUTCDate(yesterday.getUTCDate() - 1);
+  const yesterdayKey = yesterday.toISOString().slice(0, 10);
+
+  const isToday = dateKey === todayKey;
+  const isYesterday = dateKey === yesterdayKey;
+
+  if (isToday) {
+    return `Today, ${date.toLocaleTimeString(locale, {
+      hour: '2-digit',
+      minute: '2-digit',
+      timeZone: 'UTC',
+    })}`;
+  }
+
+  if (isYesterday) {
+    return `Yesterday, ${date.toLocaleTimeString(locale, {
+      hour: '2-digit',
+      minute: '2-digit',
+      timeZone: 'UTC',
+    })}`;
+  }
+
+  return date.toLocaleDateString(locale, {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: 'UTC',
+  });
 }
 
 export function formatDateTime(
-    date: string | Date,
-    timezone?: string,
-    locale?: string
+  dateInput: string | Date,
+  timezone?: string,
+  locale: string = 'en-US',
+  formatOptions?: Intl.DateTimeFormatOptions
 ): string {
-    let dateObj = typeof date === 'string' ? new Date(date) : new Date(date);
-    const options: Intl.DateTimeFormatOptions = {
+    const date = convertToTimezone(dateInput, timezone);
+
+    return date.toLocaleString(locale, {
+        timeZone: 'UTC',
         year: 'numeric',
         month: 'short',
         day: 'numeric',
         hour: '2-digit',
         minute: '2-digit',
-    };
-
-    try {
-        if (timezone) {
-            // Check for custom UTC formats like "UTC+5", "UTC+05:00", "UTC-3"
-            const utcMatch = timezone.match(/^UTC([+-])(\d{1,2})(?::(\d{2}))?$/);
-
-            if (utcMatch) {
-                // Parse offset
-                const sign = utcMatch[1] === '+' ? 1 : -1;
-                const hours = parseInt(utcMatch[2], 10);
-                const minutes = utcMatch[3] ? parseInt(utcMatch[3], 10) : 0;
-
-                // Calculate total offset in milliseconds
-                const offsetMs = sign * (hours * 60 + minutes) * 60 * 1000;
-
-                // Adjust date to the target timezone
-                // We add the offset to the UTC time to shift it to the "local" time of that zone
-                // Then we format it as UTC to display the shifted time "as is"
-                dateObj = new Date(dateObj.getTime() + offsetMs);
-                options.timeZone = 'UTC';
-            } else {
-                // Standard IANA timezone (e.g., "Europe/London")
-                options.timeZone = timezone;
-            }
-        }
-
-        return new Intl.DateTimeFormat(locale || 'en-US', options).format(dateObj);
-    } catch (e) {
-        console.warn(`Invalid timezone '${timezone}', falling back to default`, e);
-        // Fallback without timezone (uses local system time)
-        delete options.timeZone;
-        return new Intl.DateTimeFormat(locale || 'en-US', options).format(dateObj);
-    }
+        ...formatOptions,
+    });
 }
 
 // Transaction grouping and statistics helpers
@@ -91,24 +162,33 @@ export function groupTransactionsByDate(
     locale?: string
 ): GroupedTransactions {
     const groups: GroupedTransactions = {};
-    const now = new Date();
 
-    // Get today and yesterday in the user's timezone
-    const todayStr = formatDate(now, timezone, locale);
-    const yesterday = new Date(now);
-    yesterday.setDate(yesterday.getDate() - 1);
-    const yesterdayStr = formatDate(yesterday, timezone, locale);
+    // Calculate Today and Yesterday keys in User Timezone
+    const nowShifted = convertToTimezone(new Date(), timezone);
+    const todayKeyCorrect = nowShifted.toISOString().slice(0, 10);
+
+    const yesterdayShifted = new Date(nowShifted);
+    yesterdayShifted.setUTCDate(yesterdayShifted.getUTCDate() - 1);
+    const yesterdayKeyCorrect = yesterdayShifted.toISOString().slice(0, 10);
 
     transactions.forEach((tx) => {
-        const txDate = formatDate(tx.performed_at || tx.created_at, timezone, locale);
+        const txShifted = convertToTimezone(tx.performed_at || tx.created_at, timezone);
+        const txKey = txShifted.toISOString().slice(0, 10);
 
+        // Label logic
         let label: string;
-        if (txDate === todayStr) {
+        if (txKey === todayKeyCorrect) {
             label = 'Today';
-        } else if (txDate === yesterdayStr) {
+        } else if (txKey === yesterdayKeyCorrect) {
             label = 'Yesterday';
         } else {
-            label = txDate;
+            // "Jun 24" format (Date only)
+            // Use formatDateTime or standard locale string
+            label = txShifted.toLocaleDateString(locale || 'en-US', {
+                month: 'short',
+                day: 'numeric',
+                timeZone: 'UTC'
+            });
         }
 
         if (!groups[label]) {
@@ -151,4 +231,3 @@ export function getMonthDateRange(date: Date): { from: Date; to: Date } {
     const to = new Date(date.getFullYear(), date.getMonth() + 1, 0, 23, 59, 59, 999);
     return { from, to };
 }
-

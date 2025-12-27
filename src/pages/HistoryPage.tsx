@@ -11,6 +11,7 @@ import {
     groupTransactionsByDate,
     calculateMonthlyStats,
     getMonthDateRange,
+    formatDateTime,
 } from '../lib/formatters';
 import { cn } from '../lib/utils';
 import { useTelegramWebApp } from '../hooks/useTelegramWebApp';
@@ -254,12 +255,22 @@ function HistoryPage() {
                                                                     </span>
                                                                     <span>•</span>
                                                                     <span>
-                                                                        {new Date(
-                                                                            transaction.performed_at || transaction.created_at
-                                                                        ).toLocaleTimeString(user?.language_code || 'en-US', {
-                                                                            hour: '2-digit',
-                                                                            minute: '2-digit',
-                                                                        })}
+                                                                    <span>
+                                                                        {formatDateTime(
+                                                                            transaction.performed_at || transaction.created_at,
+                                                                            user?.timezone,
+                                                                            user?.language_code,
+                                                                            {
+                                                                                hour: '2-digit',
+                                                                                minute: '2-digit',
+                                                                                // formatDateTime adds year/month/day by default if not overridden?
+                                                                                // My formatDateTime implementation adds year, month, day, hour, minute default options
+                                                                                // BUT it spreads `...formatOptions` AT THE END.
+                                                                                // So if I pass { hour, minute }, it might still include year/month/day?
+                                                                                // Let's check formatDateTime in formatters.ts.
+                                                                            }
+                                                                        )}
+                                                                    </span>
                                                                     </span>
                                                                 </div>
                                                             </div>

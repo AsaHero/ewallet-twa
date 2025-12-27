@@ -4,119 +4,53 @@ import { useFormContext, Controller } from 'react-hook-form';
 import type { ParsedTransaction } from '@/core/types';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
+import { getTimezoneOffsetMinutes } from '@/lib/formatters';
 
-
-// Helpers for timezone handling
-function getOffsetStr(date: Date, timeZone: string): string | null {
+// Helper to convert UTC string to Wall Time string (YYYY-MM-DDTHH:mm) in target timezone
+function toWallTime(dateStr: string | Date | undefined | null, timeZone: string): string {
+  if (!dateStr) return '';
   try {
-    // formatToParts with timeZoneName: 'longOffset' or 'shortOffset'
-    // 'shortOffset' -> "GMT-5" or "GMT+5:30"
-    // 'longOffset' -> "GMT-05:00"
-    const parts = new Intl.DateTimeFormat('en-US', {
-      timeZone,
-      timeZoneName: 'longOffset',
-    }).formatToParts(date);
-    const tzPart = parts.find(p => p.type === 'timeZoneName');
-    return tzPart ? tzPart.value.replace('GMT', '') : null; // "-05:00", "+05:30"
+     const date = new Date(dateStr);
+     if (isNaN(date.getTime())) return '';
+
+     const offsetMinutes = getTimezoneOffsetMinutes(timeZone);
+     // Shift UTC to Wall time
+     const wallMs = date.getTime() + offsetMinutes * 60 * 1000;
+     const wallDate = new Date(wallMs);
+
+     return wallDate.toISOString().slice(0, 16);
   } catch (e) {
-    return null;
+    console.error("toWallTime error", e);
+    return '';
   }
 }
 
-function parseOffsetToMs(offsetStr: string): number {
-  // expects "+05:00", "-05:00", "+5", "Z"
-  if (!offsetStr || offsetStr === 'Z') return 0;
-  const match = offsetStr.match(/([+-])(\d{1,2})(?::(\d{2}))?/);
-  if (!match) return 0;
-  const sign = match[1] === '+' ? 1 : -1;
-  const hours = parseInt(match[2], 10);
-  const minutes = match[3] ? parseInt(match[3], 10) : 0;
-  return sign * (hours * 60 + minutes) * 60 * 1000;
-}
-
-function toWallTime(date: Date, timeZone: string): string {
-  // Convert UTC timestamp -> "YYYY-MM-DDTHH:mm" in user's timezone
-  try {
-    const parts = new Intl.DateTimeFormat('en-US', {
-      timeZone,
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false,
-    }).formatToParts(date);
-
-    const get = (type: string) => parts.find(p => p.type === type)?.value || '';
-    // result parts are like "12", "25", "2023", etc.
-    // We need YYYY-MM-DDTHH:mm
-    const year = get('year');
-    const month = get('month');
-    const day = get('day');
-    const hour = get('hour');
-    const minute = get('minute');
-
-    return `${year}-${month}-${day}T${hour}:${minute}`;
-  } catch (e) {
-    // fallback to local or ISO sliced
-    return date.toISOString().slice(0, 16);
-  }
-}
-
+// Helper to convert Wall Time string to UTC string
 function fromWallTime(wallStr: string, timeZone: string): string {
-  // "2023-12-25T10:00" + timeZone -> UTC ISO String
   if (!wallStr) return '';
-
-  // 1. Parse custom offsets like "UTC+5" if user.timezone is set to that
-  // Check if timezone is custom "UTC+..." format manually, as Intl might not support it fully if it's not IANA
-  const utcMatch = timeZone.match(/^UTC([+-]\d+(?::\d+)?)$/);
-  if (utcMatch) {
-    // Construct ISO with offset: "2023-12-25T10:00" + "+05:00"
-    // Helper to ensure "+5" becomes "+05:00"
-    let offset = utcMatch[1];
-    // normalizing offset implementation omitted for brevity, reliance on valid ISO usually works if careful
-    // But easier: wallStr is User Time. UTC = Wall - Offset.
-    const offsetMs = parseOffsetToMs(offset);
-    const wallDateAsUtc = new Date(wallStr + "Z").getTime();
-    const realUtc = wallDateAsUtc - offsetMs;
-    return new Date(realUtc).toISOString();
-  }
-
-  // 2. IANA Timezone (e.g. "America/New_York")
   try {
-    // Treat wallStr as UTC first to estimate standard time
-    const draftDate = new Date(wallStr + "Z");
-    // Find offset of this timezone at this approximate time
-    const offsetStr = getOffsetStr(draftDate, timeZone);
-    if (!offsetStr) return new Date(wallStr).toISOString(); // fallback to browser local
+      const offsetMinutes = getTimezoneOffsetMinutes(timeZone);
+      // Treat the wall string as if it were UTC to get the "face value" timestamp
+      const faceValueUtc = new Date(wallStr + 'Z').getTime();
+      if (isNaN(faceValueUtc)) return '';
 
-    const offsetMs = parseOffsetToMs(offsetStr);
-
-    // UTC = Wall - Offset
-    // Example: Wall 10:00. Offset -05:00 (NY). UTC = 10 - (-5) = 15.
-    const realUtcMs = draftDate.getTime() - offsetMs;
-
-    return new Date(realUtcMs).toISOString();
-
-    // Refinement: The offset at 10:00 UTC might differ from offset at 15:00 UTC (DST shift).
-    // Technically we should check offset again at 'realUtcMs'.
-    // const refinedOffsetStr = getOffsetStr(new Date(realUtcMs), timeZone);
-    // ...
-    // For MVP this single pass is usually 99.9% correct unless hitting the exact DST hour.
+      // Subtract offset to get back to real UTC
+      // RealUTC + Offset = Wall
+      // RealUTC = Wall - Offset
+      const realUtcMs = faceValueUtc - offsetMinutes * 60 * 1000;
+      return new Date(realUtcMs).toISOString();
   } catch (e) {
-     // fallback
-     return new Date(wallStr).toISOString();
+      console.error("fromWallTime error", e);
+      return '';
   }
 }
 
 export function DateTimeInput() {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const form = useFormContext<ParsedTransaction>();
-  const { control } = form; // removed setValue, getValues unused
+  const { control } = useFormContext<ParsedTransaction>();
 
-  // If user has no timezone, default to browser local (which means empty string for timeZone arg usually defaults to resolvedOptions)
-  // But explicit library needs a string.
+  // If user has no timezone, default to browser local
   const userTimezone = user?.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone;
 
   return (
@@ -133,9 +67,7 @@ export function DateTimeInput() {
           render={({ field }) => {
             // value is UTC string "2023-12-25T15:00:00.000Z"
             // We want to display Wall Time in User Timezone
-            const displayValue = field.value
-              ? toWallTime(new Date(field.value), userTimezone)
-              : '';
+            const displayValue = toWallTime(field.value, userTimezone);
 
             return (
               <input
@@ -144,6 +76,9 @@ export function DateTimeInput() {
                 onChange={(e) => {
                   const wallStr = e.target.value; // "2023-12-25T10:00"
                   if (!wallStr) {
+                    // Don't set undefined if cleared? Or set current time?
+                    // User might want to clear it, but form expects date.
+                    // Let's set undefined.
                     field.onChange(undefined);
                     return;
                   }
@@ -157,8 +92,10 @@ export function DateTimeInput() {
         />
         <p className="text-[11px] text-muted-foreground mt-2">
            {t('common.timezone')}: {userTimezone}
+           {/* Debug info if needed: offset {getTimezoneOffsetMinutes(userTimezone)} */}
         </p>
       </CardContent>
     </Card>
   );
 }
+
