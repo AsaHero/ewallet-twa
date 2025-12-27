@@ -9,6 +9,18 @@ class APIClient {
         this.client = axios.create({
             baseURL: import.meta.env.VITE_API_BASE_URL || 'https://api.kapusta.whereismy.city/api',
             timeout: 10000,
+            paramsSerializer: (params) => {
+                const searchParams = new URLSearchParams();
+                Object.entries(params).forEach(([key, value]) => {
+                    if (value === undefined || value === null) return;
+                    if (Array.isArray(value)) {
+                        value.forEach((v) => searchParams.append(key, v.toString()));
+                    } else {
+                        searchParams.append(key, value.toString());
+                    }
+                });
+                return searchParams.toString();
+            },
         });
 
         // Add request interceptor to inject token
