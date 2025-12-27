@@ -145,10 +145,10 @@ function HistoryPage() {
   const sentinelRef = useRef<HTMLDivElement>(null);
   useIntersection(
     sentinelRef,
-    () => {
+    () => {1
       if (hasNext) fetchNext();
     },
-    { rootMargin: '600px 0px 600px 0px' }
+    { rootMargin: '300px 0px 300px 0px' }
   );
 
   const canGoNext = () => {
@@ -334,15 +334,15 @@ function HistoryPage() {
               </p>
             </div>
           ) : (
-            <div className="space-y-6">
-              {Object.entries(groupedTransactions).map(([dateLabel, txs]) => (
-                <div key={dateLabel}>
-                  <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 px-1">
-                    {dateLabel}
-                  </h3>
+            <>
+              <div className="space-y-6">
+                {Object.entries(groupedTransactions).map(([dateLabel, txs]) => (
+                  <div key={dateLabel}>
+                    <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 px-1">
+                      {dateLabel}
+                    </h3>
 
-                  <div className="space-y-2">
-                    <AnimatePresence initial={false}>
+                    <div className="space-y-2">
                       {txs.map((transaction) => {
                         const category = transaction.category_id ? categoryById.get(transaction.category_id) : undefined;
                         const subcategory = transaction.subcategory_id ? subcategoryById.get(transaction.subcategory_id) : undefined;
@@ -352,10 +352,8 @@ function HistoryPage() {
                         return (
                           <motion.div
                             key={transaction.id}
-                            layout
                             initial={{ opacity: 0, y: 8 }}
                             animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: 8 }}
                             transition={{ duration: 0.14 }}
                           >
                             <Card
@@ -421,30 +419,34 @@ function HistoryPage() {
                           </motion.div>
                         );
                       })}
-                    </AnimatePresence>
-
-                    {/* Next-page loader */}
-                    {isFetchingNext && (
-                      <div className="space-y-2 pt-2">
-                        {[1, 2, 3].map((i) => (
-                          <Skeleton key={i} className="h-20 w-full rounded-2xl" />
-                        ))}
-                      </div>
-                    )}
-
-                    {/* Sentinel */}
-                    <div ref={sentinelRef} className="h-1" />
-                    {!hasNext && transactions.length > 0 && (
-                      <div className="text-center text-xs text-muted-foreground py-4">
-                        You’ve reached the end
-                      </div>
-                    )}
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+
+              {/* Bottom loading area (SINGLE) */}
+              <div className="pt-3">
+                {isFetchingNext && (
+                  <div className="space-y-2">
+                    {[1, 2, 3].map((i) => (
+                      <Skeleton key={i} className="h-20 w-full rounded-2xl" />
+                    ))}
+                  </div>
+                )}
+
+                {/* Sentinel: ONLY ONCE */}
+                <div ref={sentinelRef} className="h-1" />
+
+                {!hasNext && transactions.length > 0 && (
+                  <div className="text-center text-xs text-muted-foreground py-4">
+                    You’ve reached the end
+                  </div>
+                )}
+              </div>
+            </>
           )}
         </div>
+
       </div>
 
       {/* Filters sheet */}
