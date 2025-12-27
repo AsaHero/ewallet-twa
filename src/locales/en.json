@@ -55,6 +55,41 @@
         "subcategory": "Subcategory",
         "selectSubcategory": "Select subcategory...",
         "noSubcategories": "No subcategories",
-        "allSubcategories": "All subcategories..."
+        "allSubcategories": "All subcategories...",
+        "detail": "Transaction",
+        "currencyConversion": "Currency Conversion",
+        "original": "Original",
+        "dateTime": "Date & Time"
+    },
+    "history": {
+        "title": "History",
+        "noIncome": "No income transactions",
+        "noExpense": "No expense transactions",
+        "errorLoading": "Couldn’t load transactions",
+        "endOfList": "You’ve reached the end",
+        "netBalance": "Net Balance",
+        "filters": {
+            "title": "Filters",
+            "reset": "Reset",
+            "search": "Search",
+            "searchPlaceholder": "Merchant, note, anything...",
+            "amount": "Amount",
+            "min": "Min",
+            "max": "Max",
+            "accounts": "Accounts",
+            "categories": "Categories",
+            "selected": "{{count}} selected",
+            "findAccount": "Find account...",
+            "findCategory": "Find category...",
+            "noAccounts": "No matching accounts.",
+            "noCategories": "No matching categories.",
+            "apply": "Apply",
+            "chips": {
+                "search": "Search: “{{value}}”",
+                "accounts": "Accounts: {{count}}",
+                "categories": "Categories: {{count}}",
+                "amount": "Amount: {{min}} – {{max}}"
+            }
+        }
     }
 }

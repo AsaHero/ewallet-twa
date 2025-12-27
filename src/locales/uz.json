@@ -41,6 +41,41 @@
         "note": "Izoh",
         "notePlaceholder": "Izoh qoldiring...",
         "date": "Sana",
-        "updated": "Tranzaksiya yangilandi! Botni tekshiring."
+        "updated": "Tranzaksiya yangilandi! Botni tekshiring.",
+        "detail": "Tranzaksiya",
+        "currencyConversion": "Valyuta konvertatsiyasi",
+        "original": "Asl summa",
+        "dateTime": "Sana va vaqt"
+    },
+    "history": {
+        "title": "Tarix",
+        "noIncome": "Daromadlar yo'q",
+        "noExpense": "Xarajatlar yo'q",
+        "errorLoading": "Yuklab bo'lmadi",
+        "endOfList": "Ro'yxat tugadi",
+        "netBalance": "Balans",
+        "filters": {
+            "title": "Filtrlar",
+            "reset": "Tozalash",
+            "search": "Qidiruv",
+            "searchPlaceholder": "Do'kon, izoh, har narsa...",
+            "amount": "Summa",
+            "min": "Min",
+            "max": "Maks",
+            "accounts": "Hisoblar",
+            "categories": "Kategoriyalar",
+            "selected": "{{count}} ta tanlandi",
+            "findAccount": "Hisobni topish...",
+            "findCategory": "Kategoriyani topish...",
+            "noAccounts": "Mos hisoblar yo'q.",
+            "noCategories": "Mos kategoriyalar yo'q.",
+            "apply": "Ko'rish",
+            "chips": {
+                "search": "Qidiruv: “{{value}}”",
+                "accounts": "Hisoblar: {{count}}",
+                "categories": "Kategoriyalar: {{count}}",
+                "amount": "Summa: {{min}} – {{max}}"
+            }
+        }
     }
 }

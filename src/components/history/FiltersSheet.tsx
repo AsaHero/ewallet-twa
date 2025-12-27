@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { AnimatePresence, motion } from 'framer-motion';
 import { X } from 'lucide-react';
 import type { Account, Category } from '@/core/types';
@@ -37,6 +38,7 @@ export function FiltersSheet({
   value,
   onApply,
 }: Props) {
+  const { t } = useTranslation();
   const [draft, setDraft] = useState<HistoryFilters>(value);
   const [catSearch, setCatSearch] = useState('');
   const [accSearch, setAccSearch] = useState('');
@@ -120,12 +122,12 @@ export function FiltersSheet({
                 <div className="mx-auto h-1.5 w-10 rounded-full bg-muted" />
                 <div className="mt-3 flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <h2 className="text-base font-semibold text-foreground">Filters</h2>
+                    <h2 className="text-base font-semibold text-foreground">{t('history.filters.title')}</h2>
                     <button
                       onClick={reset}
                       className="text-xs px-2 py-1 rounded-full bg-muted/60 hover:bg-muted transition-colors"
                     >
-                      Reset
+                      {t('history.filters.reset')}
                     </button>
                   </div>
                   <button
@@ -142,11 +144,11 @@ export function FiltersSheet({
               <div className="px-4 py-4 max-h-[72vh] overflow-y-auto overscroll-contain space-y-5">
                 {/* Search */}
                 <div className="space-y-2">
-                  <div className="text-sm font-medium text-foreground">Search</div>
+                  <div className="text-sm font-medium text-foreground">{t('history.filters.search')}</div>
                   <input
                     value={draft.search}
                     onChange={(e) => setDraft((d) => ({ ...d, search: e.target.value }))}
-                    placeholder="Merchant, note, anything..."
+                    placeholder={t('history.filters.searchPlaceholder')}
                     className={cn(
                       'w-full h-11 px-3 rounded-2xl bg-muted/40 border border-border/50',
                       'focus:outline-none focus:ring-2 focus:ring-primary/30'
@@ -156,18 +158,18 @@ export function FiltersSheet({
 
                 {/* Amount */}
                 <div className="space-y-2">
-                  <div className="text-sm font-medium text-foreground">Amount</div>
+                  <div className="text-sm font-medium text-foreground">{t('history.filters.amount')}</div>
                   <div className="grid grid-cols-2 gap-2">
                     <input
                       inputMode="decimal"
-                      placeholder="Min"
+                      placeholder={t('history.filters.min')}
                       value={draft.min_amount ?? ''}
                       onChange={(e) => setDraft((d) => ({ ...d, min_amount: clampNumber(e.target.value) }))}
                       className="h-11 px-3 rounded-2xl bg-muted/40 border border-border/50 focus:outline-none focus:ring-2 focus:ring-primary/30"
                     />
                     <input
                       inputMode="decimal"
-                      placeholder="Max"
+                      placeholder={t('history.filters.max')}
                       value={draft.max_amount ?? ''}
                       onChange={(e) => setDraft((d) => ({ ...d, max_amount: clampNumber(e.target.value) }))}
                       className="h-11 px-3 rounded-2xl bg-muted/40 border border-border/50 focus:outline-none focus:ring-2 focus:ring-primary/30"
@@ -178,13 +180,15 @@ export function FiltersSheet({
                 {/* Accounts */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <div className="text-sm font-medium text-foreground">Accounts</div>
-                    <div className="text-xs text-muted-foreground">{draft.account_ids.length} selected</div>
+                    <div className="text-sm font-medium text-foreground">{t('history.filters.accounts')}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {t('history.filters.selected', { count: draft.account_ids.length })}
+                    </div>
                   </div>
                   <input
                     value={accSearch}
                     onChange={(e) => setAccSearch(e.target.value)}
-                    placeholder="Find account..."
+                    placeholder={t('history.filters.findAccount')}
                     className="w-full h-10 px-3 rounded-2xl bg-muted/40 border border-border/50 focus:outline-none focus:ring-2 focus:ring-primary/30"
                   />
                   <div className="flex flex-wrap gap-2">
@@ -206,7 +210,7 @@ export function FiltersSheet({
                       );
                     })}
                     {filteredAccounts.length === 0 && (
-                      <div className="text-sm text-muted-foreground py-2">No matching accounts.</div>
+                      <div className="text-sm text-muted-foreground py-2">{t('history.filters.noAccounts')}</div>
                     )}
                   </div>
                 </div>
@@ -214,13 +218,15 @@ export function FiltersSheet({
                 {/* Categories */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <div className="text-sm font-medium text-foreground">Categories</div>
-                    <div className="text-xs text-muted-foreground">{draft.category_ids.length} selected</div>
+                    <div className="text-sm font-medium text-foreground">{t('history.filters.categories')}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {t('history.filters.selected', { count: draft.category_ids.length })}
+                    </div>
                   </div>
                   <input
                     value={catSearch}
                     onChange={(e) => setCatSearch(e.target.value)}
-                    placeholder="Find category..."
+                    placeholder={t('history.filters.findCategory')}
                     className="w-full h-10 px-3 rounded-2xl bg-muted/40 border border-border/50 focus:outline-none focus:ring-2 focus:ring-primary/30"
                   />
                   <div className="flex flex-wrap gap-2">
@@ -243,7 +249,7 @@ export function FiltersSheet({
                       );
                     })}
                     {filteredCategories.length === 0 && (
-                      <div className="text-sm text-muted-foreground py-2">No matching categories.</div>
+                      <div className="text-sm text-muted-foreground py-2">{t('history.filters.noCategories')}</div>
                     )}
                   </div>
                 </div>
@@ -255,7 +261,7 @@ export function FiltersSheet({
                   onClick={apply}
                   className="w-full h-12 rounded-2xl bg-primary text-primary-foreground font-semibold active:scale-[0.99] transition-transform"
                 >
-                  Apply
+                  {t('history.filters.apply')}
                 </button>
                 <div className="h-safe-bottom" />
               </div>

@@ -56,6 +56,41 @@
         "subcategory": "Подкатегория",
         "selectSubcategory": "Выберите подкатегорию...",
         "noSubcategories": "Нет подкатегорий",
-        "allSubcategories": "Все подкатегории..."
+        "allSubcategories": "Все подкатегории...",
+        "detail": "Транзакция",
+        "currencyConversion": "Конвертация валют",
+        "original": "Исходная сумма",
+        "dateTime": "Дата и время"
+    },
+    "history": {
+        "title": "История",
+        "noIncome": "Нет доходов",
+        "noExpense": "Нет расходов",
+        "errorLoading": "Не удалось загрузить",
+        "endOfList": "Вы достигли конца",
+        "netBalance": "Баланс",
+        "filters": {
+            "title": "Фильтры",
+            "reset": "Сброс",
+            "search": "Поиск",
+            "searchPlaceholder": "Магазин, заметка, что угодно...",
+            "amount": "Сумма",
+            "min": "Мин",
+            "max": "Макс",
+            "accounts": "Счета",
+            "categories": "Категории",
+            "selected": "Выбрано: {{count}}",
+            "findAccount": "Найти счет...",
+            "findCategory": "Найти категорию...",
+            "noAccounts": "Нет счетов.",
+            "noCategories": "Нет категорий.",
+            "apply": "Применить",
+            "chips": {
+                "search": "Поиск: “{{value}}”",
+                "accounts": "Счета: {{count}}",
+                "categories": "Категории: {{count}}",
+                "amount": "Сумма: {{min}} – {{max}}"
+            }
+        }
     }
 }

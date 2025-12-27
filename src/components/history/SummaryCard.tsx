@@ -1,4 +1,5 @@
 import { ArrowLeft, ArrowRight } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent } from '../ui/card';
 import { formatCurrency, formatMonthYear } from '@/lib/formatters';
 import { cn } from '@/lib/utils';
@@ -34,6 +35,7 @@ export function SummaryCard({
   canGoPrev = true,
   canGoNext = true,
 }: SummaryCardProps) {
+  const { t } = useTranslation();
   const netBalance = totalIncome - totalExpense;
   const isPositive = netBalance >= 0;
 
@@ -85,7 +87,7 @@ export function SummaryCard({
           <div className="space-y-1 min-w-0">
             <div className="flex items-center gap-1 text-xs text-muted-foreground">
               <span className="text-green-500">↗</span>
-              <span>Income</span>
+              <span>{t('common.income')}</span>
             </div>
 
             <p
@@ -105,7 +107,7 @@ export function SummaryCard({
           <div className="space-y-1 min-w-0 text-right">
             <div className="flex items-center justify-end gap-1 text-xs text-muted-foreground">
               <span className="text-red-500">↘</span>
-              <span>Expenses</span>
+              <span>{t('common.expense')}</span>
             </div>
 
             <p
@@ -123,7 +125,7 @@ export function SummaryCard({
         {/* Net Balance */}
         <div className="pt-4 border-t border-border/50 min-w-0 overflow-hidden">
           <div className="flex items-start justify-between gap-3 min-w-0">
-            <span className="text-sm text-muted-foreground pt-[2px]">Net Balance</span>
+            <span className="text-sm text-muted-foreground pt-[2px]">{t('history.netBalance')}</span>
 
             <span
               className={cn(

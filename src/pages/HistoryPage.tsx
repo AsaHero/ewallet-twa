@@ -275,7 +275,7 @@ function HistoryPage() {
                   onClick={() => setFiltersOpen(true)}
                   className="text-xs px-3 py-1.5 rounded-full bg-muted/60 hover:bg-muted transition-colors"
                 >
-                  Search: “{filters.search.trim()}”
+                  {t('history.filters.chips.search', { value: filters.search.trim() })}
                 </button>
               )}
               {filters.account_ids.length > 0 && (
@@ -283,7 +283,7 @@ function HistoryPage() {
                   onClick={() => setFiltersOpen(true)}
                   className="text-xs px-3 py-1.5 rounded-full bg-muted/60 hover:bg-muted transition-colors"
                 >
-                  Accounts: {filters.account_ids.length}
+                  {t('history.filters.chips.accounts', { count: filters.account_ids.length })}
                 </button>
               )}
               {filters.category_ids.length > 0 && (
@@ -291,7 +291,7 @@ function HistoryPage() {
                   onClick={() => setFiltersOpen(true)}
                   className="text-xs px-3 py-1.5 rounded-full bg-muted/60 hover:bg-muted transition-colors"
                 >
-                  Categories: {filters.category_ids.length}
+                  {t('history.filters.chips.categories', { count: filters.category_ids.length })}
                 </button>
               )}
               {(filters.min_amount !== undefined || filters.max_amount !== undefined) && (
@@ -299,7 +299,10 @@ function HistoryPage() {
                   onClick={() => setFiltersOpen(true)}
                   className="text-xs px-3 py-1.5 rounded-full bg-muted/60 hover:bg-muted transition-colors"
                 >
-                  Amount: {filters.min_amount ?? '…'} – {filters.max_amount ?? '…'}
+                  {t('history.filters.chips.amount', {
+                    min: filters.min_amount ?? '…',
+                    max: filters.max_amount ?? '…',
+                  })}
                 </button>
               )}
             </div>
@@ -309,7 +312,7 @@ function HistoryPage() {
         {/* Error for transactions fetch */}
         {txError && (
           <div className="mt-4 rounded-2xl border border-border/50 bg-card/40 p-4">
-            <div className="text-sm font-semibold text-foreground">Couldn’t load transactions</div>
+            <div className="text-sm font-semibold text-foreground">{t('history.errorLoading')}</div>
             <div className="text-sm text-muted-foreground mt-1">{txError}</div>
           </div>
         )}
@@ -329,8 +332,8 @@ function HistoryPage() {
                 {selectedFilter === 'all'
                   ? t('common.noTransactions')
                   : selectedFilter === 'income'
-                    ? 'No income transactions'
-                    : 'No expense transactions'}
+                  ? t('history.noIncome')
+                  : t('history.noExpense')}
               </p>
             </div>
           ) : (
@@ -382,11 +385,11 @@ function HistoryPage() {
                                         {transaction.note ||
                                           subcategory?.name ||
                                           category?.name ||
-                                          (isIncome ? 'Income' : 'Expense')}
+                                          (isIncome ? t('common.income') : t('common.expense'))}
                                       </p>
 
                                       <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
-                                        <span className="truncate">{account?.name || 'Account'}</span>
+                                        <span className="truncate">{account?.name || t('common.accounts')}</span>
                                         <span>•</span>
                                         <span className="truncate">
                                           {formatDateTime(
@@ -439,7 +442,7 @@ function HistoryPage() {
 
                 {!hasNext && transactions.length > 0 && (
                   <div className="text-center text-xs text-muted-foreground py-4">
-                    You’ve reached the end
+                    {t('history.endOfList')}
                   </div>
                 )}
               </div>

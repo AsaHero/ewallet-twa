@@ -1,4 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { X } from 'lucide-react';
 import type { Transaction, Category, Subcategory, Account } from '@/core/types';
 import { formatCurrency, formatDateTime } from '@/lib/formatters';
@@ -23,6 +24,7 @@ export function TransactionDetailModal({
   timezone,
   onClose,
 }: TransactionDetailModalProps) {
+  const { t } = useTranslation();
   const isOpen = !!transaction;
 
   const category = transaction ? categories.find((c) => c.id === transaction.category_id) : undefined;
@@ -31,7 +33,7 @@ export function TransactionDetailModal({
 
   const displayEmoji = subcategory?.emoji || category?.emoji || '📌';
   const displayName =
-    transaction?.note || (transaction?.type === 'deposit' ? 'Income' : 'Expense');
+    transaction?.note || (transaction?.type === 'deposit' ? t('transaction.income') : t('transaction.expense'));
 
   const isIncome = transaction?.type === 'deposit';
 
@@ -65,7 +67,7 @@ export function TransactionDetailModal({
               <div className="px-4 pt-3 pb-2 border-b border-border/50">
                 <div className="mx-auto h-1.5 w-10 rounded-full bg-muted" />
                 <div className="mt-3 flex items-center justify-between">
-                  <h2 className="text-base font-semibold text-foreground">Transaction</h2>
+                  <h2 className="text-base font-semibold text-foreground">{t('transaction.detail')}</h2>
                   <button
                     onClick={onClose}
                     className="p-2 rounded-full hover:bg-muted transition-colors"
@@ -95,11 +97,11 @@ export function TransactionDetailModal({
                 {hasFx && (
                   <div className="bg-muted/40 rounded-2xl p-4 space-y-2 border border-border/50">
                     <h4 className="text-sm font-semibold text-muted-foreground">
-                      Currency Conversion
+                      {t('transaction.currencyConversion')}
                     </h4>
                     <div className="space-y-1">
                       <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Original</span>
+                        <span className="text-muted-foreground">{t('transaction.original')}</span>
                         <span className="font-medium">
                           {formatCurrency(
                             transaction.original_amount!,
@@ -110,7 +112,7 @@ export function TransactionDetailModal({
                       </div>
                       {transaction.fx_rate && (
                         <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">FX rate</span>
+                          <span className="text-muted-foreground">{t('transaction.fxRate')}</span>
                           <span className="font-medium">{transaction.fx_rate.toFixed(4)}</span>
                         </div>
                       )}
@@ -119,12 +121,12 @@ export function TransactionDetailModal({
                 )}
 
                 <div className="bg-card/40 border border-border/50 rounded-2xl p-4 space-y-3">
-                  <DetailRow label="Type" value={isIncome ? 'Income' : 'Expense'} icon={isIncome ? '💰' : '💸'} />
-                  {category && <DetailRow label="Category" value={category.name} icon={category.emoji || '📁'} />}
-                  {subcategory && <DetailRow label="Subcategory" value={subcategory.name} icon={subcategory.emoji || '📌'} />}
-                  {account && <DetailRow label="Account" value={account.name} icon="📊" />}
+                  <DetailRow label={t('transaction.type')} value={isIncome ? t('transaction.income') : t('transaction.expense')} icon={isIncome ? '💰' : '💸'} />
+                  {category && <DetailRow label={t('transaction.category')} value={category.name} icon={category.emoji || '📁'} />}
+                  {subcategory && <DetailRow label={t('transaction.subcategory')} value={subcategory.name} icon={subcategory.emoji || '📌'} />}
+                  {account && <DetailRow label={t('transaction.account')} value={account.name} icon="📊" />}
                   <DetailRow
-                    label="Date & Time"
+                    label={t('transaction.dateTime')}
                     value={formatDateTime(transaction.performed_at || transaction.created_at, timezone, locale)}
                     icon="📅"
                   />
@@ -132,7 +134,7 @@ export function TransactionDetailModal({
 
                 {transaction.note && (
                   <div className="bg-muted/40 rounded-2xl p-4 border border-border/50">
-                    <h4 className="text-sm font-semibold text-muted-foreground mb-2">Note</h4>
+                    <h4 className="text-sm font-semibold text-muted-foreground mb-2">{t('transaction.note')}</h4>
                     <p className="text-sm text-foreground whitespace-pre-wrap">{transaction.note}</p>
                   </div>
                 )}
