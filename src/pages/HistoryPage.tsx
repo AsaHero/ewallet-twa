@@ -1,321 +1,479 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { apiClient } from '../api/client';
-import type { Transaction, User, Category, Subcategory, Account } from '../core/types';
-import { Card, CardContent } from '../components/ui/card';
-import { Skeleton } from '../components/ui/skeleton';
 import { ArrowLeft } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
+
+import { apiClient } from '@/api/client';
+import type { Transaction, User, Category, Subcategory, Account } from '@/core/types';
+import { Card, CardContent } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+import { cn } from '@/lib/utils';
 import {
-    formatCurrency,
-    groupTransactionsByDate,
-    calculateMonthlyStats,
-    getMonthDateRange,
-    formatDateTime,
-} from '../lib/formatters';
-import { cn } from '../lib/utils';
-import { useTelegramWebApp } from '../hooks/useTelegramWebApp';
-import { SummaryCard } from '../components/history/SummaryCard';
-import { FilterChips, type FilterType } from '../components/history/FilterChips';
-import { TransactionDetailModal } from '../components/history/TransactionDetailModal';
+  formatCurrency,
+  groupTransactionsByDate,
+  calculateMonthlyStats,
+  getMonthDateRange,
+  formatDateTime,
+} from '@/lib/formatters';
+import { useTelegramWebApp } from '@/hooks/useTelegramWebApp';
+
+import { SummaryCard } from '@/components/history/SummaryCard';
+import { FilterChips, type FilterType } from '@/components/history/FilterChips';
+import { TransactionDetailModal } from '@/components/history/TransactionDetailModal';
+import { FiltersSheet, type HistoryFilters } from '@/components/history/FiltersSheet';
+import { useInfiniteTransactions } from '@/hooks/useInfiniteTransactions';
+import { useIntersection } from '@/hooks/useIntersection';
+
+function hapticSelect() {
+  // safe in web too
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const tg = (window as any)?.Telegram?.WebApp;
+  try {
+    tg?.HapticFeedback?.selectionChanged?.();
+  } catch {
+    // ignore
+  }
+}
 
 function HistoryPage() {
-    const { t } = useTranslation();
-    const navigate = useNavigate();
-    const { isReady } = useTelegramWebApp();
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const { isReady } = useTelegramWebApp();
 
-    const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
-    const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([]);
-    const [user, setUser] = useState<User | null>(null);
-    const [categories, setCategories] = useState<Category[]>([]);
-    const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
-    const [accounts, setAccounts] = useState<Account[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
+  const [accounts, setAccounts] = useState<Account[]>([]);
 
-    // Filter and navigation state
-    const [selectedMonth, setSelectedMonth] = useState(new Date());
-    const [selectedFilter, setSelectedFilter] = useState<FilterType>('all');
-    const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
+  const [loadingBootstrap, setLoadingBootstrap] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-    useEffect(() => {
-        if (!isReady) return;
+  // UI state
+  const [selectedMonth, setSelectedMonth] = useState(new Date());
+  const [selectedFilter, setSelectedFilter] = useState<FilterType>('all');
+  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
 
-        const fetchData = async () => {
-            try {
-                const [userData, categoriesData, subcategoriesData, accountsData] = await Promise.all([
-                    apiClient.getMe(),
-                    apiClient.getCategories(),
-                    apiClient.getSubcategories(),
-                    apiClient.getAccounts(),
-                ]);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [filters, setFilters] = useState<HistoryFilters>({
+    search: '',
+    account_ids: [],
+    category_ids: [],
+    min_amount: undefined,
+    max_amount: undefined,
+  });
 
-                setUser(userData);
-                setCategories(categoriesData);
-                setSubcategories(subcategoriesData);
-                setAccounts(accountsData);
+  useEffect(() => {
+    if (!isReady) return;
 
-                // Fetch transactions for selected month
-                await fetchMonthTransactions(selectedMonth);
-            } catch (err) {
-                console.error('Failed to fetch history:', err);
-                setError(err instanceof Error ? err.message : 'Failed to load history');
-            } finally {
-                setLoading(false);
-            }
-        };
+    const fetchBootstrap = async () => {
+      try {
+        setLoadingBootstrap(true);
+        const [userData, categoriesData, subcategoriesData, accountsData] = await Promise.all([
+          apiClient.getMe(),
+          apiClient.getCategories(),
+          apiClient.getSubcategories(),
+          apiClient.getAccounts(),
+        ]);
 
-        fetchData();
-    }, [isReady]);
-
-    const fetchMonthTransactions = async (month: Date) => {
-        try {
-            const { from, to } = getMonthDateRange(month);
-            const response = await apiClient.getTransactions({
-                from: from.toISOString(),
-                to: to.toISOString(),
-                limit: 1000, // Get all for the month
-            });
-            setAllTransactions(response.items);
-            applyFilters(response.items, selectedFilter);
-        } catch (err) {
-            console.error('Failed to fetch transactions:', err);
-        }
+        setUser(userData);
+        setCategories(categoriesData);
+        setSubcategories(subcategoriesData);
+        setAccounts(accountsData);
+      } catch (err) {
+        console.error('Failed to fetch history bootstrap:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load history');
+      } finally {
+        setLoadingBootstrap(false);
+      }
     };
 
-    const applyFilters = (transactions: Transaction[], filter: FilterType) => {
-        let filtered = transactions;
+    fetchBootstrap();
+  }, [isReady]);
 
-        if (filter === 'income') {
-            filtered = transactions.filter(tx => tx.type === 'deposit');
-        } else if (filter === 'expense') {
-            filtered = transactions.filter(tx => tx.type === 'withdrawal');
-        }
+  const categoryById = useMemo(() => {
+    const m = new Map<number, Category>();
+    categories.forEach((c) => m.set(c.id, c));
+    return m;
+  }, [categories]);
 
-        setFilteredTransactions(filtered);
+  const subcategoryById = useMemo(() => {
+    const m = new Map<number, Subcategory>();
+    subcategories.forEach((s) => m.set(s.id, s));
+    return m;
+  }, [subcategories]);
+
+  const accountById = useMemo(() => {
+    const m = new Map<string, Account>();
+    accounts.forEach((a) => m.set(a.id, a));
+    return m;
+  }, [accounts]);
+
+  const { from, to } = useMemo(() => getMonthDateRange(selectedMonth), [selectedMonth]);
+
+  const txType = useMemo(() => {
+    if (selectedFilter === 'income') return 'deposit' as const;
+    if (selectedFilter === 'expense') return 'withdrawal' as const;
+    return undefined;
+  }, [selectedFilter]);
+
+  const query = useMemo(() => {
+    return {
+      from: from.toISOString(),
+      to: to.toISOString(),
+      limit: 30,
+      type: txType,
+      search: filters.search,
+      category_ids: filters.category_ids,
+      account_ids: filters.account_ids,
+      min_amount: filters.min_amount,
+      max_amount: filters.max_amount,
     };
+  }, [from, to, txType, filters]);
 
-    const handleMonthChange = (direction: 'prev' | 'next') => {
-        const newMonth = new Date(selectedMonth);
-        if (direction === 'prev') {
-            newMonth.setMonth(newMonth.getMonth() - 1);
-        } else {
-            newMonth.setMonth(newMonth.getMonth() + 1);
-        }
-        setSelectedMonth(newMonth);
-        fetchMonthTransactions(newMonth);
-    };
+  const {
+    items: transactions,
+    total,
+    isInitialLoading,
+    isFetchingNext,
+    error: txError,
+    hasNext,
+    fetchNext,
+  } = useInfiniteTransactions(query);
 
-    const handleFilterChange = (filter: FilterType) => {
-        setSelectedFilter(filter);
-        applyFilters(allTransactions, filter);
-    };
+  // Infinite scroll sentinel
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  useIntersection(
+    sentinelRef,
+    () => {
+      if (hasNext) fetchNext();
+    },
+    { rootMargin: '600px 0px 600px 0px' }
+  );
 
-    const canGoNext = () => {
-        const now = new Date();
-        return selectedMonth.getMonth() < now.getMonth() ||
-            selectedMonth.getFullYear() < now.getFullYear();
-    };
+  const canGoNext = () => {
+    const now = new Date();
+    return selectedMonth.getMonth() < now.getMonth() || selectedMonth.getFullYear() < now.getFullYear();
+  };
 
-    if (loading) {
-        return (
-            <div className="min-h-screen bg-background">
-                <div className="h-safe-top" />
-                <div className="h-14" />
-                <div className="px-4 pb-8 max-w-md mx-auto">
-                    <Skeleton className="h-10 w-32 mb-8" />
-                    <Skeleton className="h-40 w-full rounded-2xl mb-6" />
-                    <div className="space-y-3">
-                        {[1, 2, 3, 4, 5].map((i) => (
-                            <Skeleton key={i} className="h-20 w-full rounded-2xl" />
-                        ))}
-                    </div>
-                </div>
-            </div>
-        );
-    }
+  const handleMonthChange = (direction: 'prev' | 'next') => {
+    hapticSelect();
+    const newMonth = new Date(selectedMonth);
+    if (direction === 'prev') newMonth.setMonth(newMonth.getMonth() - 1);
+    else newMonth.setMonth(newMonth.getMonth() + 1);
+    setSelectedMonth(newMonth);
+  };
 
-    if (error) {
-        return (
-            <div className="min-h-screen bg-background flex items-center justify-center p-4">
-                <div className="text-center space-y-4">
-                    <div className="text-4xl">⚠️</div>
-                    <h2 className="text-xl font-semibold text-foreground">{t('common.error')}</h2>
-                    <p className="text-muted-foreground">{error}</p>
-                </div>
-            </div>
-        );
-    }
+  const handleFilterChange = (filter: FilterType) => {
+    hapticSelect();
+    setSelectedFilter(filter);
+  };
 
-    const stats = calculateMonthlyStats(filteredTransactions);
-    const groupedTransactions = groupTransactionsByDate(
-        filteredTransactions,
-        user?.timezone,
-        user?.language_code
-    );
+  const activeFilterCount =
+    (filters.search.trim() ? 1 : 0) +
+    (filters.account_ids.length ? 1 : 0) +
+    (filters.category_ids.length ? 1 : 0) +
+    (filters.min_amount !== undefined ? 1 : 0) +
+    (filters.max_amount !== undefined ? 1 : 0);
 
+  const groupedTransactions = useMemo(() => {
+    return groupTransactionsByDate(transactions, user?.timezone, user?.language_code);
+  }, [transactions, user?.timezone, user?.language_code]);
+
+  const stats = useMemo(() => calculateMonthlyStats(transactions), [transactions]);
+
+  if (loadingBootstrap) {
     return (
-        <div className="min-h-screen bg-background text-foreground">
-            <div className="h-safe-top" />
-            <div className="h-14" />
-
-            <div className="px-4 pb-8 max-w-md mx-auto">
-                {/* Header */}
-                <header className="pt-2 pb-6">
-                    <button
-                        onClick={() => navigate('/')}
-                        className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                        <ArrowLeft className="w-5 h-5" />
-                        <span className="font-medium">{t('common.backToHome')}</span>
-                    </button>
-                    <h1 className="text-2xl font-bold text-foreground mt-4">{t('common.history')}</h1>
-                </header>
-
-                {/* Summary Card */}
-                <div className="mb-6">
-                    <SummaryCard
-                        selectedMonth={selectedMonth}
-                        totalIncome={stats.totalIncome}
-                        totalExpense={stats.totalExpense}
-                        currencyCode={user?.currency_code || 'USD'}
-                        locale={user?.language_code}
-                        onMonthChange={handleMonthChange}
-                        canGoNext={canGoNext()}
-                    />
-                </div>
-
-                {/* Filter Chips */}
-                <div className="mb-6">
-                    <FilterChips
-                        selectedFilter={selectedFilter}
-                        onFilterChange={handleFilterChange}
-                    />
-                </div>
-
-                {/* Transactions List */}
-                {filteredTransactions.length === 0 ? (
-                    <div className="text-center py-12">
-                        <div className="text-5xl mb-4">📊</div>
-                        <p className="text-muted-foreground">
-                            {selectedFilter === 'all'
-                                ? t('common.noTransactions')
-                                : `No ${selectedFilter} transactions`
-                            }
-                        </p>
-                    </div>
-                ) : (
-                    <div className="space-y-6">
-                        {Object.entries(groupedTransactions).map(([dateLabel, transactions]) => (
-                            <div key={dateLabel}>
-                                {/* Date Header */}
-                                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3 px-1">
-                                    {dateLabel}
-                                </h3>
-
-                                {/* Transaction Cards */}
-                                <div className="space-y-2">
-                                    {transactions.map((transaction) => {
-                                        const category = categories.find((c) => c.id === transaction.category_id);
-                                        const subcategory = subcategories.find((s) => s.id === transaction.subcategory_id);
-                                        const account = accounts.find((a) => a.id === transaction.account_id);
-                                        const isIncome = transaction.type === 'deposit';
-
-                                        return (
-                                            <Card
-                                                key={transaction.id}
-                                                className="border-0 bg-card/50 backdrop-blur-sm hover:bg-card/70 transition-all duration-300 cursor-pointer group"
-                                                onClick={() => setSelectedTransaction(transaction)}
-                                            >
-                                                <CardContent className="p-4">
-                                                    <div className="flex items-center justify-between">
-                                                        <div className="flex items-center gap-3 flex-1 min-w-0">
-                                                            <div
-                                                                className={cn(
-                                                                    'w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0',
-                                                                    isIncome
-                                                                        ? 'bg-green-500/10'
-                                                                        : 'bg-red-500/10'
-                                                                )}
-                                                            >
-                                                                <div className="text-xl">
-                                                                    {subcategory?.emoji || category?.emoji || '📌'}
-                                                                </div>
-                                                            </div>
-                                                            <div className="flex-1 min-w-0 space-y-0.5">
-                                                                <p className="font-medium text-sm text-foreground truncate">
-                                                                    {transaction.note ||
-                                                                        subcategory?.name ||
-                                                                        category?.name ||
-                                                                        (isIncome ? 'Income' : 'Expense')}
-                                                                </p>
-                                                                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                                                    <span className="truncate">
-                                                                        {account?.name || 'Account'}
-                                                                    </span>
-                                                                    <span>•</span>
-                                                                    <span>
-                                                                    <span>
-                                                                        {formatDateTime(
-                                                                            transaction.performed_at || transaction.created_at,
-                                                                            user?.timezone,
-                                                                            user?.language_code,
-                                                                            {
-                                                                                hour: '2-digit',
-                                                                                minute: '2-digit',
-                                                                                // formatDateTime adds year/month/day by default if not overridden?
-                                                                                // My formatDateTime implementation adds year, month, day, hour, minute default options
-                                                                                // BUT it spreads `...formatOptions` AT THE END.
-                                                                                // So if I pass { hour, minute }, it might still include year/month/day?
-                                                                                // Let's check formatDateTime in formatters.ts.
-                                                                            }
-                                                                        )}
-                                                                    </span>
-                                                                    </span>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                        <p
-                                                            className={cn(
-                                                                'font-bold tabular-nums text-base ml-3 flex-shrink-0',
-                                                                isIncome ? 'text-green-500' : 'text-red-500'
-                                                            )}
-                                                        >
-                                                            {isIncome ? '+' : '-'}
-                                                            {formatCurrency(
-                                                                transaction.amount,
-                                                                transaction.currency_code,
-                                                                user?.language_code
-                                                            )}
-                                                        </p>
-                                                    </div>
-                                                </CardContent>
-                                            </Card>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                )}
-            </div>
-
-            {/* Transaction Detail Modal */}
-            {selectedTransaction && (
-                <TransactionDetailModal
-                    transaction={selectedTransaction}
-                    categories={categories}
-                    subcategories={subcategories}
-                    accounts={accounts}
-                    locale={user?.language_code}
-                    timezone={user?.timezone}
-                    onClose={() => setSelectedTransaction(null)}
-                />
-            )}
-
-            <div className="h-safe-bottom" />
+      <div className="min-h-screen bg-background">
+        <div className="h-safe-top" />
+        <div className="px-4 pt-3 pb-8 max-w-md mx-auto">
+          <Skeleton className="h-9 w-28 mb-4" />
+          <Skeleton className="h-40 w-full rounded-3xl mb-4" />
+          <Skeleton className="h-10 w-full rounded-full mb-4" />
+          <div className="space-y-3">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <Skeleton key={i} className="h-20 w-full rounded-2xl" />
+            ))}
+          </div>
         </div>
+        <div className="h-safe-bottom" />
+      </div>
     );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="text-center space-y-3">
+          <div className="text-4xl">⚠️</div>
+          <h2 className="text-xl font-semibold text-foreground">{t('common.error')}</h2>
+          <p className="text-muted-foreground">{error}</p>
+        </div>
+      </div>
+    );
+  }
+
+  const showEmpty = !isInitialLoading && transactions.length === 0 && !txError;
+
+  return (
+    <motion.div
+      className="min-h-screen bg-background text-foreground"
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.18 }}
+    >
+      <div className="h-safe-top" />
+
+      <div className="px-4 pt-3 pb-8 max-w-md mx-auto">
+        {/* Header */}
+        <header className="sticky top-0 z-10 bg-background/85 backdrop-blur-md -mx-4 px-4 pt-2 pb-3 border-b border-border/40">
+          <button
+            onClick={() => navigate('/')}
+            className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            <span className="font-semibold">{t('common.backToHome')}</span>
+          </button>
+
+          <div className="mt-2 flex items-end justify-between">
+            <h1 className="text-xl font-bold text-foreground">{t('common.history')}</h1>
+            {total > 0 && (
+              <div className="text-xs text-muted-foreground">
+                {transactions.length}/{total}
+              </div>
+            )}
+          </div>
+        </header>
+
+        {/* Summary */}
+        <div className="mt-4">
+          <SummaryCard
+            selectedMonth={selectedMonth}
+            totalIncome={stats.totalIncome}
+            totalExpense={stats.totalExpense}
+            currencyCode={user?.currency_code || 'USD'}
+            locale={user?.language_code}
+            onMonthChange={handleMonthChange}
+            canGoNext={canGoNext()}
+          />
+        </div>
+
+        {/* Filters */}
+        <div className="mt-4">
+          <FilterChips
+            selectedFilter={selectedFilter}
+            onFilterChange={handleFilterChange}
+            onOpenFilters={() => setFiltersOpen(true)}
+            activeCount={activeFilterCount}
+          />
+
+          {/* Active summary pills (compact) */}
+          {activeFilterCount > 0 && (
+            <div className="mt-2 flex flex-wrap gap-2">
+              {filters.search.trim() && (
+                <button
+                  onClick={() => setFiltersOpen(true)}
+                  className="text-xs px-3 py-1.5 rounded-full bg-muted/60 hover:bg-muted transition-colors"
+                >
+                  Search: “{filters.search.trim()}”
+                </button>
+              )}
+              {filters.account_ids.length > 0 && (
+                <button
+                  onClick={() => setFiltersOpen(true)}
+                  className="text-xs px-3 py-1.5 rounded-full bg-muted/60 hover:bg-muted transition-colors"
+                >
+                  Accounts: {filters.account_ids.length}
+                </button>
+              )}
+              {filters.category_ids.length > 0 && (
+                <button
+                  onClick={() => setFiltersOpen(true)}
+                  className="text-xs px-3 py-1.5 rounded-full bg-muted/60 hover:bg-muted transition-colors"
+                >
+                  Categories: {filters.category_ids.length}
+                </button>
+              )}
+              {(filters.min_amount !== undefined || filters.max_amount !== undefined) && (
+                <button
+                  onClick={() => setFiltersOpen(true)}
+                  className="text-xs px-3 py-1.5 rounded-full bg-muted/60 hover:bg-muted transition-colors"
+                >
+                  Amount: {filters.min_amount ?? '…'} – {filters.max_amount ?? '…'}
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Error for transactions fetch */}
+        {txError && (
+          <div className="mt-4 rounded-2xl border border-border/50 bg-card/40 p-4">
+            <div className="text-sm font-semibold text-foreground">Couldn’t load transactions</div>
+            <div className="text-sm text-muted-foreground mt-1">{txError}</div>
+          </div>
+        )}
+
+        {/* List */}
+        <div className="mt-4">
+          {isInitialLoading ? (
+            <div className="space-y-3">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <Skeleton key={i} className="h-20 w-full rounded-2xl" />
+              ))}
+            </div>
+          ) : showEmpty ? (
+            <div className="text-center py-12">
+              <div className="text-5xl mb-3">📊</div>
+              <p className="text-muted-foreground">
+                {selectedFilter === 'all'
+                  ? t('common.noTransactions')
+                  : selectedFilter === 'income'
+                    ? 'No income transactions'
+                    : 'No expense transactions'}
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {Object.entries(groupedTransactions).map(([dateLabel, txs]) => (
+                <div key={dateLabel}>
+                  <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 px-1">
+                    {dateLabel}
+                  </h3>
+
+                  <div className="space-y-2">
+                    <AnimatePresence initial={false}>
+                      {txs.map((transaction) => {
+                        const category = transaction.category_id ? categoryById.get(transaction.category_id) : undefined;
+                        const subcategory = transaction.subcategory_id ? subcategoryById.get(transaction.subcategory_id) : undefined;
+                        const account = transaction.account_id ? accountById.get(transaction.account_id) : undefined;
+                        const isIncome = transaction.type === 'deposit';
+
+                        return (
+                          <motion.div
+                            key={transaction.id}
+                            layout
+                            initial={{ opacity: 0, y: 8 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: 8 }}
+                            transition={{ duration: 0.14 }}
+                          >
+                            <Card
+                              className="border border-border/40 bg-card/40 hover:bg-card/70 transition-colors cursor-pointer active:scale-[0.997]"
+                              onClick={() => {
+                                hapticSelect();
+                                setSelectedTransaction(transaction);
+                              }}
+                            >
+                              <CardContent className="p-3.5">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                                    <div
+                                      className={cn(
+                                        'w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 border border-border/30',
+                                        isIncome ? 'bg-green-500/10' : 'bg-red-500/10'
+                                      )}
+                                    >
+                                      <div className="text-xl">
+                                        {subcategory?.emoji || category?.emoji || '📌'}
+                                      </div>
+                                    </div>
+
+                                    <div className="flex-1 min-w-0">
+                                      <p className="font-semibold text-sm text-foreground truncate">
+                                        {transaction.note ||
+                                          subcategory?.name ||
+                                          category?.name ||
+                                          (isIncome ? 'Income' : 'Expense')}
+                                      </p>
+
+                                      <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
+                                        <span className="truncate">{account?.name || 'Account'}</span>
+                                        <span>•</span>
+                                        <span className="truncate">
+                                          {formatDateTime(
+                                            transaction.performed_at || transaction.created_at,
+                                            user?.timezone,
+                                            user?.language_code,
+                                            { hour: '2-digit', minute: '2-digit' }
+                                          )}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  <p
+                                    className={cn(
+                                      'font-bold tabular-nums text-base ml-3 flex-shrink-0',
+                                      isIncome ? 'text-green-500' : 'text-red-500'
+                                    )}
+                                  >
+                                    {isIncome ? '+' : '-'}
+                                    {formatCurrency(
+                                      transaction.amount,
+                                      transaction.currency_code,
+                                      user?.language_code
+                                    )}
+                                  </p>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          </motion.div>
+                        );
+                      })}
+                    </AnimatePresence>
+
+                    {/* Next-page loader */}
+                    {isFetchingNext && (
+                      <div className="space-y-2 pt-2">
+                        {[1, 2, 3].map((i) => (
+                          <Skeleton key={i} className="h-20 w-full rounded-2xl" />
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Sentinel */}
+                    <div ref={sentinelRef} className="h-1" />
+                    {!hasNext && transactions.length > 0 && (
+                      <div className="text-center text-xs text-muted-foreground py-4">
+                        You’ve reached the end
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Filters sheet */}
+      <FiltersSheet
+        open={filtersOpen}
+        onOpenChange={setFiltersOpen}
+        accounts={accounts}
+        categories={categories}
+        value={filters}
+        onApply={(v) => {
+          hapticSelect();
+          setFilters(v);
+        }}
+      />
+
+      {/* Transaction modal */}
+      <TransactionDetailModal
+        transaction={selectedTransaction}
+        categories={categories}
+        subcategories={subcategories}
+        accounts={accounts}
+        locale={user?.language_code}
+        timezone={user?.timezone}
+        onClose={() => setSelectedTransaction(null)}
+      />
+
+      <div className="h-safe-bottom" />
+    </motion.div>
+  );
 }
 
 export default HistoryPage;
