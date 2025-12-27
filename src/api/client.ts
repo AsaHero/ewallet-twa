@@ -94,7 +94,18 @@ class APIClient {
     }
 
     // --- Transactions ---
-    async getTransactions(params?: { limit?: number; offset?: number }): Promise<TransactionsResponse> {
+    async getTransactions(params?: {
+        limit?: number;
+        offset?: number;
+        from?: string;  // ISO date string
+        to?: string;    // ISO date string
+        type?: 'withdrawal' | 'deposit';
+        category_ids?: number[];
+        account_ids?: string[];
+        min_amount?: number;
+        max_amount?: number;
+        search?: string;
+    }): Promise<TransactionsResponse> {
         const res = await this.client.get<TransactionsResponse>('/transactions', { params });
         return res.data;
     }

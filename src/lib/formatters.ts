@@ -73,3 +73,82 @@ export function formatDateTime(
         return new Intl.DateTimeFormat(locale || 'en-US', options).format(dateObj);
     }
 }
+
+// Transaction grouping and statistics helpers
+export interface GroupedTransactions {
+    [dateLabel: string]: any[];
+}
+
+export interface MonthlyStats {
+    totalIncome: number;
+    totalExpense: number;
+    netBalance: number;
+}
+
+export function groupTransactionsByDate(
+    transactions: any[],
+    timezone?: string,
+    locale?: string
+): GroupedTransactions {
+    const groups: GroupedTransactions = {};
+    const now = new Date();
+
+    // Get today and yesterday in the user's timezone
+    const todayStr = formatDate(now, timezone, locale);
+    const yesterday = new Date(now);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = formatDate(yesterday, timezone, locale);
+
+    transactions.forEach((tx) => {
+        const txDate = formatDate(tx.performed_at || tx.created_at, timezone, locale);
+
+        let label: string;
+        if (txDate === todayStr) {
+            label = 'Today';
+        } else if (txDate === yesterdayStr) {
+            label = 'Yesterday';
+        } else {
+            label = txDate;
+        }
+
+        if (!groups[label]) {
+            groups[label] = [];
+        }
+        groups[label].push(tx);
+    });
+
+    return groups;
+}
+
+export function calculateMonthlyStats(transactions: any[]): MonthlyStats {
+    let totalIncome = 0;
+    let totalExpense = 0;
+
+    transactions.forEach((tx) => {
+        if (tx.type === 'deposit') {
+            totalIncome += tx.amount;
+        } else if (tx.type === 'withdrawal') {
+            totalExpense += tx.amount;
+        }
+    });
+
+    return {
+        totalIncome,
+        totalExpense,
+        netBalance: totalIncome - totalExpense,
+    };
+}
+
+export function formatMonthYear(date: Date, locale?: string): string {
+    return new Intl.DateTimeFormat(locale || 'en-US', {
+        month: 'long',
+        year: 'numeric',
+    }).format(date);
+}
+
+export function getMonthDateRange(date: Date): { from: Date; to: Date } {
+    const from = new Date(date.getFullYear(), date.getMonth(), 1);
+    const to = new Date(date.getFullYear(), date.getMonth() + 1, 0, 23, 59, 59, 999);
+    return { from, to };
+}
+
