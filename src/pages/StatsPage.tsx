@@ -218,14 +218,6 @@ export default function StatsPage() {
       <div className="px-4 pb-8 max-w-md mx-auto">
         {/* Sticky header + controls */}
         <header className="pt-2 pb-4 sticky top-0 z-10 bg-background/80 backdrop-blur-xl">
-          <button
-            onClick={() => WebApp.close()}
-            className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5" />
-            <span className="font-medium">{t('common.close') || 'Close'}</span>
-          </button>
-
           <div className="mt-3 flex items-center justify-between gap-2">
             <h1 className="text-2xl font-bold">{t('common.stats') || 'Stats'}</h1>
 
