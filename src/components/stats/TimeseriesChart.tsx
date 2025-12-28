@@ -12,6 +12,7 @@ import {
   YAxis,
   Tooltip,
 } from 'recharts';
+import { useTranslation } from 'react-i18next';
 
 function shortLabel(ts: string, groupBy: 'day' | 'week' | 'month') {
   // Expect formats like YYYY-MM-DD (day/week) or YYYY-MM (month) depending on backend.
@@ -31,10 +32,10 @@ function estimateTickInterval(n: number) {
   return Math.floor(n / 7);
 }
 
-function humanKey(name: string) {
-  if (name === 'income') return 'Income';
-  if (name === 'expense') return 'Expense';
-  if (name === 'net') return 'Net';
+function humanKey(name: string, t: any) {
+  if (name === 'income') return t('common.income');
+  if (name === 'expense') return t('common.expense');
+  if (name === 'net') return t('stats.net');
   return name;
 }
 
@@ -60,6 +61,7 @@ function CustomTooltip({
   currencyCode,
   locale,
   groupBy,
+  t,
 }: any) {
   if (!active || !payload?.length) return null;
 
@@ -81,19 +83,19 @@ function CustomTooltip({
 
       {'net' in map && (
         <ValueRow
-          label={humanKey('net')}
+          label={humanKey('net', t)}
           value={formatCurrency(map.net, currencyCode, locale)}
         />
       )}
       {'income' in map && (
         <ValueRow
-          label={humanKey('income')}
+          label={humanKey('income', t)}
           value={formatCurrency(map.income, currencyCode, locale)}
         />
       )}
       {'expense' in map && (
         <ValueRow
-          label={humanKey('expense')}
+          label={humanKey('expense', t)}
           value={formatCurrency(map.expense, currencyCode, locale)}
         />
       )}
@@ -116,6 +118,7 @@ export function TimeseriesChart({
   locale?: string;
   groupBy: 'day' | 'week' | 'month';
 }) {
+  const { t } = useTranslation();
   // Mobile readability: show Net by default; let user toggle income/expense.
   // (Still optional—keeps chart clean.)
   const [showBreakdown, setShowBreakdown] = useState(false);
@@ -177,7 +180,7 @@ export function TimeseriesChart({
                 : 'bg-background/40 border-border/50 text-muted-foreground hover:text-foreground'
             )}
           >
-            {showBreakdown ? 'Net + Breakdown' : 'Net only'}
+            {showBreakdown ? t('stats.netPlusBreakdown') : t('stats.netOnly')}
           </button>
         </div>
 
@@ -186,7 +189,7 @@ export function TimeseriesChart({
             <Skeleton className="h-full w-full rounded-2xl" />
           ) : !data || !points.length ? (
             <div className="h-full rounded-2xl bg-muted/30 flex items-center justify-center text-sm text-muted-foreground">
-              No data
+              {t('stats.noData')}
             </div>
           ) : (
             <>
@@ -213,6 +216,7 @@ export function TimeseriesChart({
                         currencyCode={currencyCode}
                         locale={locale}
                         groupBy={groupBy}
+                        t={t}
                       />
                     }
                   />
@@ -256,7 +260,7 @@ export function TimeseriesChart({
                 <div className="absolute inset-0 pointer-events-none">
                   <div className="absolute inset-0 bg-background/10" />
                   <div className="absolute right-3 top-3 text-[11px] text-muted-foreground">
-                    Updating…
+                    {t('stats.updating')}
                   </div>
                 </div>
               ) : null}
@@ -267,7 +271,7 @@ export function TimeseriesChart({
         {/* tiny helper text */}
         {data && points.length ? (
           <div className="mt-2 text-[11px] text-muted-foreground">
-            Tap points to see exact values.
+            {t('stats.tapPoints')}
           </div>
         ) : null}
       </CardContent>

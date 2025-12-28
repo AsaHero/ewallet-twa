@@ -136,7 +136,7 @@ export default function StatsPage() {
       });
       setTsData(res);
     } catch (e) {
-      setErrorTs(e instanceof Error ? e.message : 'Failed to load trend');
+      setErrorTs(e instanceof Error ? e.message : t('stats.trendError'));
     } finally {
       setLoadingTs(false);
     }
@@ -154,7 +154,7 @@ export default function StatsPage() {
       });
       setCatData(res);
     } catch (e) {
-      setErrorCat(e instanceof Error ? e.message : 'Failed to load categories');
+      setErrorCat(e instanceof Error ? e.message : t('stats.categoriesError'));
     } finally {
       setLoadingCat(false);
     }
@@ -189,9 +189,9 @@ export default function StatsPage() {
     if (!accountIds.length) return t('common.all') || 'All';
     if (accountIds.length === 1) {
       const a = accounts.find((x) => x.id === accountIds[0]);
-      return a?.name || '1 account';
+      return a?.name || t('common.account', { count: 1 });
     }
-    return `${accountIds.length} accounts`;
+    return t('common.account', { count: accountIds.length });
   }, [accountIds, accounts, t]);
 
   if (!isReady || loadingInit) {

@@ -3,6 +3,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import type { SubcategoryStatsView } from '@/core/types';
 import { formatCurrency } from '@/lib/formatters';
 import { cn } from '@/lib/utils';
+import { useTranslation } from 'react-i18next';
 
 export function SubcategoryRankList({
   title,
@@ -19,6 +20,8 @@ export function SubcategoryRankList({
   locale?: string;
   onSelectSubcategory?: (subcategoryId: number) => void;
 }) {
+  const { t } = useTranslation();
+
   return (
     <Card className="border border-border/40 bg-card/40">
       <CardContent className="p-4">
@@ -37,7 +40,7 @@ export function SubcategoryRankList({
               ))}
             </>
           ) : !view || !view.items?.length ? (
-            <div className="py-8 text-center text-sm text-muted-foreground">No subcategories</div>
+            <div className="py-8 text-center text-sm text-muted-foreground">{t('stats.noSubcategories')}</div>
           ) : (
             view.items.slice(0, 14).map((it) => {
               const clickable = !!onSelectSubcategory;
@@ -57,8 +60,8 @@ export function SubcategoryRankList({
                         {it.emoji || '📌'}
                       </div>
                       <div className="min-w-0">
-                        <div className="font-semibold text-sm truncate">{it.name || 'Subcategory'}</div>
-                        <div className="text-xs text-muted-foreground">{it.count} tx</div>
+                        <div className="font-semibold text-sm truncate">{it.name || t('stats.subcategory')}</div>
+                        <div className="text-xs text-muted-foreground">{t('stats.transactions', { count: it.count })}</div>
                       </div>
                     </div>
 
@@ -84,7 +87,7 @@ export function SubcategoryRankList({
           )}
         </div>
 
-        {loading && view ? <div className="mt-3 text-xs text-muted-foreground">Updating…</div> : null}
+        {loading && view ? <div className="mt-3 text-xs text-muted-foreground">{t('stats.updating')}</div> : null}
       </CardContent>
     </Card>
   );

@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { Check, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { Account } from '@/core/types';
 import { cn } from '@/lib/utils';
 
@@ -19,6 +20,7 @@ export function AccountFilterSheet({
   onApply: (ids: string[]) => void;
   title: string;
 }) {
+  const { t } = useTranslation();
   const [local, setLocal] = useState<string[]>(selectedIds);
 
   useEffect(() => {
@@ -86,7 +88,7 @@ export function AccountFilterSheet({
                     allSelected ? 'border-primary/50 bg-primary/10' : 'border-border/50 bg-card/40'
                   )}
                 >
-                  <div className="font-semibold text-sm">All accounts</div>
+                  <div className="font-semibold text-sm">{t('stats.allAccounts')}</div>
                   {allSelected && <Check className="w-5 h-5 text-primary" />}
                 </button>
 
@@ -118,7 +120,7 @@ export function AccountFilterSheet({
                   onClick={apply}
                   className="w-full h-12 rounded-2xl bg-primary text-primary-foreground font-semibold active:scale-[0.99] transition-transform shadow-lg shadow-primary/20"
                 >
-                  Apply
+                  {t('stats.apply')}
                 </button>
                 <div className="h-safe-bottom" />
               </div>

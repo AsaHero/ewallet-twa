@@ -18,7 +18,12 @@
         "done": "Done",
         "optional": "optional",
         "noResults": "No results found",
-        "timezone": "Timezone"
+        "timezone": "Timezone",
+        "all": "All",
+        "back": "Back",
+        "prev": "Prev",
+        "next": "Next",
+        "stats": "Stats"
     },
     "errors": {
         "failedToLoad": "Failed to load data",
@@ -104,5 +109,36 @@
             "apply": "Apply",
             "save": "Save"
         }
+    },
+    "stats": {
+        "title": "Stats",
+        "trend": "Trend",
+        "category": "Category",
+        "subcategory": "Subcategory",
+        "accounts": "Accounts",
+        "topIncomeCategories": "Top income categories",
+        "topExpenseCategories": "Top expense categories",
+        "topSubcategories": "Top subcategories",
+        "viewTransactions": "View transactions",
+        "trendError": "Could not load trend",
+        "categoriesError": "Could not load categories",
+        "subcategoriesError": "Could not load subcategories",
+        "invalidCategoryId": "Invalid category id",
+        "invalidSubcategoryId": "Invalid subcategory id",
+        "accountCount_one": "{{count}} acc",
+        "accountCount_other": "{{count}} acc",
+        "allAccounts": "All accounts",
+        "apply": "Apply",
+        "retry": "Retry",
+        "netPlusBreakdown": "Net + Breakdown",
+        "netOnly": "Net only",
+        "noData": "No data",
+        "updating": "Updating…",
+        "tapPoints": "Tap points to see exact values.",
+        "net": "Net",
+        "noCategories": "No categories",
+        "noSubcategories": "No subcategories",
+        "transactions_one": "{{count}} tx",
+        "transactions_other": "{{count}} tx"
     }
 }

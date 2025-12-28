@@ -127,7 +127,7 @@ export default function SubcategoryStatsPage() {
       });
       setTsData(res);
     } catch (e) {
-      setErrorTs(e instanceof Error ? e.message : 'Failed to load trend');
+      setErrorTs(e instanceof Error ? e.message : t('stats.trendError'));
     } finally {
       setLoadingTs(false);
     }
@@ -159,7 +159,7 @@ export default function SubcategoryStatsPage() {
   if (!Number.isFinite(subId)) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4 text-muted-foreground">
-        Invalid subcategory id
+        {t('stats.invalidSubcategoryId')}
       </div>
     );
   }
@@ -208,7 +208,7 @@ export default function SubcategoryStatsPage() {
               onClick={() => setAccountSheetOpen(true)}
               className="px-3 py-2 rounded-xl bg-card/50 hover:bg-card/70 border border-border/50 text-sm font-semibold transition-colors"
             >
-              {accountIds.length ? `${accountIds.length} acc` : (t('common.all') || 'All')}
+              {accountIds.length ? t('stats.accountCount', { count: accountIds.length }) : (t('common.all') || 'All')}
             </button>
           </div>
 
@@ -258,7 +258,7 @@ export default function SubcategoryStatsPage() {
         <div className="mt-2">
           {errorTs ? (
             <ErrorCard
-              title="Could not load trend"
+              title={t('stats.trendError')}
               message={errorTs}
               onRetry={() => fetchTimeseries()}
             />

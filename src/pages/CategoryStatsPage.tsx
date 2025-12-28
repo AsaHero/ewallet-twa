@@ -133,7 +133,7 @@ export default function CategoryStatsPage() {
       });
       setTsData(res);
     } catch (e) {
-      setErrorTs(e instanceof Error ? e.message : 'Failed to load trend');
+      setErrorTs(e instanceof Error ? e.message : t('stats.trendError'));
     } finally {
       setLoadingTs(false);
     }
@@ -152,7 +152,7 @@ export default function CategoryStatsPage() {
       });
       setSubData(res);
     } catch (e) {
-      setErrorSub(e instanceof Error ? e.message : 'Failed to load subcategories');
+      setErrorSub(e instanceof Error ? e.message : t('stats.subcategoriesError'));
     } finally {
       setLoadingSub(false);
     }
@@ -185,7 +185,7 @@ export default function CategoryStatsPage() {
   if (!Number.isFinite(catId)) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4 text-muted-foreground">
-        Invalid category id
+        {t('stats.invalidCategoryId')}
       </div>
     );
   }
@@ -233,7 +233,7 @@ export default function CategoryStatsPage() {
               onClick={() => setAccountSheetOpen(true)}
               className="px-3 py-2 rounded-xl bg-card/50 hover:bg-card/70 border border-border/50 text-sm font-semibold transition-colors"
             >
-              {accountIds.length ? `${accountIds.length} acc` : (t('common.all') || 'All')}
+              {accountIds.length ? t('stats.accountCount', { count: accountIds.length }) : (t('common.all') || 'All')}
             </button>
           </div>
 
@@ -282,7 +282,7 @@ export default function CategoryStatsPage() {
 
         <div className="mt-2">
           {errorTs ? (
-            <ErrorCard title="Could not load trend" message={errorTs} onRetry={() => fetchTimeseries()} />
+            <ErrorCard title={t('stats.trendError')} message={errorTs} onRetry={() => fetchTimeseries()} />
           ) : (
             <TimeseriesChart
               title={t('stats.trend') || 'Trend'}
@@ -297,7 +297,7 @@ export default function CategoryStatsPage() {
 
         <div className="mt-5">
           {errorSub ? (
-            <ErrorCard title="Could not load subcategories" message={errorSub} onRetry={() => fetchSubcategories()} />
+            <ErrorCard title={t('stats.subcategoriesError')} message={errorSub} onRetry={() => fetchSubcategories()} />
           ) : (
             <SubcategoryRankList
               title={t('stats.topSubcategories') || 'Top subcategories'}

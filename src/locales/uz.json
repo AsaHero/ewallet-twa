@@ -16,7 +16,14 @@
         "expense": "Xarajat",
         "backToHome": "Bosh sahifaga qaytish",
         "done": "Tayyor",
-        "optional": "ixtiyoriy"
+        "optional": "ixtiyoriy",
+        "noResults": "Hech narsa topilmadi",
+        "timezone": "Vaqt mintaqasi",
+        "all": "Hammasi",
+        "back": "Orqaga",
+        "prev": "Oldingi",
+        "next": "Keyingi",
+        "stats": "Statistika"
     },
     "errors": {
         "failedToLoad": "Ma'lumotlarni yuklashda xatolik",
@@ -90,5 +97,36 @@
             "apply": "Tasdiqlash",
             "save": "Saqlash"
         }
+    },
+    "stats": {
+        "title": "Statistika",
+        "trend": "Trend",
+        "category": "Kategoriya",
+        "subcategory": "Subkategoriya",
+        "accounts": "Hisoblar",
+        "topIncomeCategories": "Top daromad kategoriyalari",
+        "topExpenseCategories": "Top xarajat kategoriyalari",
+        "topSubcategories": "Top subkategoriyalar",
+        "viewTransactions": "Tranzaksiyalarni ko'rish",
+        "trendError": "Trendni yuklab bo'lmadi",
+        "categoriesError": "Kategoriyalarni yuklab bo'lmadi",
+        "subcategoriesError": "Subkategoriyalarni yuklab bo'lmadi",
+        "invalidCategoryId": "Noto'g'ri kategoriya ID",
+        "invalidSubcategoryId": "Noto'g'ri subkategoriya ID",
+        "accountCount_one": "{{count}} his",
+        "accountCount_other": "{{count}} his",
+        "allAccounts": "Barcha hisoblar",
+        "apply": "Tasdiqlash",
+        "retry": "Qayta urinish",
+        "netPlusBreakdown": "Sof + Tafsilot",
+        "netOnly": "Faqat sof",
+        "noData": "Ma'lumot yo'q",
+        "updating": "Yangilanmoqda…",
+        "tapPoints": "Aniq qiymatlarni ko'rish uchun nuqtalarga bosing.",
+        "net": "Sof",
+        "noCategories": "Kategoriyalar yo'q",
+        "noSubcategories": "Subkategoriyalar yo'q",
+        "transactions_one": "{{count}} tr",
+        "transactions_other": "{{count}} tr"
     }
 }

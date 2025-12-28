@@ -1,4 +1,5 @@
 import { Card, CardContent } from '@/components/ui/card';
+import { useTranslation } from 'react-i18next';
 
 export function ErrorCard({
   title,
@@ -9,6 +10,8 @@ export function ErrorCard({
   message: string;
   onRetry: () => void;
 }) {
+  const { t } = useTranslation();
+
   return (
     <Card className="border border-border/40 bg-card/40">
       <CardContent className="p-4">
@@ -18,7 +21,7 @@ export function ErrorCard({
           onClick={onRetry}
           className="mt-3 h-10 px-4 rounded-xl bg-primary text-primary-foreground font-semibold active:scale-[0.99] transition-transform"
         >
-          Retry
+          {t('stats.retry')}
         </button>
       </CardContent>
     </Card>

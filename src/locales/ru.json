@@ -20,7 +20,12 @@
         "done": "Готово",
         "optional": "необязательно",
         "noResults": "Ничего не найдено",
-        "timezone": "Часовой пояс"
+        "timezone": "Часовой пояс",
+        "all": "Все",
+        "back": "Назад",
+        "prev": "Назад",
+        "next": "Вперед",
+        "stats": "Статистика"
     },
     "errors": {
         "failedToLoad": "Не удалось загрузить данные",
@@ -105,5 +110,40 @@
             "apply": "Применить",
             "save": "Сохранить"
         }
+    },
+    "stats": {
+        "title": "Статистика",
+        "trend": "Тренд",
+        "category": "Категория",
+        "subcategory": "Подкатегория",
+        "accounts": "Счета",
+        "topIncomeCategories": "Топ категории доходов",
+        "topExpenseCategories": "Топ категории расходов",
+        "topSubcategories": "Топ подкатегории",
+        "viewTransactions": "Показать транзакции",
+        "trendError": "Не удалось загрузить тренд",
+        "categoriesError": "Не удалось загрузить категории",
+        "subcategoriesError": "Не удалось загрузить подкатегории",
+        "invalidCategoryId": "Неверный ID категории",
+        "invalidSubcategoryId": "Неверный ID подкатегории",
+        "accountCount_one": "{{count}} сч",
+        "accountCount_few": "{{count}} сч",
+        "accountCount_many": "{{count}} сч",
+        "accountCount_other": "{{count}} сч",
+        "allAccounts": "Все счета",
+        "apply": "Применить",
+        "retry": "Повторить",
+        "netPlusBreakdown": "Чистый + Детали",
+        "netOnly": "Только чистый",
+        "noData": "Нет данных",
+        "updating": "Обновление…",
+        "tapPoints": "Нажмите на точки, чтобы увидеть точные значения.",
+        "net": "Чистый",
+        "noCategories": "Нет категорий",
+        "noSubcategories": "Нет подкатегорий",
+        "transactions_one": "{{count}} тр",
+        "transactions_few": "{{count}} тр",
+        "transactions_many": "{{count}} тр",
+        "transactions_other": "{{count}} тр"
     }
 }
