@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 import { apiClient } from '@/api/client';
@@ -38,7 +37,6 @@ function hapticSelect() {
 
 function HistoryPage() {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const { isReady } = useTelegramWebApp();
 
   const [user, setUser] = useState<User | null>(null);
