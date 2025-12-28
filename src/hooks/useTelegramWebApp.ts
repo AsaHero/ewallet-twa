@@ -31,9 +31,7 @@ export function useTelegramWebApp() {
             WebApp.expand();
 
             // Request Full screen
-            if (!WebApp.isFullscreen) {
-                WebApp.requestFullscreen();
-            }
+            WebApp.requestFullscreen();
 
             // Enable closing confirmation
             WebApp.enableClosingConfirmation();

@@ -236,7 +236,7 @@ function TransactionPage() {
     WebApp.BackButton.show();
     const handleBack = () => {
         if (mode === 'create') WebApp.close();
-        else navigate('/');
+        else WebApp.close();
     };
     WebApp.BackButton.onClick(handleBack);
     return () => {

@@ -49,7 +49,7 @@ function shiftRange(range: DateRange, direction: 'prev' | 'next'): DateRange {
 export default function StatsPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { isReady, haptic } = useTelegramWebApp();
+  const { isReady, haptic, WebApp } = useTelegramWebApp();
 
   const [user, setUser] = useState<User | null>(null);
   const [accounts, setAccounts] = useState<Account[]>([]);
@@ -219,11 +219,11 @@ export default function StatsPage() {
         {/* Sticky header + controls */}
         <header className="pt-2 pb-4 sticky top-0 z-10 bg-background/80 backdrop-blur-xl">
           <button
-            onClick={() => navigate('/')}
+            onClick={() => WebApp.close()}
             className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
-            <span className="font-medium">{t('common.backToHome')}</span>
+            <span className="font-medium">{t('common.close') || 'Close'}</span>
           </button>
 
           <div className="mt-3 flex items-center justify-between gap-2">
