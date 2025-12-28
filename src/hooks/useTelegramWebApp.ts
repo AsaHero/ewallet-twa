@@ -83,5 +83,6 @@ export function useTelegramWebApp() {
         initData: WebApp.initData,
         themeParams: WebApp.themeParams,
         colorScheme: WebApp.colorScheme,
+        haptic: WebApp.HapticFeedback,
     };
 }

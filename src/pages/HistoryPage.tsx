@@ -284,18 +284,11 @@ function HistoryPage() {
       transition={{ duration: 0.18 }}
     >
       <div className="h-safe-top" />
+      <div className="h-14" />
 
       <div className="px-4 pt-3 pb-8 max-w-md mx-auto">
         {/* Header */}
         <header className="sticky top-0 z-10 bg-background/85 backdrop-blur-md -mx-4 px-4 pt-2 pb-3 border-b border-border/40">
-          <button
-            onClick={() => navigate('/')}
-            className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5" />
-            <span className="font-semibold">{t('common.backToHome')}</span>
-          </button>
-
           <div className="mt-2 flex items-end justify-between">
             <h1 className="text-xl font-bold text-foreground">{t('common.history')}</h1>
             {total > 0 && (

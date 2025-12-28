@@ -12,6 +12,9 @@ import { cn } from './lib/utils';
 import HistoryPage from './pages/HistoryPage';
 import TransactionPage from './pages/TransactionPage';
 import { useAuth } from './contexts/AuthContext';
+import StatsPage from './pages/StatsPage';
+import CategoryStatsPage from './pages/CategoryStatsPage';
+import SubcategoryStatsPage from './pages/SubcategoryStatsPage';
 
 function HomePage() {
   const { t, i18n } = useTranslation();
@@ -336,6 +339,9 @@ function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/history" element={<HistoryPage />} />
         <Route path="/transaction" element={<TransactionPage />} />
+        <Route path="/stats" element={<StatsPage />} />
+        <Route path="/stats/category/:categoryId" element={<CategoryStatsPage />} />
+        <Route path="/stats/subcategory/:subcategoryId" element={<SubcategoryStatsPage />} />
       </Routes>
     </BrowserRouter>
   );

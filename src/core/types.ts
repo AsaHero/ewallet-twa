@@ -67,21 +67,6 @@ export interface PaginationResponse {
     offset: number;
 }
 
-export interface TransactionStats {
-    total_income: number;
-    total_expense: number;
-    balance: number;
-    income_by_category: CategoryStat[];
-    expense_by_category: CategoryStat[];
-}
-
-export interface CategoryStat {
-    category_id: number;
-    category_name: string;
-    category_emoji?: string;
-    total: number;
-}
-
 export interface ParsedTransaction {
   type: 'withdrawal' | 'deposit';
   amount: number;
@@ -108,3 +93,73 @@ export interface BotUpdateTransactionRequest {
   };
   data: ParsedTransaction;
 }
+
+export type StatsGroupBy = 'day' | 'week' | 'month';
+export type StatsTxType = 'deposit' | 'withdrawal' | 'transfer' | 'adjustment';
+
+export type TimeseriesDataPoint = {
+  ts: string;
+  income: number;
+  expense: number;
+  net: number;
+  count: number;
+};
+
+export type TimeseriesTotals = {
+  income: number;
+  expense: number;
+  net: number;
+  count: number;
+};
+
+export type TimeseriesStatsView = {
+  from: string;
+  to: string;
+  group_by: StatsGroupBy;
+  points: TimeseriesDataPoint[];
+  totals: TimeseriesTotals;
+};
+
+export type CategoryStatsView = {
+  from: string;
+  to: string;
+  type: string; // deposit/withdrawal
+  totals: CategoryStatsTotals;
+  items: CategoryStatsItem[];
+};
+
+export type SubcategoryStatsView = {
+  from: string;
+  to: string;
+  type: string; // deposit/withdrawal
+  totals: SubcategoryStatsTotals;
+  items: SubcategoryStatsItem[];
+};
+
+export type CategoryStatsItem = {
+  category_id: number;
+  name: string;
+  emoji: string;
+  total: number;
+  count: number;
+  share: number;
+};
+
+export type CategoryStatsTotals = {
+  total: number;
+  count: number;
+};
+
+export type SubcategoryStatsItem = {
+  subcategory_id: number;
+  name: string;
+  emoji: string;
+  total: number;
+  count: number;
+  share: number;
+};
+
+export type SubcategoryStatsTotals = {
+  total: number;
+  count: number;
+};

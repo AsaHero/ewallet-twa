@@ -262,6 +262,8 @@ function TransactionPage() {
   return (
     <FormProvider {...form}>
       <div className="min-h-screen bg-background pb-24">
+        <div className="h-safe-top" />
+        <div className="h-14" />
         {/* Header */}
         <div className="sticky top-0 bg-background/80 backdrop-blur-lg border-b border-border/40 z-10">
           <div className="max-w-md mx-auto px-4 py-4">

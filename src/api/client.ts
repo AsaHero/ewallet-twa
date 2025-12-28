@@ -1,5 +1,5 @@
 import axios, { type AxiosInstance, type AxiosError } from 'axios';
-import type { Account, User, Transaction, TransactionsResponse, TransactionStats, Category, Subcategory } from '../core/types';
+import type { Account, User, Transaction, TransactionsResponse, Category, Subcategory, StatsGroupBy, StatsTxType, TimeseriesStatsView, CategoryStatsView, SubcategoryStatsView } from '../core/types';
 import { authService } from '../services/auth.service';
 
 class APIClient {
@@ -111,8 +111,9 @@ class APIClient {
         offset?: number;
         from?: string;  // ISO date string
         to?: string;    // ISO date string
-        type?: 'withdrawal' | 'deposit';
+        type?: StatsTxType;
         category_ids?: number[];
+        subcategory_ids?: number[];
         account_ids?: string[];
         min_amount?: number;
         max_amount?: number;
@@ -164,15 +165,45 @@ class APIClient {
         await this.client.delete(`/transactions/${id}`);
     }
 
-    // --- Stats ---
-    async getStats(params?: { from?: string; to?: string; account_id?: string }): Promise<TransactionStats> {
-        const res = await this.client.get<TransactionStats>('/stats/summary', { params });
-        return res.data;
-    }
-
     // --- User ---
     async updateUser(data: { currency_code?: string; language_code?: string; timezone?: string }): Promise<User> {
         const res = await this.client.patch<User>('/users/me', data);
+        return res.data;
+    }
+
+    // --- Stats ---
+    async getStatsTimeseries(params: {
+        from: string;
+        to: string;
+        group_by: StatsGroupBy;
+        type?: StatsTxType;
+        account_ids?: string[];
+        category_ids?: number[];
+        subcategory_ids?: number[];
+    }): Promise<TimeseriesStatsView> {
+        const res = await this.client.get<TimeseriesStatsView>('/stats/timeseries', { params });
+        return res.data;
+    }
+
+    async getStatsByCategory(params: {
+        from: string;
+        to: string;
+        type?: 'deposit' | 'withdrawal';
+        account_ids?: string[];
+        category_ids?: number[];
+    }): Promise<CategoryStatsView> {
+        const res = await this.client.get<CategoryStatsView>('/stats/by-category', { params });
+        return res.data;
+    }
+
+    async getStatsBySubcategory(params: {
+        from: string;
+        to: string;
+        type?: 'deposit' | 'withdrawal';
+        account_ids?: string[];
+        category_ids?: number[];
+    }): Promise<SubcategoryStatsView> {
+        const res = await this.client.get<SubcategoryStatsView>('/stats/by-subcategory', { params });
         return res.data;
     }
 }
