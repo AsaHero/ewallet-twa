@@ -48,7 +48,7 @@ function shiftRange(range: DateRange, direction: 'prev' | 'next'): DateRange {
 export default function StatsPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { isReady, haptic, WebApp } = useTelegramWebApp();
+  const { isReady, haptic } = useTelegramWebApp();
 
   const [user, setUser] = useState<User | null>(null);
   const [accounts, setAccounts] = useState<Account[]>([]);
