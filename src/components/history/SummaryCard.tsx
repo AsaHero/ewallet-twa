@@ -1,7 +1,7 @@
 
 import { ArrowLeft, ArrowRight, ChevronDown } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { format, isSameMonth, isSameYear, startOfMonth, endOfMonth } from 'date-fns';
+import { format, isSameMonth, isSameYear, endOfMonth } from 'date-fns';
 import { ru, enUS, uz } from 'date-fns/locale';
 import { Card, CardContent } from '../ui/card';
 import { formatCurrency } from '@/lib/formatters';
