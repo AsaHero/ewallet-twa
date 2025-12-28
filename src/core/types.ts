@@ -56,6 +56,9 @@ export interface Transaction {
 export interface TransactionsResponse {
     items: Transaction[];
     pagination: PaginationResponse;
+    total_income: number;
+    total_expense: number;
+    net_balance: number;
 }
 
 export interface PaginationResponse {

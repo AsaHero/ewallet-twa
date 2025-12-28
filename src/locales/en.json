@@ -90,6 +90,19 @@
                 "categories": "Categories: {{count}}",
                 "amount": "Amount: {{min}} – {{max}}"
             }
+        },
+        "dateRange": {
+            "title": "Select Period",
+            "custom": "Custom Range",
+            "thisMonth": "This Month",
+            "lastMonth": "Last Month",
+            "thisWeek": "This Week",
+            "lastWeek": "Last Week",
+            "last30Days": "Last 30 Days",
+            "from": "From",
+            "to": "To",
+            "apply": "Apply",
+            "save": "Save"
         }
     }
 }

@@ -1,18 +1,56 @@
-import { ArrowLeft, ArrowRight } from 'lucide-react';
+
+import { ArrowLeft, ArrowRight, ChevronDown } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { format, isSameMonth, isSameYear, startOfMonth, endOfMonth } from 'date-fns';
+import { ru, enUS, uz } from 'date-fns/locale';
 import { Card, CardContent } from '../ui/card';
-import { formatCurrency, formatMonthYear } from '@/lib/formatters';
+import { formatCurrency } from '@/lib/formatters';
 import { cn } from '@/lib/utils';
+import type { DateRange } from './DateRangeSheet';
 
 interface SummaryCardProps {
-  selectedMonth: Date;
+  dateRange: DateRange;
   totalIncome: number;
   totalExpense: number;
   currencyCode: string;
   locale?: string;
-  onMonthChange: (direction: 'prev' | 'next') => void;
+  onPrev: () => void;
+  onNext: () => void;
   canGoPrev?: boolean;
   canGoNext?: boolean;
+  onHeaderClick: () => void;
+}
+
+function getLocaleObject(locale?: string) {
+    if (locale === 'ru') return ru;
+    if (locale === 'uz') return uz;
+    return enUS;
+}
+
+function formatDateRange(from: Date, to: Date, locale?: string) {
+    const loc = getLocaleObject(locale);
+
+    // Check if it's a full month
+    if (
+        isSameMonth(from, to) &&
+        from.getDate() === 1 &&
+        to.getDate() === endOfMonth(from).getDate()
+    ) {
+        return format(from, 'LLLL yyyy', { locale: loc });
+    }
+
+    // Same year
+    if (isSameYear(from, to)) {
+        // Same month but partial
+        if (isSameMonth(from, to)) {
+            return `${format(from, 'd', { locale: loc })} - ${format(to, 'd MMMM yyyy', { locale: loc })}`;
+        }
+        // Different months
+        return `${format(from, 'd MMM', { locale: loc })} - ${format(to, 'd MMM yyyy', { locale: loc })}`;
+    }
+
+    // Different years
+    return `${format(from, 'd MMM yyyy', { locale: loc })} - ${format(to, 'd MMM yyyy', { locale: loc })}`;
 }
 
 function softenWrapCurrency(input: string) {
@@ -26,14 +64,16 @@ function softenWrapCurrency(input: string) {
 }
 
 export function SummaryCard({
-  selectedMonth,
+  dateRange,
   totalIncome,
   totalExpense,
   currencyCode,
   locale,
-  onMonthChange,
+  onPrev,
+  onNext,
   canGoPrev = true,
   canGoNext = true,
+  onHeaderClick,
 }: SummaryCardProps) {
   const { t } = useTranslation();
   const netBalance = totalIncome - totalExpense;
@@ -46,10 +86,10 @@ export function SummaryCard({
   return (
     <Card className="border-0 bg-gradient-to-br from-primary/10 to-primary/5 backdrop-blur-sm overflow-hidden">
       <CardContent className="p-5 overflow-hidden">
-        {/* Month Selector */}
+        {/* Date Selector Header */}
         <div className="flex items-center justify-between mb-5">
           <button
-            onClick={() => onMonthChange('prev')}
+            onClick={onPrev}
             disabled={!canGoPrev}
             className={cn(
               'p-2 rounded-full transition-all',
@@ -57,17 +97,23 @@ export function SummaryCard({
                 ? 'hover:bg-primary/10 text-foreground active:scale-[0.98]'
                 : 'opacity-30 cursor-not-allowed text-muted-foreground'
             )}
-            aria-label="Previous month"
+            aria-label="Previous period"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
 
-          <h2 className="text-[15px] font-bold text-foreground tracking-tight">
-            {formatMonthYear(selectedMonth, locale)}
-          </h2>
+          <button
+            onClick={onHeaderClick}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-primary/10 active:scale-95 transition-all group"
+          >
+            <h2 className="text-[15px] font-bold text-foreground tracking-tight capitalize">
+                {formatDateRange(dateRange.from, dateRange.to, locale)}
+            </h2>
+            <ChevronDown className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+          </button>
 
           <button
-            onClick={() => onMonthChange('next')}
+            onClick={onNext}
             disabled={!canGoNext}
             className={cn(
               'p-2 rounded-full transition-all',
@@ -75,7 +121,7 @@ export function SummaryCard({
                 ? 'hover:bg-primary/10 text-foreground active:scale-[0.98]'
                 : 'opacity-30 cursor-not-allowed text-muted-foreground'
             )}
-            aria-label="Next month"
+            aria-label="Next period"
           >
             <ArrowRight className="w-5 h-5" />
           </button>

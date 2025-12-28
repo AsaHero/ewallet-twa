@@ -19,6 +19,8 @@ export type TransactionsQuery = {
 type State = {
   items: Transaction[];
   total: number;
+  total_income: number;
+  total_expense: number;
   offset: number;
   limit: number;
   isInitialLoading: boolean;
@@ -43,6 +45,8 @@ export function useInfiniteTransactions(query: TransactionsQuery) {
   const [state, setState] = useState<State>({
     items: [],
     total: 0,
+    total_income: 0,
+    total_expense: 0,
     offset: 0,
     limit,
     isInitialLoading: true,
@@ -100,6 +104,8 @@ export function useInfiniteTransactions(query: TransactionsQuery) {
             ...s,
             items: merged,
             total: res.pagination.total,
+            total_income: res.total_income,
+            total_expense: res.total_expense,
             offset: merged.length,
             limit,
             isInitialLoading: false,
@@ -140,6 +146,8 @@ export function useInfiniteTransactions(query: TransactionsQuery) {
     setState({
       items: [],
       total: 0,
+      total_income: 0,
+      total_expense: 0,
       offset: 0,
       limit,
       isInitialLoading: true,
@@ -171,6 +179,8 @@ export function useInfiniteTransactions(query: TransactionsQuery) {
   return {
     items: state.items,
     total: state.total,
+    total_income: state.total_income,
+    total_expense: state.total_expense,
     isInitialLoading: state.isInitialLoading,
     isFetchingNext: state.isFetchingNext,
     error: state.error,

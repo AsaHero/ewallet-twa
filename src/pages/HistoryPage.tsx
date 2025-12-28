@@ -12,8 +12,6 @@ import { cn } from '@/lib/utils';
 import {
   formatCurrency,
   groupTransactionsByDate,
-  calculateMonthlyStats,
-  getMonthDateRange,
   formatDateTime,
 } from '@/lib/formatters';
 import { useTelegramWebApp } from '@/hooks/useTelegramWebApp';
@@ -22,8 +20,10 @@ import { SummaryCard } from '@/components/history/SummaryCard';
 import { FilterChips, type FilterType } from '@/components/history/FilterChips';
 import { TransactionDetailModal } from '@/components/history/TransactionDetailModal';
 import { FiltersSheet, type HistoryFilters } from '@/components/history/FiltersSheet';
+import { DateRangeSheet, type DateRange } from '@/components/history/DateRangeSheet';
 import { useInfiniteTransactions } from '@/hooks/useInfiniteTransactions';
 import { useIntersection } from '@/hooks/useIntersection';
+import { startOfMonth, endOfMonth, addMonths, subMonths, addWeeks, subWeeks, differenceInCalendarDays, addDays, endOfDay, isBefore } from 'date-fns';
 
 function hapticSelect() {
   // safe in web too
@@ -50,7 +50,15 @@ function HistoryPage() {
   const [error, setError] = useState<string | null>(null);
 
   // UI state
-  const [selectedMonth, setSelectedMonth] = useState(new Date());
+  const [dateRange, setDateRange] = useState<DateRange>(() => {
+    const now = new Date();
+    return {
+      from: startOfMonth(now),
+      to: endOfMonth(now),
+      label: 'thisMonth'
+    };
+  });
+  const [datePickerOpen, setDatePickerOpen] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState<FilterType>('all');
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
 
@@ -109,7 +117,7 @@ function HistoryPage() {
     return m;
   }, [accounts]);
 
-  const { from, to } = useMemo(() => getMonthDateRange(selectedMonth), [selectedMonth]);
+  const { from, to } = dateRange;
 
   const txType = useMemo(() => {
     if (selectedFilter === 'income') return 'deposit' as const;
@@ -134,6 +142,8 @@ function HistoryPage() {
   const {
     items: transactions,
     total,
+    total_income,
+    total_expense,
     isInitialLoading,
     isFetchingNext,
     error: txError,
@@ -153,15 +163,66 @@ function HistoryPage() {
 
   const canGoNext = () => {
     const now = new Date();
-    return selectedMonth.getMonth() < now.getMonth() || selectedMonth.getFullYear() < now.getFullYear();
+    // Allow going next if 'to' is before end of today (approx)
+    // Or just check if the current range is fully in the past
+    // Simple check: if TO is before Today
+    return isBefore(dateRange.to, endOfDay(now));
   };
 
-  const handleMonthChange = (direction: 'prev' | 'next') => {
+  const handlePrev = () => {
     hapticSelect();
-    const newMonth = new Date(selectedMonth);
-    if (direction === 'prev') newMonth.setMonth(newMonth.getMonth() - 1);
-    else newMonth.setMonth(newMonth.getMonth() + 1);
-    setSelectedMonth(newMonth);
+    const { from, to, label } = dateRange;
+
+    if (label === 'thisMonth' || label === 'lastMonth') {
+        const newFrom = subMonths(from, 1);
+        const newTo = endOfMonth(newFrom);
+        setDateRange({ from: newFrom, to: newTo, label });
+    } else if (label === 'thisWeek' || label === 'lastWeek') {
+
+        // Easier: sub 1 week from both keys
+        // But date-fns `subWeeks` preserves day of week?
+        // Let's just shift by 7 days
+        setDateRange({
+            from: subWeeks(from, 1),
+            to: subWeeks(to, 1),
+            label
+        });
+    } else {
+        // Custom or 30 days: shift by duration
+        const diff = differenceInCalendarDays(to, from);
+        // shift by (diff + 1) days
+        const shift = diff + 1;
+        setDateRange({
+            from: addDays(from, -shift),
+            to: addDays(to, -shift),
+            label: 'custom'
+        });
+    }
+  };
+
+  const handleNext = () => {
+    hapticSelect();
+    const { from, to, label } = dateRange;
+
+    if (label === 'thisMonth' || label === 'lastMonth') {
+        const newFrom = addMonths(from, 1);
+        const newTo = endOfMonth(newFrom);
+        setDateRange({ from: newFrom, to: newTo, label });
+    } else if (label === 'thisWeek' || label === 'lastWeek') {
+        setDateRange({
+            from: addWeeks(from, 1),
+            to: addWeeks(to, 1),
+            label
+        });
+    } else {
+        const diff = differenceInCalendarDays(to, from);
+        const shift = diff + 1;
+        setDateRange({
+            from: addDays(from, shift),
+            to: addDays(to, shift),
+            label: 'custom'
+        });
+    }
   };
 
   const handleFilterChange = (filter: FilterType) => {
@@ -180,7 +241,7 @@ function HistoryPage() {
     return groupTransactionsByDate(transactions, user?.timezone, user?.language_code);
   }, [transactions, user?.timezone, user?.language_code]);
 
-  const stats = useMemo(() => calculateMonthlyStats(transactions), [transactions]);
+
 
   if (loadingBootstrap) {
     return (
@@ -248,12 +309,14 @@ function HistoryPage() {
         {/* Summary */}
         <div className="mt-4">
           <SummaryCard
-            selectedMonth={selectedMonth}
-            totalIncome={stats.totalIncome}
-            totalExpense={stats.totalExpense}
+            dateRange={dateRange}
+            totalIncome={total_income}
+            totalExpense={total_expense}
             currencyCode={user?.currency_code || 'USD'}
             locale={user?.language_code}
-            onMonthChange={handleMonthChange}
+            onPrev={handlePrev}
+            onNext={handleNext}
+            onHeaderClick={() => setDatePickerOpen(true)}
             canGoNext={canGoNext()}
           />
         </div>
@@ -462,6 +525,16 @@ function HistoryPage() {
         onApply={(v) => {
           hapticSelect();
           setFilters(v);
+        }}
+      />
+
+      <DateRangeSheet
+        open={datePickerOpen}
+        onOpenChange={setDatePickerOpen}
+        value={dateRange}
+        onApply={(v) => {
+            hapticSelect();
+            setDateRange(v);
         }}
       />
 
