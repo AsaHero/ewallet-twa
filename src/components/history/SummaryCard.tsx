@@ -1,4 +1,3 @@
-
 import { ArrowLeft, ArrowRight, ChevronDown } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { format, isSameMonth, isSameYear, endOfMonth } from 'date-fns';
@@ -7,6 +6,7 @@ import { Card, CardContent } from '../ui/card';
 import { formatCurrency } from '@/lib/formatters';
 import { cn } from '@/lib/utils';
 import type { DateRange } from './DateRangeSheet';
+import { useMemo } from 'react';
 
 interface SummaryCardProps {
   dateRange: DateRange;
@@ -22,43 +22,45 @@ interface SummaryCardProps {
 }
 
 function getLocaleObject(locale?: string) {
-    if (locale === 'ru') return ru;
-    if (locale === 'uz') return uz;
-    return enUS;
+  const l = (locale || 'en').toLowerCase();
+  if (l.startsWith('ru')) return ru;
+  if (l.startsWith('uz')) return uz;
+  return enUS;
 }
 
 function formatDateRange(from: Date, to: Date, locale?: string) {
-    const loc = getLocaleObject(locale);
+  const loc = getLocaleObject(locale);
 
-    // Check if it's a full month
-    if (
-        isSameMonth(from, to) &&
-        from.getDate() === 1 &&
-        to.getDate() === endOfMonth(from).getDate()
-    ) {
-        return format(from, 'LLLL yyyy', { locale: loc });
+  const fromDay = from.getDate();
+  const toDay = to.getDate();
+
+  // Full month
+  if (
+    isSameMonth(from, to) &&
+    fromDay === 1 &&
+    toDay === endOfMonth(from).getDate()
+  ) {
+    return format(from, 'LLLL yyyy', { locale: loc });
+  }
+
+  // Same year
+  if (isSameYear(from, to)) {
+    if (isSameMonth(from, to)) {
+      return `${format(from, 'd', { locale: loc })} - ${format(to, 'd MMMM yyyy', { locale: loc })}`;
     }
+    return `${format(from, 'd MMM', { locale: loc })} - ${format(to, 'd MMM yyyy', { locale: loc })}`;
+  }
 
-    // Same year
-    if (isSameYear(from, to)) {
-        // Same month but partial
-        if (isSameMonth(from, to)) {
-            return `${format(from, 'd', { locale: loc })} - ${format(to, 'd MMMM yyyy', { locale: loc })}`;
-        }
-        // Different months
-        return `${format(from, 'd MMM', { locale: loc })} - ${format(to, 'd MMM yyyy', { locale: loc })}`;
-    }
-
-    // Different years
-    return `${format(from, 'd MMM yyyy', { locale: loc })} - ${format(to, 'd MMM yyyy', { locale: loc })}`;
+  // Different years
+  return `${format(from, 'd MMM yyyy', { locale: loc })} - ${format(to, 'd MMM yyyy', { locale: loc })}`;
 }
 
 function softenWrapCurrency(input: string) {
-  // Intl often uses NBSP (non-breaking space) which prevents wrapping and can cause horizontal scrolling.
-  // We keep precision 100% but make wrapping possible.
+  // Keep precision 100% but allow wrap INSIDE card.
+  // 1) replace NBSP with normal space
+  // 2) allow break after commas/spaces (not between digits)
   return input
     .replace(/\u00A0/g, ' ')
-    // allow wrapping after common separators without breaking digits arbitrarily:
     .replace(/,/g, ',\u200B')
     .replace(/ /g, ' \u200B');
 }
@@ -76,18 +78,33 @@ export function SummaryCard({
   onHeaderClick,
 }: SummaryCardProps) {
   const { t } = useTranslation();
+
   const netBalance = totalIncome - totalExpense;
   const isPositive = netBalance >= 0;
 
-  const incomeText = softenWrapCurrency(formatCurrency(totalIncome, currencyCode, locale));
-  const expenseText = softenWrapCurrency(formatCurrency(totalExpense, currencyCode, locale));
-  const netText = softenWrapCurrency(formatCurrency(netBalance, currencyCode, locale));
+  const headerText = useMemo(
+    () => formatDateRange(dateRange.from, dateRange.to, locale),
+    [dateRange.from, dateRange.to, locale]
+  );
+
+  const incomeText = useMemo(
+    () => softenWrapCurrency(formatCurrency(totalIncome, currencyCode, locale)),
+    [totalIncome, currencyCode, locale]
+  );
+  const expenseText = useMemo(
+    () => softenWrapCurrency(formatCurrency(totalExpense, currencyCode, locale)),
+    [totalExpense, currencyCode, locale]
+  );
+  const netText = useMemo(
+    () => softenWrapCurrency(formatCurrency(netBalance, currencyCode, locale)),
+    [netBalance, currencyCode, locale]
+  );
 
   return (
     <Card className="border-0 bg-gradient-to-br from-primary/10 to-primary/5 backdrop-blur-sm overflow-hidden">
       <CardContent className="p-5 overflow-hidden">
         {/* Date Selector Header */}
-        <div className="flex items-center justify-between mb-5">
+        <div className="flex items-center justify-between mb-5 gap-2">
           <button
             onClick={onPrev}
             disabled={!canGoPrev}
@@ -104,12 +121,13 @@ export function SummaryCard({
 
           <button
             onClick={onHeaderClick}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-primary/10 active:scale-95 transition-all group"
+            className="min-w-0 flex-1 flex items-center justify-center gap-2 px-3 py-1.5 rounded-xl hover:bg-primary/10 active:scale-95 transition-all group"
+            aria-label="Select date range"
           >
-            <h2 className="text-[15px] font-bold text-foreground tracking-tight capitalize">
-                {formatDateRange(dateRange.from, dateRange.to, locale)}
+            <h2 className="min-w-0 text-[15px] font-bold text-foreground tracking-tight capitalize truncate">
+              {headerText}
             </h2>
-            <ChevronDown className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+            <ChevronDown className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
           </button>
 
           <button
@@ -139,9 +157,7 @@ export function SummaryCard({
             <p
               className={cn(
                 'text-green-500 font-extrabold tabular-nums tracking-tight leading-tight',
-                // responsive size; smaller on tiny screens
                 'text-[clamp(14px,4.8vw,22px)]',
-                // allow wrapping INSIDE the card without causing horizontal scroll:
                 'whitespace-normal break-words overflow-hidden'
               )}
             >
@@ -171,7 +187,9 @@ export function SummaryCard({
         {/* Net Balance */}
         <div className="pt-4 border-t border-border/50 min-w-0 overflow-hidden">
           <div className="flex items-start justify-between gap-3 min-w-0">
-            <span className="text-sm text-muted-foreground pt-[2px]">{t('history.netBalance')}</span>
+            <span className="text-sm text-muted-foreground pt-[2px]">
+              {t('history.netBalance')}
+            </span>
 
             <span
               className={cn(
