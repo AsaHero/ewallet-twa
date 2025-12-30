@@ -36,6 +36,7 @@ export function TransactionDetailModal({
     transaction?.note || (transaction?.type === 'deposit' ? t('transaction.income') : t('transaction.expense'));
 
   const isIncome = transaction?.type === 'deposit';
+  const isPositive = (transaction?.amount ?? 0) >= 0;
 
   const hasFx =
     transaction?.original_amount !== undefined &&
@@ -86,11 +87,11 @@ export function TransactionDetailModal({
                   <p
                     className={cn(
                       'text-3xl font-bold tabular-nums',
-                      isIncome ? 'text-green-500' : 'text-red-500'
+                      isPositive ? 'text-green-500' : 'text-red-500'
                     )}
                   >
-                    {isIncome ? '+' : '-'}
-                    {formatCurrency(transaction.amount, transaction.currency_code, locale)}
+                    {isPositive ? '+' : '-'}
+                    {formatCurrency(Math.abs(transaction.amount), transaction.currency_code, locale)}
                   </p>
                 </div>
 

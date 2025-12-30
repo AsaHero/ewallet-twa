@@ -206,9 +206,9 @@ export function calculateMonthlyStats(transactions: any[]): MonthlyStats {
 
     transactions.forEach((tx) => {
         if (tx.type === 'deposit') {
-            totalIncome += tx.amount;
+            totalIncome += tx.amount; // Should be positive
         } else if (tx.type === 'withdrawal') {
-            totalExpense += tx.amount;
+            totalExpense += Math.abs(tx.amount); // Should be negative, so take absolute value
         }
     });
 

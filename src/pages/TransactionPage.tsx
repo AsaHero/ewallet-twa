@@ -110,7 +110,7 @@ function TransactionPage() {
           const transaction = await apiClient.getTransaction(transactionId);
           reset({
             type: transaction.type,
-            amount: transaction.amount,
+            amount: Math.abs(transaction.amount), // Convert signed amount to unsigned for form
             currency: user.currency_code || transaction.currency_code,
             category_id: transaction.category_id,
             subcategory_id: transaction.subcategory_id,
@@ -126,7 +126,7 @@ function TransactionPage() {
           const parsedData = JSON.parse(decodeURIComponent(dataParam));
           reset({
             type: parsedData.type || 'withdrawal',
-            amount: parsedData.amount || 0,
+            amount: parsedData.amount ? Math.abs(parsedData.amount) : 0, // Convert to unsigned for form
             currency: user.currency_code || 'USD',
             category_id: parsedData.category_id,
             subcategory_id: parsedData.subcategory_id,

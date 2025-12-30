@@ -403,6 +403,7 @@ function HistoryPage() {
                         const category = transaction.category_id ? categoryById.get(transaction.category_id) : undefined;
                         const subcategory = transaction.subcategory_id ? subcategoryById.get(transaction.subcategory_id) : undefined;
                         const account = transaction.account_id ? accountById.get(transaction.account_id) : undefined;
+                        const isPositive = transaction.amount >= 0;
                         const isIncome = transaction.type === 'deposit';
 
                         return (
@@ -425,7 +426,7 @@ function HistoryPage() {
                                     <div
                                       className={cn(
                                         'w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 border border-border/30',
-                                        isIncome ? 'bg-green-500/10' : 'bg-red-500/10'
+                                        isPositive ? 'bg-green-500/10' : 'bg-red-500/10'
                                       )}
                                     >
                                       <div className="text-xl">
@@ -459,12 +460,12 @@ function HistoryPage() {
                                   <p
                                     className={cn(
                                       'font-bold tabular-nums text-base ml-3 flex-shrink-0',
-                                      isIncome ? 'text-green-500' : 'text-red-500'
+                                      isPositive ? 'text-green-500' : 'text-red-500'
                                     )}
                                   >
-                                    {isIncome ? '+' : '-'}
+                                    {isPositive ? '+' : '-'}
                                     {formatCurrency(
-                                      transaction.amount,
+                                      Math.abs(transaction.amount),
                                       transaction.currency_code,
                                       user?.language_code
                                     )}
