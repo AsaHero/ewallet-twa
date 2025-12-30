@@ -79,7 +79,7 @@ export function SummaryCard({
 }: SummaryCardProps) {
   const { t } = useTranslation();
 
-  const netBalance = totalIncome - totalExpense;
+  const netBalance = totalIncome + totalExpense;
   const isPositive = netBalance >= 0;
 
   const headerText = useMemo(
