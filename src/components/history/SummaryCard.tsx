@@ -179,7 +179,7 @@ export function SummaryCard({
                 'whitespace-normal break-words overflow-hidden'
               )}
             >
-              -{expenseText}
+              {expenseText}
             </p>
           </div>
         </div>
