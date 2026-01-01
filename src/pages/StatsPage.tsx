@@ -245,6 +245,7 @@ export default function StatsPage() {
             dateRange={dateRange}
             totalIncome={totals?.income ?? 0}
             totalExpense={totals?.expense ?? 0}
+            netBalance={totals?.net ?? 0}
             currencyCode={currencyCode}
             locale={locale}
             onPrev={onPrev}

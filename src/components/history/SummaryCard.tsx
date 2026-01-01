@@ -12,6 +12,7 @@ interface SummaryCardProps {
   dateRange: DateRange;
   totalIncome: number;
   totalExpense: number;
+  netBalance: number;
   currencyCode: string;
   locale?: string;
   onPrev: () => void;
@@ -69,6 +70,7 @@ export function SummaryCard({
   dateRange,
   totalIncome,
   totalExpense,
+  netBalance,
   currencyCode,
   locale,
   onPrev,
@@ -79,9 +81,7 @@ export function SummaryCard({
 }: SummaryCardProps) {
   const { t } = useTranslation();
 
-  const netBalance = totalIncome + totalExpense;
   const isPositive = netBalance >= 0;
-
   const headerText = useMemo(
     () => formatDateRange(dateRange.from, dateRange.to, locale),
     [dateRange.from, dateRange.to, locale]

@@ -34,21 +34,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         token = authService.getToken();
 
         if (!token && initData) {
-          // Try initData authentication
-          try {
-            await authService.authenticateWithInitData(initData);
-          } catch (err) {
-            // Fallback to user ID authentication
-            if (tgUser) {
-              await authService.authenticateWithUserId(tgUser.id, {
-                first_name: tgUser.first_name,
-                last_name: tgUser.last_name,
-                username: tgUser.username,
-                language_code: tgUser.language_code,
-              });
-            } else {
-              throw new Error('No Telegram user data available');
-            }
+          if (tgUser) {
+            await authService.authenticateWithUserId(tgUser.id, {
+              first_name: tgUser.first_name,
+              last_name: tgUser.last_name,
+              username: tgUser.username,
+              language_code: tgUser.language_code,
+            });
+          } else {
+            throw new Error('No Telegram user data available');
           }
         }
       }
