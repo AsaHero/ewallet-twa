@@ -7,6 +7,7 @@ import { format, isAfter, addDays, differenceInCalendarDays, startOfMonth, endOf
 import { apiClient } from '@/api/client';
 import type { User, Account, TimeseriesStatsView, SubcategoryStatsView } from '@/core/types';
 import { useTelegramWebApp } from '@/hooks/useTelegramWebApp';
+import { useAuth } from '@/contexts/AuthContext';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 
@@ -56,6 +57,7 @@ export default function CategoryStatsPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { isReady, haptic } = useTelegramWebApp();
+  const { loading: authLoading } = useAuth();
   const { categoryId } = useParams();
   const location = useLocation();
 
@@ -93,7 +95,7 @@ export default function CategoryStatsPage() {
   const groupBy = useMemo(() => autoGroupBy(dateRange), [dateRange]);
 
   useEffect(() => {
-    if (!isReady) return;
+    if (!isReady || authLoading) return;
     (async () => {
       try {
         const [me, acc] = await Promise.all([apiClient.getMe(), apiClient.getAccounts()]);
@@ -103,7 +105,7 @@ export default function CategoryStatsPage() {
         setLoadingInit(false);
       }
     })();
-  }, [isReady]);
+  }, [isReady, authLoading]);
 
   const query = useMemo(() => {
     return {

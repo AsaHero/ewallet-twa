@@ -13,6 +13,7 @@ import {
 import { apiClient } from '@/api/client';
 import type { User, Account, TimeseriesStatsView, CategoryStatsView, StatsGroupBy } from '@/core/types';
 import { useTelegramWebApp } from '@/hooks/useTelegramWebApp';
+import { useAuth } from '@/contexts/AuthContext';
 import { Skeleton } from '@/components/ui/skeleton';
 
 import { SummaryCard } from '@/components/history/SummaryCard';
@@ -49,6 +50,7 @@ export default function StatsPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { isReady, haptic } = useTelegramWebApp();
+  const { loading: authLoading } = useAuth();
 
   const [user, setUser] = useState<User | null>(null);
   const [accounts, setAccounts] = useState<Account[]>([]);
@@ -110,7 +112,7 @@ export default function StatsPage() {
 
   // Initial data (me + accounts)
   useEffect(() => {
-    if (!isReady) return;
+    if (!isReady || authLoading) return;
 
     (async () => {
       try {
@@ -121,7 +123,7 @@ export default function StatsPage() {
         setLoadingInit(false);
       }
     })();
-  }, [isReady]);
+  }, [isReady, authLoading]);
 
   const fetchTimeseries = useCallback(async (q = debouncedQuery) => {
     setLoadingTs(true);

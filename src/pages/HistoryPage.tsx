@@ -13,6 +13,7 @@ import {
   formatDateTime,
 } from '@/lib/formatters';
 import { useTelegramWebApp } from '@/hooks/useTelegramWebApp';
+import { useAuth } from '@/contexts/AuthContext';
 
 import { SummaryCard } from '@/components/history/SummaryCard';
 import { FilterChips, type FilterType } from '@/components/history/FilterChips';
@@ -37,6 +38,7 @@ function hapticSelect() {
 function HistoryPage() {
   const { t } = useTranslation();
   const { isReady } = useTelegramWebApp();
+  const { loading: authLoading } = useAuth();
 
   const [user, setUser] = useState<User | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -69,7 +71,7 @@ function HistoryPage() {
   });
 
   useEffect(() => {
-    if (!isReady) return;
+    if (!isReady || authLoading) return;
 
     const fetchBootstrap = async () => {
       try {
@@ -94,7 +96,7 @@ function HistoryPage() {
     };
 
     fetchBootstrap();
-  }, [isReady]);
+  }, [isReady, authLoading]);
 
   const categoryById = useMemo(() => {
     const m = new Map<number, Category>();

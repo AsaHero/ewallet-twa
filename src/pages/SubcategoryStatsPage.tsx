@@ -14,6 +14,7 @@ import {
 import { apiClient } from '@/api/client';
 import type { User, Account, StatsGroupBy, StatsTxType, TimeseriesStatsView } from '@/core/types';
 import { useTelegramWebApp } from '@/hooks/useTelegramWebApp';
+import { useAuth } from '@/contexts/AuthContext';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 
@@ -52,6 +53,7 @@ export default function SubcategoryStatsPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { isReady, haptic } = useTelegramWebApp();
+  const { loading: authLoading } = useAuth();
   const { subcategoryId } = useParams();
   const location = useLocation();
 
@@ -84,7 +86,7 @@ export default function SubcategoryStatsPage() {
   const locale = user?.language_code;
 
   useEffect(() => {
-    if (!isReady) return;
+    if (!isReady || authLoading) return;
 
     (async () => {
       try {
@@ -95,7 +97,7 @@ export default function SubcategoryStatsPage() {
         setLoadingInit(false);
       }
     })();
-  }, [isReady]);
+  }, [isReady, authLoading]);
 
   const query = useMemo(() => {
     return {
