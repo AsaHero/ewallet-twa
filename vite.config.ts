@@ -10,4 +10,31 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // React ecosystem
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+
+          // Chart library (likely large)
+          'charts': ['recharts'],
+
+          // Date utilities (includes moment-timezone which is large ~500KB)
+          'date-utils': ['date-fns', 'moment-timezone'],
+
+          // Form handling
+          'forms': ['react-hook-form'],
+
+          // Animation library
+          'animations': ['framer-motion'],
+
+          // UI components
+          'ui': ['lucide-react'],
+        },
+      },
+    },
+    // Suppress warning for moment-timezone chunk (known large dependency)
+    chunkSizeWarningLimit: 900,
+  },
 })
