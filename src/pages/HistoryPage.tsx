@@ -141,6 +141,7 @@ function HistoryPage() {
     total,
     total_income,
     total_expense,
+    netBalance,
     isInitialLoading,
     isFetchingNext,
     error: txError,
@@ -302,6 +303,7 @@ function HistoryPage() {
             dateRange={dateRange}
             totalIncome={total_income}
             totalExpense={total_expense}
+            netBalance={netBalance}
             currencyCode={user?.currency_code || 'USD'}
             locale={user?.language_code}
             onPrev={handlePrev}

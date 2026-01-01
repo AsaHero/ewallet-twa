@@ -21,6 +21,7 @@ type State = {
   total: number;
   total_income: number;
   total_expense: number;
+  netBalance: number;
   offset: number;
   limit: number;
   isInitialLoading: boolean;
@@ -47,6 +48,7 @@ export function useInfiniteTransactions(query: TransactionsQuery) {
     total: 0,
     total_income: 0,
     total_expense: 0,
+    netBalance: 0,
     offset: 0,
     limit,
     isInitialLoading: true,
@@ -106,6 +108,7 @@ export function useInfiniteTransactions(query: TransactionsQuery) {
             total: res.pagination.total,
             total_income: res.total_income,
             total_expense: res.total_expense,
+            netBalance: res.net_balance,
             offset: merged.length,
             limit,
             isInitialLoading: false,
@@ -148,6 +151,7 @@ export function useInfiniteTransactions(query: TransactionsQuery) {
       total: 0,
       total_income: 0,
       total_expense: 0,
+      netBalance: 0,
       offset: 0,
       limit,
       isInitialLoading: true,
@@ -181,6 +185,7 @@ export function useInfiniteTransactions(query: TransactionsQuery) {
     total: state.total,
     total_income: state.total_income,
     total_expense: state.total_expense,
+    netBalance: state.netBalance,
     isInitialLoading: state.isInitialLoading,
     isFetchingNext: state.isFetchingNext,
     error: state.error,
