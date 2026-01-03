@@ -129,18 +129,19 @@ function CenterLabel({
   const canDrill = !!selected && !isOther && typeof onDrillDown === 'function';
 
   return (
-    <div className="absolute inset-0 flex items-center justify-center">
-      {/* Click layer (only when drill is available) */}
+    // ✅ IMPORTANT: let clicks pass through by default
+    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+      {/* ✅ Only the drill button should capture events */}
       {canDrill ? (
         <button
           type="button"
           onClick={() => onDrillDown?.(selected!.id)}
-          className="absolute inset-0 rounded-2xl"
+          className="absolute inset-0 rounded-2xl pointer-events-auto"
           aria-label="Open details"
         />
       ) : null}
 
-      <div className="pointer-events-none text-center px-3 max-w-[260px]">
+      <div className="text-center px-3 max-w-[260px]">
         <div className="text-xs text-muted-foreground truncate font-medium">{title}</div>
 
         <AnimatePresence mode="wait" initial={false}>
@@ -173,6 +174,7 @@ function CenterLabel({
     </div>
   );
 }
+
 
 // Custom render function for active (selected) pie slice
 // This creates the "bump out" effect by increasing the outer radius
@@ -319,7 +321,7 @@ export function ExploreDonut({
               >
 
                 <PieChart>
-                  <Pie
+                    <Pie
                     data={chartItems}
                     dataKey="total"
                     nameKey="name"
@@ -330,27 +332,32 @@ export function ExploreDonut({
                     animationDuration={420}
                     animationBegin={0}
                     {...({ activeIndex, activeShape: renderActiveShape } as any)}
-                    // Recharts gives payload for click; we also stop background reset.
-                    onClick={(data: any, _: number, e: any) => {
-                      e?.stopPropagation?.();
-                      handleSelect(Number(data?.id));
-                    }}
-                  >
+                    >
                     {chartItems.map((it, index) => {
-                      const isSelected = selectedId === it.id;
-                      const dim = selectedId != null && !isSelected;
-                      return (
-                        <Cell
-                          key={it.id}
-                          fill={getChartColor(index)}
-                          opacity={dim ? 0.35 : 1}
-                          className="transition-opacity duration-200 cursor-pointer hover:opacity-100"
-                          strokeWidth={isSelected ? 2 : 0}
-                          stroke={isSelected ? getChartColor(index) : 'none'}
-                        />
-                      );
+                        const isSelected = selectedId === it.id;
+                        const dim = selectedId != null && !isSelected;
+
+                        return (
+                            <Cell
+                            key={it.id}
+                            fill={getChartColor(index)}
+                            opacity={dim ? 0.35 : 1}
+                            className="transition-opacity duration-200 cursor-pointer hover:opacity-100"
+                            strokeWidth={isSelected ? 2 : 0}
+                            stroke={isSelected ? getChartColor(index) : 'none'}
+                            // ✅ super reliable on mobile:
+                            onMouseDown={(e: any) => {
+                            e?.stopPropagation?.();
+                                handleSelect(it.id);
+                            }}
+                            onTouchStart={(e: any) => {
+                            e?.stopPropagation?.();
+                                handleSelect(it.id);
+                            }}
+                            />
+                        );
                     })}
-                  </Pie>
+                    </Pie>
 
                   {/* Tooltip: desktop only (mobile uses center label) */}
                   {!isCoarsePointer ? (
