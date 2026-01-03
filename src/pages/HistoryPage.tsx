@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 
@@ -39,6 +39,7 @@ function hapticSelect() {
 function HistoryPage() {
   const { t } = useTranslation();
   const location = useLocation();
+  const navigate = useNavigate();
   const { isReady } = useTelegramWebApp();
   const { loading: authLoading } = useAuth();
 
@@ -123,6 +124,26 @@ function HistoryPage() {
 
     fetchBootstrap();
   }, [isReady, authLoading]);
+
+  // TWA BackButton - show back button if navigated from another page
+  useEffect(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const tg = (window as any)?.Telegram?.WebApp;
+    if (!tg) return;
+
+    // If we have navigation state (came from CategoryPage), show back button
+    if (navState) {
+      tg.BackButton.show();
+      const handler = () => navigate(-1);
+      tg.BackButton.onClick(handler);
+
+      return () => {
+        tg.BackButton.hide();
+        tg.BackButton.offClick(handler);
+      };
+    }
+    // Otherwise, no back button (HistoryPage is the main entry point)
+  }, [navState, navigate]);
 
   const categoryById = useMemo(() => {
     const m = new Map<number, Category>();

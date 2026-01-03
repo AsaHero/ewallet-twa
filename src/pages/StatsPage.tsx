@@ -48,12 +48,35 @@ export default function StatsPageV2() {
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [loadingInit, setLoadingInit] = useState(true);
 
-  // filters
+ // filters - restore from sessionStorage if available
   const [dateRange, setDateRange] = useState<DateRange>(() => {
+    const cached = sessionStorage.getItem('stats_dateRange');
+    if (cached) {
+      try {
+        const parsed = JSON.parse(cached);
+        return {
+          from: new Date(parsed.from),
+          to: new Date(parsed.to),
+          label: parsed.label,
+        };
+      } catch {
+        // fall through to default
+      }
+    }
     const now = new Date();
     return { from: startOfMonth(now), to: endOfMonth(now), label: 'thisMonth' };
   });
-  const [accountIds, setAccountIds] = useState<string[]>([]);
+  const [accountIds, setAccountIds] = useState<string[]>(() => {
+    const cached = sessionStorage.getItem('stats_accountIds');
+    if (cached) {
+      try {
+        return JSON.parse(cached);
+      } catch {
+        return [];
+      }
+    }
+    return [];
+  });
   const groupBy = useMemo(() => autoGroupBy(dateRange), [dateRange]);
 
   // sheets
@@ -65,8 +88,11 @@ export default function StatsPageV2() {
   const [loadingBal, setLoadingBal] = useState(false);
   const [errorBal, setErrorBal] = useState<string | null>(null);
 
-  // explore state
-  const [txType, setTxType] = useState<StatsTxType>('withdrawal');
+  // explore state - restore txType from sessionStorage
+  const [txType, setTxType] = useState<StatsTxType>(() => {
+    const cached = sessionStorage.getItem('stats_txType');
+    return (cached === 'deposit' || cached === 'withdrawal') ? cached : 'withdrawal';
+  });
   const [level, setLevel] = useState<ExploreLevel>('category');
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
   const [selectedSubId, setSelectedSubId] = useState<number | null>(null);
