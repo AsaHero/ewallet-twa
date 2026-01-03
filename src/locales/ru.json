@@ -144,6 +144,39 @@
         "transactions_one": "{{count}} тр",
         "transactions_few": "{{count}} тр",
         "transactions_many": "{{count}} тр",
-        "transactions_other": "{{count}} тр"
+        "transactions_other": "{{count}} тр",
+        "overview": "Обзор",
+        "totalTransactions": "Всего транзакций",
+        "avgTransaction": "Средняя транзакция",
+        "topCategory": "Топ категория",
+        "periodChange": "vs прошлый",
+        "balanceOverTime": "Баланс со временем",
+        "change": "Изменение",
+        "balanceOpen": "Открытие",
+        "balanceClose": "Закрытие",
+        "delta": "Δ",
+        "min": "Мин",
+        "max": "Макс",
+        "txCount": "Транзакций",
+        "start": "Начало",
+        "end": "Конец",
+        "allCategories": "Все категории",
+        "leaders": "Лидеры",
+        "distributionError": "Не удалось загрузить распределение",
+        "presets": {
+            "last7days": "За 7 дней",
+            "last30days": "За 30 дней",
+            "thisMonth": "Этот месяц",
+            "lastMonth": "Прошлый месяц",
+            "thisQuarter": "Этот квартал",
+            "thisYear": "Этот год",
+            "custom": "Свой период"
+        },
+        "emptyState": {
+            "noData": "Нет данных",
+            "noDataDesc": "Попробуйте выбрать другой период",
+            "noResults": "Ничего не найдено",
+            "noResultsDesc": "Измените фильтры и попробуйте снова"
+        }
     }
 }

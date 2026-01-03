@@ -127,6 +127,39 @@
         "noCategories": "Kategoriyalar yo'q",
         "noSubcategories": "Subkategoriyalar yo'q",
         "transactions_one": "{{count}} tr",
-        "transactions_other": "{{count}} tr"
+        "transactions_other": "{{count}} tr",
+        "overview": "Umumiy ko'rinish",
+        "totalTransactions": "Jami tranzaksiyalar",
+        "avgTransaction": "O'rtacha tranzaksiya",
+        "topCategory": "Eng yuqori kategoriya",
+        "periodChange": "oldingi bilan",
+        "balanceOverTime": "Vaqt bo'yicha balans",
+        "change": "O'zgarish",
+        "balanceOpen": "Ochilish",
+        "balanceClose": "Yopilish",
+        "delta": "Δ",
+        "min": "Min",
+        "max": "Maks",
+        "txCount": "Tranzaksiyalar",
+        "start": "Boshlanish",
+        "end": "Tugash",
+        "allCategories": "Barcha kategoriyalar",
+        "leaders": "Yetakchilar",
+        "distributionError": "Taqsimotni yuklab bo'lmadi",
+        "presets": {
+            "last7days": "Oxirgi 7 kun",
+            "last30days": "Oxirgi 30 kun",
+            "thisMonth": "Bu oy",
+            "lastMonth": "O'tgan oy",
+            "thisQuarter": "Bu chorak",
+            "thisYear": "Bu yil",
+            "custom": "Boshqa"
+        },
+        "emptyState": {
+            "noData": "Ma'lumot yo'q",
+            "noDataDesc": "Boshqa davrni tanlang",
+            "noResults": "Hech narsa topilmadi",
+            "noResultsDesc": "Filtrlarni o'zgartiring va qayta urinib ko'ring"
+        }
     }
 }
