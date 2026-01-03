@@ -162,6 +162,9 @@
             "noResultsDesc": "Filtrlarni o'zgartiring va qayta urinib ko'ring"
         },
         "uncategorized": "Subkategoriyasiz",
-        "distribution": "Taqsimot"
+        "distribution": "Taqsimot",
+        "other": "Boshqalar",
+        "total": "Jami",
+        "tapAgainToOpen": "Ochish uchun yana bosing"
     }
 }

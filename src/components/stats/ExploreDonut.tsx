@@ -112,9 +112,10 @@ function CenterLabel({
   currencyCode: string;
   locale?: string;
 }) {
+  const { t } = useTranslation();
   const isOther = selected?.id === OTHER_ID || selected?.kind === 'other';
 
-  const title = selected ? `${selected.emoji || '📌'} ${selected.name}` : 'Total';
+  const title = selected ? `${selected.emoji || '📌'} ${selected.name}` : t('stats.total');
   const amount = selected ? selected.total : total;
   const tx = selected ? selected.count : count;
   const pct = selected ? Math.round((selected.share || 0) * 100) : null;
@@ -150,8 +151,14 @@ function CenterLabel({
             transition={{ duration: 0.12 }}
             className="text-[11px] text-muted-foreground mt-1"
           >
-            {tx} tx{pct !== null ? ` • ${pct}%` : ''}
-            {selected && !isOther ? ' • Tap again to open' : ''}
+            <div>
+              {tx} tx{pct !== null ? ` • ${pct}%` : ''}
+            </div>
+            {selected && !isOther && (
+              <div className="mt-0.5">
+                • {t('stats.tapAgainToOpen')}
+              </div>
+            )}
           </motion.div>
         </AnimatePresence>
       </div>
@@ -237,13 +244,11 @@ export function ExploreDonut({
   }, []);
 
   const chartItems = useMemo(() => {
-    const otherLabel =
-      (t('stats.other') as string) ||
-      (t('common.other') as string) ||
-      'Others';
+    const otherLabel = t('stats.other', 'Others');
 
     return buildTopNWithOther(items, TOP_N, otherLabel);
   }, [items, t]);
+
 
   const selected = useMemo(() => {
     if (!selectedId) return null;

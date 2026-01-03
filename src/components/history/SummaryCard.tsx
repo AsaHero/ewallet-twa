@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { format, isSameMonth, isSameYear, endOfMonth } from 'date-fns';
 import { ru, enUS, uz } from 'date-fns/locale';
 import { Card, CardContent } from '../ui/card';
-import { formatCurrency } from '@/lib/formatters';
+import { formatCurrency, softenWrapCurrency } from '@/lib/formatters';
 import { cn } from '@/lib/utils';
 import type { DateRange } from './DateRangeSheet';
 import { useMemo } from 'react';
@@ -56,15 +56,6 @@ function formatDateRange(from: Date, to: Date, locale?: string) {
   return `${format(from, 'd MMM yyyy', { locale: loc })} - ${format(to, 'd MMM yyyy', { locale: loc })}`;
 }
 
-function softenWrapCurrency(input: string) {
-  // Keep precision 100% but allow wrap INSIDE card.
-  // 1) replace NBSP with normal space
-  // 2) allow break after commas/spaces (not between digits)
-  return input
-    .replace(/\u00A0/g, ' ')
-    .replace(/,/g, ',\u200B')
-    .replace(/ /g, ' \u200B');
-}
 
 export function SummaryCard({
   dateRange,

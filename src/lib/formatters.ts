@@ -13,6 +13,16 @@ export function formatCurrency(
     }).format(amount);
 }
 
+export function softenWrapCurrency(input: string) {
+  // Keep precision 100% but allow wrap INSIDE card.
+  // 1) replace NBSP with normal space
+  // 2) allow break after commas/spaces (not between digits)
+  return input
+    .replace(/\u00A0/g, ' ')
+    .replace(/,/g, ',\u200B')
+    .replace(/ /g, ' \u200B');
+}
+
 // Convert timezone string to minutes
 // Supports legacy "UTC+5" format AND standard IANA "Asia/Tashkent" format
 export function getTimezoneOffsetMinutes(timezone?: string): number {
