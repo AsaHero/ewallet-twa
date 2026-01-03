@@ -297,7 +297,7 @@ export function ExploreDonut({
                     data={chartItems}
                     dataKey="total"
                     nameKey="name"
-                    innerRadius="40%"
+                    innerRadius="75%"
                     outerRadius="98%"
                     paddingAngle={isCoarsePointer ? 3 : 2}
                     isAnimationActive={!loading}
@@ -322,7 +322,6 @@ export function ExploreDonut({
                           className="transition-opacity duration-200 cursor-pointer hover:opacity-100"
                           strokeWidth={isSelected ? 2 : 0}
                           stroke={isSelected ? getChartColor(index) : 'none'}
-                          // ✅ reliable touch behavior
                           onMouseDown={(e: any) => {
                             e?.stopPropagation?.();
                             handleSelect(it.id);
