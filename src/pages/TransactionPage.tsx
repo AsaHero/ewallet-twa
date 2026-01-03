@@ -181,6 +181,9 @@ function TransactionPage() {
 
     WebApp.MainButton.showProgress();
     try {
+        // Apply proper sign based on transaction type before sending to backend
+        const signedAmount = data.type === 'withdrawal' ? -Math.abs(data.amount) : Math.abs(data.amount);
+
         await botClient.updateTransaction({
             from: {
                 id: tgUser.id,
@@ -191,14 +194,13 @@ function TransactionPage() {
             },
             data: {
                 ...data,
+                amount: signedAmount,
                 currency: user?.currency_code || data.currency,
             },
         });
 
         WebApp.HapticFeedback.notificationOccurred('success');
-        WebApp.showAlert(t('transaction.updated'), () => {
-            WebApp.close();
-        });
+        WebApp.close();
     } catch (err) {
         console.error('Failed to send data:', err);
         WebApp.HapticFeedback.notificationOccurred('error');
@@ -287,13 +289,7 @@ function TransactionPage() {
             items={categoryItems}
             value={categoryId}
             onSelect={(id) => {
-               // Logic: Category Change -> Reset Subcategory
                const newCatId = typeof id === 'number' ? id : undefined;
-
-               // Only reset if actually changed? Or always?
-               // User said "Category: transport -> Food; Subcategory: taxi -> Reset (Null)"
-               // So if we Pick a Category, we should probably reset subcategory to be safe
-               // UNLESS the current subcategory belongs to new category (unlikely unless same name/id)
                setValue("category_id", newCatId, { shouldDirty: true });
                setValue("subcategory_id", undefined, { shouldDirty: true });
             }}
