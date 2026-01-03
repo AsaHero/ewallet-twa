@@ -23,6 +23,7 @@ import { ErrorCard } from '@/components/stats/ErrorCard';
 import { BalanceTimeseriesChart } from '@/components/stats/BalanceTimeseriesChart';
 import { ExploreDonut, type ExploreItem } from '@/components/stats/ExploreDonut';
 import { ExploreRankList } from '@/components/stats/ExploreRankList';
+import { StatsOverviewCard } from '@/components/stats/StatsOverviewCard';
 
 type ExploreLevel = 'category' | 'subcategory';
 
@@ -208,6 +209,23 @@ export default function StatsPageV2() {
 
   const selectedId = level === 'category' ? selectedCategoryId : selectedSubId;
 
+  // ---- overview metrics ----
+  const overviewMetrics = useMemo(() => {
+    const totalCount = exploreTotals.count;
+    const avgAmount = totalCount > 0 ? exploreTotals.total / totalCount : 0;
+    const topCategory = exploreItems.length > 0 ? exploreItems[0] : null;
+
+    return {
+      totalCount,
+      avgAmount,
+      topCategory: topCategory ? {
+        name: topCategory.name,
+        emoji: topCategory.emoji,
+        total: topCategory.total,
+      } : null,
+    };
+  }, [exploreTotals, exploreItems]);
+
   // ---- interactions ----
   const onToggleTxType = () => {
     haptic?.selectionChanged?.();
@@ -304,8 +322,20 @@ export default function StatsPageV2() {
           ) : null}
         </header>
 
+        {/* Overview Card */}
+        <div className="mt-4">
+          <StatsOverviewCard
+            totalCount={overviewMetrics.totalCount}
+            avgAmount={overviewMetrics.avgAmount}
+            topCategory={overviewMetrics.topCategory}
+            currencyCode={currencyCode}
+            locale={locale}
+            loading={loadingExplore}
+          />
+        </div>
+
         {/* Balance chart */}
-        <div className="mt-2">
+        <div className="mt-5">
           {errorBal ? (
             <ErrorCard
               title={t('stats.trendError') || 'Could not load balance trend'}
