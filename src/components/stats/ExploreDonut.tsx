@@ -297,14 +297,18 @@ export function ExploreDonut({
                     data={chartItems}
                     dataKey="total"
                     nameKey="name"
-                    // ✅ bigger donut + thicker ring
-                    innerRadius="50%"
-                    outerRadius="96%"
+                    innerRadius="40%"
+                    outerRadius="98%"
                     paddingAngle={isCoarsePointer ? 3 : 2}
                     isAnimationActive={!loading}
                     animationDuration={420}
                     animationBegin={0}
                     {...({ activeIndex, activeShape: renderActiveShape } as any)}
+                    onClick={(data: any, _idx: number, e: any) => {
+                      e?.stopPropagation?.();
+                      const id = Number(data?.id ?? data?.payload?.id);
+                      if (Number.isFinite(id)) handleSelect(id);
+                    }}
                   >
                     {chartItems.map((it, index) => {
                       const isSelected = selectedId === it.id;
