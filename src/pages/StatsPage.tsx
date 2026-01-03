@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { format, startOfMonth, endOfMonth, differenceInCalendarDays } from 'date-fns';
 
@@ -39,6 +40,7 @@ function autoGroupBy(range: DateRange): StatsGroupBy {
 
 export default function StatsPageV2() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { isReady, haptic } = useTelegramWebApp();
 
   // init
@@ -241,11 +243,24 @@ export default function StatsPageV2() {
     haptic?.impactOccurred?.('light');
 
     if (level === 'category') {
-      // drill into subcategories
-      setSelectedCategoryId(id);
-      setLevel('subcategory');
-      setSelectedSubId(null);
-      setExpanded(false);
+      // Navigate to CategoryStatsPage with all filter state
+      const categoryData = exploreItems.find(it => it.id === id);
+
+      navigate(`/stats/category/${id}`, {
+        state: {
+          dateRange: {
+            from: dateRange.from,
+            to: dateRange.to,
+            label: dateRange.label,
+          },
+          accountIds,
+          categoryType: txType,
+          categoryMeta: {
+            name: categoryData?.name,
+            emoji: categoryData?.emoji,
+          },
+        },
+      });
     } else {
       // select subcategory
       setSelectedSubId(id);

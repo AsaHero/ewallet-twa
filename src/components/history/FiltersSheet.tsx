@@ -9,6 +9,7 @@ export type HistoryFilters = {
   search: string;
   account_ids: string[];
   category_ids: number[];
+  subcategory_ids?: number[];
   min_amount?: number;
   max_amount?: number;
 };
@@ -78,7 +79,7 @@ export function FiltersSheet({
   };
 
   const reset = () => {
-    setDraft({ search: '', account_ids: [], category_ids: [], min_amount: undefined, max_amount: undefined });
+    setDraft({ search: '', account_ids: [], category_ids: [], subcategory_ids: [], min_amount: undefined, max_amount: undefined });
     setCatSearch('');
     setAccSearch('');
   };
@@ -88,6 +89,7 @@ export function FiltersSheet({
       search: draft.search ?? '',
       account_ids: draft.account_ids ?? [],
       category_ids: draft.category_ids ?? [],
+      subcategory_ids: draft.subcategory_ids ?? [],
       min_amount: draft.min_amount,
       max_amount: draft.max_amount,
     });

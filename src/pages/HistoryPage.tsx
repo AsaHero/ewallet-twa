@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 
@@ -37,8 +38,19 @@ function hapticSelect() {
 
 function HistoryPage() {
   const { t } = useTranslation();
+  const location = useLocation();
   const { isReady } = useTelegramWebApp();
   const { loading: authLoading } = useAuth();
+
+  // Navigation state from CategoryStatsPage
+  const navState = location.state as {
+    from?: string | Date;
+    to?: string | Date;
+    type?: 'deposit' | 'withdrawal';
+    category_ids?: number[];
+    subcategory_ids?: number[];
+    account_ids?: string[];
+  } | null;
 
   const [user, setUser] = useState<User | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -50,6 +62,14 @@ function HistoryPage() {
 
   // UI state
   const [dateRange, setDateRange] = useState<DateRange>(() => {
+    // Initialize from navigation state if available
+    if (navState?.from && navState?.to) {
+      return {
+        from: new Date(navState.from),
+        to: new Date(navState.to),
+        label: 'custom' as const
+      };
+    }
     const now = new Date();
     return {
       from: startOfMonth(now),
@@ -58,17 +78,23 @@ function HistoryPage() {
     };
   });
   const [datePickerOpen, setDatePickerOpen] = useState(false);
-  const [selectedFilter, setSelectedFilter] = useState<FilterType>('all');
+  const [selectedFilter, setSelectedFilter] = useState<FilterType>(() => {
+    // Initialize from navigation state
+    if (navState?.type === 'deposit') return 'income';
+    if (navState?.type === 'withdrawal') return 'expense';
+    return 'all';
+  });
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
 
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [filters, setFilters] = useState<HistoryFilters>({
+  const [filters, setFilters] = useState<HistoryFilters>(() => ({
     search: '',
-    account_ids: [],
-    category_ids: [],
+    account_ids: navState?.account_ids || [],
+    category_ids: navState?.category_ids || [],
+    subcategory_ids: navState?.subcategory_ids || [],
     min_amount: undefined,
     max_amount: undefined,
-  });
+  }));
 
   useEffect(() => {
     if (!isReady || authLoading) return;
@@ -132,6 +158,7 @@ function HistoryPage() {
       type: txType,
       search: filters.search,
       category_ids: filters.category_ids,
+      subcategory_ids: filters.subcategory_ids,
       account_ids: filters.account_ids,
       min_amount: filters.min_amount,
       max_amount: filters.max_amount,

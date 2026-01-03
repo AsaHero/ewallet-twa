@@ -172,6 +172,8 @@
             "noDataDesc": "Try selecting a different date range",
             "noResults": "No results found",
             "noResultsDesc": "Adjust your filters and try again"
-        }
+        },
+        "uncategorized": "Uncategorized",
+        "distribution": "Distribution"
     }
 }

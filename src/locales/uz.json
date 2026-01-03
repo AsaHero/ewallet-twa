@@ -160,6 +160,8 @@
             "noDataDesc": "Boshqa davrni tanlang",
             "noResults": "Hech narsa topilmadi",
             "noResultsDesc": "Filtrlarni o'zgartiring va qayta urinib ko'ring"
-        }
+        },
+        "uncategorized": "Subkategoriyasiz",
+        "distribution": "Taqsimot"
     }
 }
