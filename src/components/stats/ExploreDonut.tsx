@@ -77,7 +77,6 @@ function buildTopNWithOther(raw: ExploreItem[], topN: number, otherLabel: string
   const otherCount = tail.reduce((s, x) => s + (x.count || 0), 0);
   const grand = sorted.reduce((s, x) => s + (x.total || 0), 0);
 
-  // If tail totals are basically zero, skip "Others"
   if (!grand || otherTotal <= 0) return head;
 
   const other: ExploreItem = {
@@ -94,11 +93,10 @@ function buildTopNWithOther(raw: ExploreItem[], topN: number, otherLabel: string
 }
 
 function amountTypographyClass(amountStr: string) {
-  // Heuristic based on formatted length (locale/currency dependent)
   const n = amountStr.length;
-  if (n >= 18) return 'text-[clamp(14px,3.4vw,18px)] font-semibold tracking-tight';
-  if (n >= 14) return 'text-[clamp(15px,3.8vw,20px)] font-semibold tracking-tight';
-  return 'text-[clamp(16px,4.2vw,22px)] font-bold';
+  if (n >= 18) return 'text-[clamp(16px,3.8vw,22px)] font-semibold tracking-tight';
+  if (n >= 14) return 'text-[clamp(17px,4.2vw,24px)] font-semibold tracking-tight';
+  return 'text-[clamp(18px,4.6vw,26px)] font-bold';
 }
 
 function CenterLabel({
@@ -107,14 +105,12 @@ function CenterLabel({
   count,
   currencyCode,
   locale,
-  onDrillDown,
 }: {
   selected?: ExploreItem | null;
   total: number;
   count: number;
   currencyCode: string;
   locale?: string;
-  onDrillDown?: (id: number) => void;
 }) {
   const isOther = selected?.id === OTHER_ID || selected?.kind === 'other';
 
@@ -126,22 +122,10 @@ function CenterLabel({
   const amountStr = formatCurrency(amount, currencyCode, locale);
   const amountCls = amountTypographyClass(amountStr);
 
-  const canDrill = !!selected && !isOther && typeof onDrillDown === 'function';
-
   return (
-    // ✅ IMPORTANT: let clicks pass through by default
+    // ✅ never block pie taps
     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-      {/* ✅ Only the drill button should capture events */}
-      {canDrill ? (
-        <button
-          type="button"
-          onClick={() => onDrillDown?.(selected!.id)}
-          className="absolute inset-0 rounded-2xl pointer-events-auto"
-          aria-label="Open details"
-        />
-      ) : null}
-
-      <div className="text-center px-3 max-w-[260px]">
+      <div className="text-center px-3 max-w-[300px]">
         <div className="text-xs text-muted-foreground truncate font-medium">{title}</div>
 
         <AnimatePresence mode="wait" initial={false}>
@@ -164,10 +148,10 @@ function CenterLabel({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -3 }}
             transition={{ duration: 0.12 }}
-            className="text-[11px] text-muted-foreground mt-0.5"
+            className="text-[11px] text-muted-foreground mt-1"
           >
             {tx} tx{pct !== null ? ` • ${pct}%` : ''}
-            {canDrill ? ' • Tap to open' : ''}
+            {selected && !isOther ? ' • Tap again to open' : ''}
           </motion.div>
         </AnimatePresence>
       </div>
@@ -175,9 +159,7 @@ function CenterLabel({
   );
 }
 
-
-// Custom render function for active (selected) pie slice
-// This creates the "bump out" effect by increasing the outer radius
+// Active slice render (bump out + halo)
 const renderActiveShape = (props: any) => {
   const {
     cx,
@@ -190,11 +172,10 @@ const renderActiveShape = (props: any) => {
     cornerRadius,
   } = props;
 
-  const bump = 6; // pixels to expand
+  const bump = 8;
 
   return (
     <g>
-      {/* Main expanded sector */}
       <Sector
         cx={cx}
         cy={cy}
@@ -205,12 +186,11 @@ const renderActiveShape = (props: any) => {
         fill={fill}
         cornerRadius={cornerRadius}
       />
-      {/* Halo ring for extra visual emphasis */}
       <Sector
         cx={cx}
         cy={cy}
         innerRadius={outerRadius + bump + 2}
-        outerRadius={outerRadius + bump + 4}
+        outerRadius={outerRadius + bump + 5}
         startAngle={startAngle}
         endAngle={endAngle}
         fill={fill}
@@ -245,12 +225,10 @@ export function ExploreDonut({
   const [isCoarsePointer, setIsCoarsePointer] = useState(false);
 
   useEffect(() => {
-    // Mobile-ish heuristic: pointer coarse
     try {
       const mq = window.matchMedia?.('(pointer: coarse)');
       const update = () => setIsCoarsePointer(!!mq?.matches);
       update();
-
       mq?.addEventListener?.('change', update);
       return () => mq?.removeEventListener?.('change', update);
     } catch {
@@ -278,14 +256,11 @@ export function ExploreDonut({
     return idx >= 0 ? idx : undefined;
   }, [chartItems, selectedId]);
 
-
-
+  // ✅ “second tap drills”
   const handleSelect = (id: number) => {
     if (loading) return;
 
-    // Tap again behavior
     if (selectedId === id) {
-      // Drill-down only if not Others
       if (id !== OTHER_ID) {
         hapticImpactLight();
         onDrillDown?.(id);
@@ -298,68 +273,65 @@ export function ExploreDonut({
   };
 
   return (
-    <Card className="border border-border/40 bg-card/40 overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-      <CardContent className="p-4">
+    // ✅ bigger overall container/card
+    <Card className="border border-border/40 bg-card/40 shadow-sm">
+      <CardContent className="p-5">
         <div className="flex items-baseline justify-between">
-          <h3 className="text-sm font-semibold text-foreground">{title}</h3>
+          <h3 className="text-base font-semibold text-foreground">{title}</h3>
           <div className="text-xs text-muted-foreground">
             {chartItems.length ? `${chartItems.length} items` : ''}
           </div>
         </div>
 
-        <div className="mt-3 h-56 relative">
+        {/* ✅ bigger chart area */}
+        <div className="mt-4 h-72 relative">
           {loading && !chartItems.length ? (
             <Skeleton className="h-full w-full rounded-2xl" />
           ) : !chartItems.length ? (
             <EmptyStateIllustration variant="no-data" />
           ) : (
             <>
-
-              <ResponsiveContainer
-                width="100%"
-                height="100%"
-              >
-
+              <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                    <Pie
+                  <Pie
                     data={chartItems}
                     dataKey="total"
                     nameKey="name"
-                    innerRadius="58%"
-                    outerRadius="90%"
+                    // ✅ bigger donut + thicker ring
+                    innerRadius="50%"
+                    outerRadius="96%"
                     paddingAngle={isCoarsePointer ? 3 : 2}
                     isAnimationActive={!loading}
                     animationDuration={420}
                     animationBegin={0}
                     {...({ activeIndex, activeShape: renderActiveShape } as any)}
-                    >
+                  >
                     {chartItems.map((it, index) => {
-                        const isSelected = selectedId === it.id;
-                        const dim = selectedId != null && !isSelected;
+                      const isSelected = selectedId === it.id;
+                      const dim = selectedId != null && !isSelected;
 
-                        return (
-                            <Cell
-                            key={it.id}
-                            fill={getChartColor(index)}
-                            opacity={dim ? 0.35 : 1}
-                            className="transition-opacity duration-200 cursor-pointer hover:opacity-100"
-                            strokeWidth={isSelected ? 2 : 0}
-                            stroke={isSelected ? getChartColor(index) : 'none'}
-                            // ✅ super reliable on mobile:
-                            onMouseDown={(e: any) => {
+                      return (
+                        <Cell
+                          key={it.id}
+                          fill={getChartColor(index)}
+                          opacity={dim ? 0.35 : 1}
+                          className="transition-opacity duration-200 cursor-pointer hover:opacity-100"
+                          strokeWidth={isSelected ? 2 : 0}
+                          stroke={isSelected ? getChartColor(index) : 'none'}
+                          // ✅ reliable touch behavior
+                          onMouseDown={(e: any) => {
                             e?.stopPropagation?.();
-                                handleSelect(it.id);
-                            }}
-                            onTouchStart={(e: any) => {
+                            handleSelect(it.id);
+                          }}
+                          onTouchStart={(e: any) => {
                             e?.stopPropagation?.();
-                                handleSelect(it.id);
-                            }}
-                            />
-                        );
+                            handleSelect(it.id);
+                          }}
+                        />
+                      );
                     })}
-                    </Pie>
+                  </Pie>
 
-                  {/* Tooltip: desktop only (mobile uses center label) */}
                   {!isCoarsePointer ? (
                     <Tooltip
                       formatter={(value: any, _name: any, props: any) => {
@@ -390,12 +362,6 @@ export function ExploreDonut({
                 count={totals.count}
                 currencyCode={currencyCode}
                 locale={locale}
-                onDrillDown={(id) => {
-                  // center tap drill-down (disabled for Others inside CenterLabel)
-                  if (loading) return;
-                  hapticImpactLight();
-                  onDrillDown?.(id);
-                }}
               />
 
               {loading ? (

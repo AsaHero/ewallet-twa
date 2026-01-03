@@ -337,7 +337,7 @@ export default function StatsPage() {
       <div className="h-safe-top" />
       <div className="h-14" />
 
-      <div className="px-4 pb-8 max-w-md mx-auto">
+      <div className="px-4 pb-8 max-w-lg mx-auto">
         {/* Sticky header */}
         <header className="pt-2 pb-4 sticky top-0 z-10 bg-background/80 backdrop-blur-xl">
           <div className="mt-3 flex items-center justify-between gap-2">
