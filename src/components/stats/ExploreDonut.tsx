@@ -1,5 +1,7 @@
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import { formatCurrency } from '@/lib/formatters';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts';
 
@@ -45,6 +47,7 @@ function CenterLabel({
 
 export function ExploreDonut({
   title,
+  loading,
   items,
   totals,
   selectedId,
@@ -53,6 +56,7 @@ export function ExploreDonut({
   locale,
 }: {
   title: string;
+  loading: boolean;
   items: ExploreItem[];
   totals: { total: number; count: number };
   selectedId?: number | null;
@@ -60,6 +64,7 @@ export function ExploreDonut({
   currencyCode: string;
   locale?: string;
 }) {
+  const { t } = useTranslation();
   const selected = useMemo(
     () => (selectedId ? items.find((x) => x.id === selectedId) : null) || null,
     [items, selectedId]
@@ -74,7 +79,9 @@ export function ExploreDonut({
         </div>
 
         <div className="mt-3 h-56 relative">
-          {!items.length ? (
+          {loading && !items.length ? (
+            <Skeleton className="h-full w-full rounded-2xl" />
+          ) : !items.length ? (
             <div className="h-full rounded-2xl bg-muted/30 flex items-center justify-center text-sm text-muted-foreground">
               No data
             </div>
@@ -90,6 +97,8 @@ export function ExploreDonut({
                     outerRadius="92%"
                     paddingAngle={2}
                     onClick={(d: any) => onSelect?.(Number(d?.id))}
+                    isAnimationActive={!loading}
+                    animationDuration={260}
                   >
                     {items.map((it) => (
                       <Cell
@@ -117,6 +126,15 @@ export function ExploreDonut({
                 currencyCode={currencyCode}
                 locale={locale}
               />
+
+              {loading ? (
+                <div className="absolute inset-0 pointer-events-none">
+                  <div className="absolute inset-0 bg-background/10" />
+                  <div className="absolute right-3 top-3 text-[11px] text-muted-foreground">
+                    {t('stats.updating') || 'Updating'}
+                  </div>
+                </div>
+              ) : null}
             </>
           )}
         </div>
@@ -124,3 +142,4 @@ export function ExploreDonut({
     </Card>
   );
 }
+

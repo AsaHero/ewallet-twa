@@ -339,6 +339,7 @@ export default function StatsPageV2() {
                   ? (txType === 'withdrawal' ? (t('stats.topExpenseCategories') || 'Top expense categories') : (t('stats.topIncomeCategories') || 'Top income categories'))
                   : (t('stats.topSubcategories') || 'Top subcategories')
               }
+              loading={loadingExplore}
               items={exploreItems}
               totals={exploreTotals}
               selectedId={selectedId}
