@@ -295,14 +295,6 @@ export function ExploreDonut({
     onSelect?.(id);
   };
 
-  const handleChartBackgroundTap = () => {
-    if (loading) return;
-    if (selectedId != null) {
-      hapticSelectionChanged();
-      onSelect?.(null);
-    }
-  };
-
   return (
     <Card className="border border-border/40 bg-card/40 overflow-hidden shadow-sm hover:shadow-md transition-shadow">
       <CardContent className="p-4">
@@ -320,15 +312,12 @@ export function ExploreDonut({
             <EmptyStateIllustration variant="no-data" />
           ) : (
             <>
-              {/* Optional: tap empty area to reset selection */}
-              <button
-                type="button"
-                className="absolute inset-0 rounded-2xl"
-                onClick={handleChartBackgroundTap}
-                aria-label="Reset selection"
-              />
 
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer
+                width="100%"
+                height="100%"
+              >
+
                 <PieChart>
                   <Pie
                     data={chartItems}
