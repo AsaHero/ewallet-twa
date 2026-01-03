@@ -342,7 +342,7 @@ export function ExploreDonut({
                     animationBegin={0}
                     {...({ activeIndex, activeShape: renderActiveShape } as any)}
                     // Recharts gives payload for click; we also stop background reset.
-                    onClick={(data: any, index: number, e: any) => {
+                    onClick={(data: any, _: number, e: any) => {
                       e?.stopPropagation?.();
                       handleSelect(Number(data?.id));
                     }}
