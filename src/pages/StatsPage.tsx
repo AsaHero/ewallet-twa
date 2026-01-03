@@ -10,7 +10,6 @@ import type {
   StatsGroupBy,
   BalanceTimeseriesView,
   CategoryStatsView,
-  SubcategoryStatsView,
   StatsTxType,
 } from '@/core/types';
 
@@ -26,8 +25,6 @@ import { ExploreDonut, type ExploreItem } from '@/components/stats/ExploreDonut'
 import { ExploreRankList } from '@/components/stats/ExploreRankList';
 import { StatsOverviewCard } from '@/components/stats/StatsOverviewCard';
 
-type ExploreLevel = 'category' | 'subcategory';
-
 function toYMD(d: Date) {
   return format(d, 'yyyy-MM-dd');
 }
@@ -38,7 +35,9 @@ function autoGroupBy(range: DateRange): StatsGroupBy {
   return 'month';
 }
 
-export default function StatsPageV2() {
+const OTHER_ID = -1;
+
+export default function StatsPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { isReady, haptic } = useTelegramWebApp();
@@ -48,7 +47,7 @@ export default function StatsPageV2() {
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [loadingInit, setLoadingInit] = useState(true);
 
- // filters - restore from sessionStorage if available
+  // filters - restore from sessionStorage if available
   const [dateRange, setDateRange] = useState<DateRange>(() => {
     const cached = sessionStorage.getItem('stats_dateRange');
     if (cached) {
@@ -60,12 +59,13 @@ export default function StatsPageV2() {
           label: parsed.label,
         };
       } catch {
-        // fall through to default
+        // fall through
       }
     }
     const now = new Date();
     return { from: startOfMonth(now), to: endOfMonth(now), label: 'thisMonth' };
   });
+
   const [accountIds, setAccountIds] = useState<string[]>(() => {
     const cached = sessionStorage.getItem('stats_accountIds');
     if (cached) {
@@ -77,6 +77,7 @@ export default function StatsPageV2() {
     }
     return [];
   });
+
   const groupBy = useMemo(() => autoGroupBy(dateRange), [dateRange]);
 
   // sheets
@@ -88,19 +89,17 @@ export default function StatsPageV2() {
   const [loadingBal, setLoadingBal] = useState(false);
   const [errorBal, setErrorBal] = useState<string | null>(null);
 
-  // explore state - restore txType from sessionStorage
+  // explore state
   const [txType, setTxType] = useState<StatsTxType>(() => {
     const cached = sessionStorage.getItem('stats_txType');
-    return (cached === 'deposit' || cached === 'withdrawal') ? cached : 'withdrawal';
+    return cached === 'deposit' || cached === 'withdrawal' ? cached : 'withdrawal';
   });
-  const [level, setLevel] = useState<ExploreLevel>('category');
+
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
-  const [selectedSubId, setSelectedSubId] = useState<number | null>(null);
   const [expanded, setExpanded] = useState(false);
 
   // explore data
   const [cat, setCat] = useState<CategoryStatsView | null>(null);
-  const [sub, setSub] = useState<SubcategoryStatsView | null>(null);
   const [loadingExplore, setLoadingExplore] = useState(false);
   const [errorExplore, setErrorExplore] = useState<string | null>(null);
 
@@ -109,11 +108,14 @@ export default function StatsPageV2() {
 
   // Persist filter state to sessionStorage whenever they change
   useEffect(() => {
-    sessionStorage.setItem('stats_dateRange', JSON.stringify({
-      from: dateRange.from.toISOString(),
-      to: dateRange.to.toISOString(),
-      label: dateRange.label,
-    }));
+    sessionStorage.setItem(
+      'stats_dateRange',
+      JSON.stringify({
+        from: dateRange.from.toISOString(),
+        to: dateRange.to.toISOString(),
+        label: dateRange.label,
+      })
+    );
   }, [dateRange]);
 
   useEffect(() => {
@@ -144,77 +146,59 @@ export default function StatsPageV2() {
       to: toYMD(dateRange.to),
       group_by: groupBy,
       account_ids: accountIds.length ? accountIds : undefined,
-      txType,
-      level,
-      selectedCategoryId,
+      type: txType as StatsTxType,
     };
-  }, [dateRange.from, dateRange.to, groupBy, accountIds, txType, level, selectedCategoryId]);
+  }, [dateRange.from, dateRange.to, groupBy, accountIds, txType]);
 
   const debounced = useDebouncedValue(query, 180);
 
   // ---- fetchers ----
-  const fetchBalance = useCallback(async (q = debounced) => {
-    setLoadingBal(true);
-    setErrorBal(null);
-    try {
-      const res = await apiClient.getStatsBalanceTimeseries({
-        from: q.from,
-        to: q.to,
-        group_by: q.group_by,
-        mode: 'aggregate',
-        account_ids: q.account_ids,
-      });
-      setBal(res);
-    } catch (e) {
-      setErrorBal(e instanceof Error ? e.message : (t('stats.trendError') || 'Could not load balance trend'));
-    } finally {
-      setLoadingBal(false);
-    }
-  }, [debounced, t]);
+  const fetchBalance = useCallback(
+    async (q = debounced) => {
+      setLoadingBal(true);
+      setErrorBal(null);
+      try {
+        const res = await apiClient.getStatsBalanceTimeseries({
+          from: q.from,
+          to: q.to,
+          group_by: q.group_by,
+          mode: 'aggregate',
+          account_ids: q.account_ids,
+        });
+        setBal(res);
+      } catch (e) {
+        setErrorBal(
+          e instanceof Error ? e.message : (t('stats.trendError') || 'Could not load balance trend')
+        );
+      } finally {
+        setLoadingBal(false);
+      }
+    },
+    [debounced, t]
+  );
 
-  const fetchExplore = useCallback(async (q = debounced) => {
-    setLoadingExplore(true);
-    setErrorExplore(null);
-
-    try {
-      if (q.level === 'category') {
+  const fetchExplore = useCallback(
+    async (q = debounced) => {
+      setLoadingExplore(true);
+      setErrorExplore(null);
+      try {
         const res = await apiClient.getStatsByCategory({
           from: q.from,
           to: q.to,
-          type: q.txType,
+          type: q.type,
           account_ids: q.account_ids,
         });
         setCat(res);
-        setSub(null);
-      } else {
-        if (!q.selectedCategoryId) {
-          // safety fallback
-          const res = await apiClient.getStatsByCategory({
-            from: q.from,
-            to: q.to,
-            type: q.txType,
-            account_ids: q.account_ids,
-          });
-          setCat(res);
-          setSub(null);
-          return;
-        }
-
-        const res = await apiClient.getStatsBySubcategory({
-          from: q.from,
-          to: q.to,
-          type: q.txType,
-          account_ids: q.account_ids,
-          category_ids: [q.selectedCategoryId],
-        });
-        setSub(res);
+      } catch (e) {
+        setErrorExplore(
+          e instanceof Error ? e.message : (t('stats.categoriesError') || 'Could not load distribution')
+        );
+      } finally {
+        setLoadingExplore(false);
       }
-    } catch (e) {
-      setErrorExplore(e instanceof Error ? e.message : (t('stats.categoriesError') || 'Could not load distribution'));
-    } finally {
-      setLoadingExplore(false);
-    }
-  }, [debounced, t]);
+    },
+    [debounced, t]
+  );
 
   // refetch when debounced changes
   useEffect(() => {
@@ -225,34 +209,20 @@ export default function StatsPageV2() {
 
   // ---- derived donut/list model ----
   const exploreItems: ExploreItem[] = useMemo(() => {
-    if (level === 'category') {
-      const items = cat?.items ?? [];
-      return items.map((it) => ({
-        id: it.category_id,
-        name: it.name,
-        emoji: it.emoji,
-        total: it.total,
-        count: it.count,
-        share: it.share,
-      }));
-    }
-    const items = sub?.items ?? [];
+    const items = cat?.items ?? [];
     return items.map((it) => ({
-      id: it.subcategory_id,
+      id: it.category_id,
       name: it.name,
       emoji: it.emoji,
       total: it.total,
       count: it.count,
       share: it.share,
     }));
-  }, [level, cat, sub]);
+  }, [cat]);
 
   const exploreTotals = useMemo(() => {
-    if (level === 'category') return cat?.totals ?? { total: 0, count: 0 };
-    return sub?.totals ?? { total: 0, count: 0 };
-  }, [level, cat, sub]);
-
-  const selectedId = level === 'category' ? selectedCategoryId : selectedSubId;
+    return cat?.totals ?? { total: 0, count: 0 };
+  }, [cat]);
 
   // ---- overview metrics ----
   const overviewMetrics = useMemo(() => {
@@ -263,11 +233,13 @@ export default function StatsPageV2() {
     return {
       totalCount,
       avgAmount,
-      topCategory: topCategory ? {
-        name: topCategory.name,
-        emoji: topCategory.emoji,
-        total: topCategory.total,
-      } : null,
+      topCategory: topCategory
+        ? {
+            name: topCategory.name,
+            emoji: topCategory.emoji,
+            total: topCategory.total,
+          }
+        : null,
     };
   }, [exploreTotals, exploreItems]);
 
@@ -275,47 +247,74 @@ export default function StatsPageV2() {
   const onToggleTxType = () => {
     haptic?.selectionChanged?.();
     setTxType((v) => (v === 'withdrawal' ? 'deposit' : 'withdrawal'));
-    // reset drill
-    setLevel('category');
     setSelectedCategoryId(null);
-    setSelectedSubId(null);
     setExpanded(false);
   };
 
-  const onSelectExplore = (id: number) => {
-    haptic?.impactOccurred?.('light');
-
-    if (level === 'category') {
-      // Navigate to CategoryStatsPage with all filter state
-      const categoryData = exploreItems.find(it => it.id === id);
-
-      navigate(`/stats/category/${id}`, {
-        state: {
-          dateRange: {
-            from: dateRange.from,
-            to: dateRange.to,
-            label: dateRange.label,
-          },
-          accountIds,
-          categoryType: txType,
-          categoryMeta: {
-            name: categoryData?.name,
-            emoji: categoryData?.emoji,
-          },
-        },
-      });
-    } else {
-      // select subcategory
-      setSelectedSubId(id);
-    }
-  };
-
-  const onBackToCategories = () => {
+  // Donut select = highlight only
+  const onSelectDonut = (id: number | null) => {
     haptic?.selectionChanged?.();
-    setLevel('category');
-    setSelectedCategoryId(null);
-    setSelectedSubId(null);
-    setExpanded(false);
+
+    if (id == null) {
+      setSelectedCategoryId(null);
+      return;
+    }
+
+    // allow selecting Others for highlight/center label, but it's never navigable
+    setSelectedCategoryId(id);
+  };
+
+  // Donut drill-down = navigate to category page (ExploreDonut already blocks Others)
+  const onDrillDownDonut = (id: number) => {
+    if (id === OTHER_ID) return;
+
+    haptic?.impactOccurred?.('light');
+    const categoryData = exploreItems.find((it) => it.id === id);
+
+    navigate(`/stats/category/${id}`, {
+      state: {
+        dateRange: {
+          from: dateRange.from,
+          to: dateRange.to,
+          label: dateRange.label,
+        },
+        accountIds,
+        categoryType: txType,
+        categoryMeta: {
+          name: categoryData?.name,
+          emoji: categoryData?.emoji,
+        },
+      },
+    });
+  };
+
+  // List tap = open immediately (as you requested)
+  const onSelectFromList = (id: number) => {
+    if (id === OTHER_ID) {
+      // If list ever includes Others, just select it (no navigation)
+      haptic?.selectionChanged?.();
+      setSelectedCategoryId(id);
+      return;
+    }
+
+    haptic?.impactOccurred?.('light');
+    const categoryData = exploreItems.find((it) => it.id === id);
+
+    navigate(`/stats/category/${id}`, {
+      state: {
+        dateRange: {
+          from: dateRange.from,
+          to: dateRange.to,
+          label: dateRange.label,
+        },
+        accountIds,
+        categoryType: txType,
+        categoryMeta: {
+          name: categoryData?.name,
+          emoji: categoryData?.emoji,
+        },
+      },
+    });
   };
 
   if (!isReady || loadingInit) {
@@ -348,7 +347,9 @@ export default function StatsPageV2() {
               onClick={() => setAccountSheetOpen(true)}
               className="px-3 py-2 rounded-xl bg-card/50 hover:bg-card/70 border border-border/50 text-sm font-semibold transition-colors"
             >
-              {accountIds.length ? t('stats.accountCount', { count: accountIds.length }) : (t('common.all') || 'All')}
+              {accountIds.length
+                ? (t('stats.accountCount', { count: accountIds.length }) as string)
+                : (t('common.all') || 'All')}
             </button>
           </div>
 
@@ -364,20 +365,11 @@ export default function StatsPageV2() {
               onClick={onToggleTxType}
               className="h-11 px-4 rounded-2xl border text-sm font-semibold bg-background/40 border-border/50 hover:bg-background/60"
             >
-              {txType === 'withdrawal' ? (t('common.expense') || 'Expenses') : (t('common.income') || 'Income')}
+              {txType === 'withdrawal'
+                ? (t('common.expense') || 'Expenses')
+                : (t('common.income') || 'Income')}
             </button>
           </div>
-
-          {level === 'subcategory' ? (
-            <div className="mt-3">
-              <button
-                onClick={onBackToCategories}
-                className="text-sm text-muted-foreground hover:text-foreground"
-              >
-                ← {t('stats.allCategories') || 'All categories'}
-              </button>
-            </div>
-          ) : null}
         </header>
 
         {/* Overview Card */}
@@ -423,31 +415,32 @@ export default function StatsPageV2() {
           ) : (
             <ExploreDonut
               title={
-                level === 'category'
-                  ? (txType === 'withdrawal' ? (t('stats.topExpenseCategories') || 'Top expense categories') : (t('stats.topIncomeCategories') || 'Top income categories'))
-                  : (t('stats.topSubcategories') || 'Top subcategories')
+                txType === 'withdrawal'
+                  ? (t('stats.topExpenseCategories') || 'Top expense categories')
+                  : (t('stats.topIncomeCategories') || 'Top income categories')
               }
               loading={loadingExplore}
               items={exploreItems}
               totals={exploreTotals}
-              selectedId={selectedId}
-              onSelect={onSelectExplore}
+              selectedId={selectedCategoryId}
+              onSelect={onSelectDonut}
+              onDrillDown={onDrillDownDonut}
               currencyCode={currencyCode}
               locale={locale}
             />
           )}
         </div>
 
-        {/* Explore list */}
+        {/* Explore list (tap once opens page) */}
         <div className="mt-4">
           <ExploreRankList
-            title={level === 'category' ? (t('stats.leaders') || 'Leaders') : (t('stats.leaders') || 'Leaders')}
+            title={t('stats.leaders') || 'Leaders'}
             items={exploreItems}
             totals={exploreTotals}
             expanded={expanded}
             onToggleExpanded={() => setExpanded((v) => !v)}
-            selectedId={selectedId}
-            onSelect={onSelectExplore}
+            selectedId={selectedCategoryId}
+            onSelect={onSelectFromList}
             currencyCode={currencyCode}
             locale={locale}
           />
