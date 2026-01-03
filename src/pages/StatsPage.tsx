@@ -107,6 +107,23 @@ export default function StatsPageV2() {
   const currencyCode = user?.currency_code || 'USD';
   const locale = user?.language_code;
 
+  // Persist filter state to sessionStorage whenever they change
+  useEffect(() => {
+    sessionStorage.setItem('stats_dateRange', JSON.stringify({
+      from: dateRange.from.toISOString(),
+      to: dateRange.to.toISOString(),
+      label: dateRange.label,
+    }));
+  }, [dateRange]);
+
+  useEffect(() => {
+    sessionStorage.setItem('stats_accountIds', JSON.stringify(accountIds));
+  }, [accountIds]);
+
+  useEffect(() => {
+    sessionStorage.setItem('stats_txType', txType);
+  }, [txType]);
+
   // init load (me + accounts)
   useEffect(() => {
     if (!isReady) return;
