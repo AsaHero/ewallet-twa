@@ -1,34 +1,34 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import {
-  format,
-  startOfMonth,
-  endOfMonth,
-  differenceInCalendarDays,
-  addDays,
-  isAfter,
-} from 'date-fns';
+import { format, startOfMonth, endOfMonth, differenceInCalendarDays } from 'date-fns';
 
 import { apiClient } from '@/api/client';
-import type { User, Account, TimeseriesStatsView, CategoryStatsView, StatsGroupBy } from '@/core/types';
-import { useTelegramWebApp } from '@/hooks/useTelegramWebApp';
-import { useAuth } from '@/contexts/AuthContext';
-import { Skeleton } from '@/components/ui/skeleton';
+import type {
+  User,
+  Account,
+  StatsGroupBy,
+  BalanceTimeseriesView,
+  CategoryStatsView,
+  SubcategoryStatsView,
+  StatsTxType,
+} from '@/core/types';
 
-import { SummaryCard } from '@/components/history/SummaryCard';
+import { useTelegramWebApp } from '@/hooks/useTelegramWebApp';
+import { Skeleton } from '@/components/ui/skeleton';
 import { DateRangeSheet, type DateRange } from '@/components/history/DateRangeSheet';
-import { StatsTypeChips, type StatsType } from '@/components/stats/StatsTypeChips';
 import { AccountFilterSheet } from '@/components/stats/AccountFilterSheet';
-import { TimeseriesChart } from '@/components/stats/TimeseriesChart';
-import { CategoryRankList } from '@/components/stats/CategoryRankList';
-import { ErrorCard } from '@/components/stats/ErrorCard';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
+import { ErrorCard } from '@/components/stats/ErrorCard';
+
+import { BalanceTimeseriesChart } from '@/components/stats/BalanceTimeseriesChart';
+import { ExploreDonut, type ExploreItem } from '@/components/stats/ExploreDonut';
+import { ExploreRankList } from '@/components/stats/ExploreRankList';
+
+type ExploreLevel = 'category' | 'subcategory';
 
 function toYMD(d: Date) {
   return format(d, 'yyyy-MM-dd');
 }
-
 function autoGroupBy(range: DateRange): StatsGroupBy {
   const days = Math.abs(differenceInCalendarDays(range.to, range.from)) + 1;
   if (days <= 31) return 'day';
@@ -36,84 +36,51 @@ function autoGroupBy(range: DateRange): StatsGroupBy {
   return 'month';
 }
 
-function shiftRange(range: DateRange, direction: 'prev' | 'next'): DateRange {
-  const days = differenceInCalendarDays(range.to, range.from) + 1;
-  const delta = direction === 'prev' ? -days : days;
-  return {
-    from: addDays(range.from, delta),
-    to: addDays(range.to, delta),
-    label: 'custom',
-  };
-}
-
-export default function StatsPage() {
+export default function StatsPageV2() {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const { isReady, haptic } = useTelegramWebApp();
-  const { loading: authLoading } = useAuth();
 
+  // init
   const [user, setUser] = useState<User | null>(null);
   const [accounts, setAccounts] = useState<Account[]>([]);
+  const [loadingInit, setLoadingInit] = useState(true);
 
+  // filters
   const [dateRange, setDateRange] = useState<DateRange>(() => {
     const now = new Date();
     return { from: startOfMonth(now), to: endOfMonth(now), label: 'thisMonth' };
   });
+  const [accountIds, setAccountIds] = useState<string[]>([]);
+  const groupBy = useMemo(() => autoGroupBy(dateRange), [dateRange]);
 
-  const [type, setType] = useState<StatsType>('all'); // all | income | expense
-  const [accountIds, setAccountIds] = useState<string[]>([]); // empty = all
-
-  // Sheets
+  // sheets
   const [dateSheetOpen, setDateSheetOpen] = useState(false);
   const [accountSheetOpen, setAccountSheetOpen] = useState(false);
 
-  // Data
-  const [tsData, setTsData] = useState<TimeseriesStatsView | null>(null);
-  const [catData, setCatData] = useState<CategoryStatsView | null>(null);
+  // balance data
+  const [bal, setBal] = useState<BalanceTimeseriesView | null>(null);
+  const [loadingBal, setLoadingBal] = useState(false);
+  const [errorBal, setErrorBal] = useState<string | null>(null);
 
-  const [loadingInit, setLoadingInit] = useState(true);
-  const [loadingTs, setLoadingTs] = useState(false);
-  const [loadingCat, setLoadingCat] = useState(false);
+  // explore state
+  const [txType, setTxType] = useState<StatsTxType>('withdrawal');
+  const [level, setLevel] = useState<ExploreLevel>('category');
+  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
+  const [selectedSubId, setSelectedSubId] = useState<number | null>(null);
+  const [expanded, setExpanded] = useState(false);
 
-  const [errorTs, setErrorTs] = useState<string | null>(null);
-  const [errorCat, setErrorCat] = useState<string | null>(null);
+  // explore data
+  const [cat, setCat] = useState<CategoryStatsView | null>(null);
+  const [sub, setSub] = useState<SubcategoryStatsView | null>(null);
+  const [loadingExplore, setLoadingExplore] = useState(false);
+  const [errorExplore, setErrorExplore] = useState<string | null>(null);
 
   const currencyCode = user?.currency_code || 'USD';
   const locale = user?.language_code;
 
-  const groupBy = useMemo(() => autoGroupBy(dateRange), [dateRange]);
-
-  // Map UI type -> backend type for timeseries
-  const timeseriesType = useMemo(() => {
-    if (type === 'income') return 'deposit' as const;
-    if (type === 'expense') return 'withdrawal' as const;
-    return undefined;
-  }, [type]);
-
-  // For categories: if "all" we still show expense categories (more useful).
-  const categoryType = useMemo(() => {
-    if (type === 'income') return 'deposit' as const;
-    return 'withdrawal' as const;
-  }, [type]);
-
-  // Build request query (server expects repeated keys for arrays: account_ids=...&account_ids=...)
-  const query = useMemo(() => {
-    return {
-      from: toYMD(dateRange.from),
-      to: toYMD(dateRange.to),
-      group_by: groupBy,
-      ts_type: timeseriesType,
-      cat_type: categoryType,
-      account_ids: accountIds.length ? accountIds : undefined,
-    };
-  }, [dateRange.from, dateRange.to, groupBy, timeseriesType, categoryType, accountIds]);
-
-  const debouncedQuery = useDebouncedValue(query, 180);
-
-  // Initial data (me + accounts)
+  // init load (me + accounts)
   useEffect(() => {
-    if (!isReady || authLoading) return;
-
+    if (!isReady) return;
     (async () => {
       try {
         const [me, acc] = await Promise.all([apiClient.getMe(), apiClient.getAccounts()]);
@@ -123,78 +90,157 @@ export default function StatsPage() {
         setLoadingInit(false);
       }
     })();
-  }, [isReady, authLoading]);
+  }, [isReady]);
 
-  const fetchTimeseries = useCallback(async (q = debouncedQuery) => {
-    setLoadingTs(true);
-    setErrorTs(null);
+  const query = useMemo(() => {
+    return {
+      from: toYMD(dateRange.from),
+      to: toYMD(dateRange.to),
+      group_by: groupBy,
+      account_ids: accountIds.length ? accountIds : undefined,
+      txType,
+      level,
+      selectedCategoryId,
+    };
+  }, [dateRange.from, dateRange.to, groupBy, accountIds, txType, level, selectedCategoryId]);
+
+  const debounced = useDebouncedValue(query, 180);
+
+  // ---- fetchers ----
+  const fetchBalance = useCallback(async (q = debounced) => {
+    setLoadingBal(true);
+    setErrorBal(null);
     try {
-      const res = await apiClient.getStatsTimeseries({
+      const res = await apiClient.getStatsBalanceTimeseries({
         from: q.from,
         to: q.to,
         group_by: q.group_by,
-        type: q.ts_type,
+        mode: 'aggregate',
         account_ids: q.account_ids,
       });
-      setTsData(res);
+      setBal(res);
     } catch (e) {
-      setErrorTs(e instanceof Error ? e.message : t('stats.trendError'));
+      setErrorBal(e instanceof Error ? e.message : (t('stats.trendError') || 'Could not load balance trend'));
     } finally {
-      setLoadingTs(false);
+      setLoadingBal(false);
     }
-  }, [debouncedQuery]);
+  }, [debounced, t]);
 
-  const fetchCategories = useCallback(async (q = debouncedQuery) => {
-    setLoadingCat(true);
-    setErrorCat(null);
+  const fetchExplore = useCallback(async (q = debounced) => {
+    setLoadingExplore(true);
+    setErrorExplore(null);
+
     try {
-      const res = await apiClient.getStatsByCategory({
-        from: q.from,
-        to: q.to,
-        type: q.cat_type,
-        account_ids: q.account_ids,
-      });
-      setCatData(res);
-    } catch (e) {
-      setErrorCat(e instanceof Error ? e.message : t('stats.categoriesError'));
-    } finally {
-      setLoadingCat(false);
-    }
-  }, [debouncedQuery]);
+      if (q.level === 'category') {
+        const res = await apiClient.getStatsByCategory({
+          from: q.from,
+          to: q.to,
+          type: q.txType,
+          account_ids: q.account_ids,
+        });
+        setCat(res);
+        setSub(null);
+      } else {
+        if (!q.selectedCategoryId) {
+          // safety fallback
+          const res = await apiClient.getStatsByCategory({
+            from: q.from,
+            to: q.to,
+            type: q.txType,
+            account_ids: q.account_ids,
+          });
+          setCat(res);
+          setSub(null);
+          return;
+        }
 
-  // Refetch on debounced changes
+        const res = await apiClient.getStatsBySubcategory({
+          from: q.from,
+          to: q.to,
+          type: q.txType,
+          account_ids: q.account_ids,
+          category_ids: [q.selectedCategoryId],
+        });
+        setSub(res);
+      }
+    } catch (e) {
+      setErrorExplore(e instanceof Error ? e.message : (t('stats.categoriesError') || 'Could not load distribution'));
+    } finally {
+      setLoadingExplore(false);
+    }
+  }, [debounced, t]);
+
+  // refetch when debounced changes
   useEffect(() => {
     if (!isReady || loadingInit) return;
-    fetchTimeseries(debouncedQuery);
-    fetchCategories(debouncedQuery);
-  }, [isReady, loadingInit, debouncedQuery, fetchTimeseries, fetchCategories]);
+    fetchBalance(debounced);
+    fetchExplore(debounced);
+  }, [isReady, loadingInit, debounced, fetchBalance, fetchExplore]);
 
-  const totals = tsData?.totals;
-
-  const onPrev = () => {
-    haptic?.impactOccurred?.('light');
-    setDateRange((r) => shiftRange(r, 'prev'));
-  };
-
-  const onNext = () => {
-    haptic?.impactOccurred?.('light');
-    setDateRange((r) => shiftRange(r, 'next'));
-  };
-
-  const canGoNext = () => {
-    // prevent going into future: if next shift would result in to > now => disable
-    const next = shiftRange(dateRange, 'next');
-    return !isAfter(next.to, new Date());
-  };
-
-  const accountLabel = useMemo(() => {
-    if (!accountIds.length) return t('common.all') || 'All';
-    if (accountIds.length === 1) {
-      const a = accounts.find((x) => x.id === accountIds[0]);
-      return a?.name || t('common.account', { count: 1 });
+  // ---- derived donut/list model ----
+  const exploreItems: ExploreItem[] = useMemo(() => {
+    if (level === 'category') {
+      const items = cat?.items ?? [];
+      return items.map((it) => ({
+        id: it.category_id,
+        name: it.name,
+        emoji: it.emoji,
+        total: it.total,
+        count: it.count,
+        share: it.share,
+      }));
     }
-    return t('common.account', { count: accountIds.length });
-  }, [accountIds, accounts, t]);
+    const items = sub?.items ?? [];
+    return items.map((it) => ({
+      id: it.subcategory_id,
+      name: it.name,
+      emoji: it.emoji,
+      total: it.total,
+      count: it.count,
+      share: it.share,
+    }));
+  }, [level, cat, sub]);
+
+  const exploreTotals = useMemo(() => {
+    if (level === 'category') return cat?.totals ?? { total: 0, count: 0 };
+    return sub?.totals ?? { total: 0, count: 0 };
+  }, [level, cat, sub]);
+
+  const selectedId = level === 'category' ? selectedCategoryId : selectedSubId;
+
+  // ---- interactions ----
+  const onToggleTxType = () => {
+    haptic?.selectionChanged?.();
+    setTxType((v) => (v === 'withdrawal' ? 'deposit' : 'withdrawal'));
+    // reset drill
+    setLevel('category');
+    setSelectedCategoryId(null);
+    setSelectedSubId(null);
+    setExpanded(false);
+  };
+
+  const onSelectExplore = (id: number) => {
+    haptic?.impactOccurred?.('light');
+
+    if (level === 'category') {
+      // drill into subcategories
+      setSelectedCategoryId(id);
+      setLevel('subcategory');
+      setSelectedSubId(null);
+      setExpanded(false);
+    } else {
+      // select subcategory
+      setSelectedSubId(id);
+    }
+  };
+
+  const onBackToCategories = () => {
+    haptic?.selectionChanged?.();
+    setLevel('category');
+    setSelectedCategoryId(null);
+    setSelectedSubId(null);
+    setExpanded(false);
+  };
 
   if (!isReady || loadingInit) {
     return (
@@ -203,9 +249,9 @@ export default function StatsPage() {
         <div className="h-14" />
         <div className="px-4 pb-8 max-w-md mx-auto space-y-4">
           <Skeleton className="h-8 w-40" />
-          <Skeleton className="h-40 w-full rounded-2xl" />
           <Skeleton className="h-56 w-full rounded-2xl" />
-          <Skeleton className="h-48 w-full rounded-2xl" />
+          <Skeleton className="h-64 w-full rounded-2xl" />
+          <Skeleton className="h-72 w-full rounded-2xl" />
         </div>
       </div>
     );
@@ -217,7 +263,7 @@ export default function StatsPage() {
       <div className="h-14" />
 
       <div className="px-4 pb-8 max-w-md mx-auto">
-        {/* Sticky header + controls */}
+        {/* Sticky header */}
         <header className="pt-2 pb-4 sticky top-0 z-10 bg-background/80 backdrop-blur-xl">
           <div className="mt-3 flex items-center justify-between gap-2">
             <h1 className="text-2xl font-bold">{t('common.stats') || 'Stats'}</h1>
@@ -226,91 +272,96 @@ export default function StatsPage() {
               onClick={() => setAccountSheetOpen(true)}
               className="px-3 py-2 rounded-xl bg-card/50 hover:bg-card/70 border border-border/50 text-sm font-semibold transition-colors"
             >
-              {accountLabel}
+              {accountIds.length ? t('stats.accountCount', { count: accountIds.length }) : (t('common.all') || 'All')}
             </button>
           </div>
 
-          <div className="mt-3">
-            <StatsTypeChips
-              value={type}
-              onChange={(v) => {
-                haptic?.selectionChanged?.();
-                setType(v);
-              }}
-            />
+          <div className="mt-3 flex gap-2">
+            <button
+              onClick={() => setDateSheetOpen(true)}
+              className="flex-1 h-11 rounded-2xl bg-card/50 hover:bg-card/70 border border-border/50 text-sm font-semibold transition-colors"
+            >
+              {toYMD(dateRange.from)} → {toYMD(dateRange.to)}
+            </button>
+
+            <button
+              onClick={onToggleTxType}
+              className="h-11 px-4 rounded-2xl border text-sm font-semibold bg-background/40 border-border/50 hover:bg-background/60"
+            >
+              {txType === 'withdrawal' ? (t('common.expense') || 'Expenses') : (t('common.income') || 'Income')}
+            </button>
           </div>
+
+          {level === 'subcategory' ? (
+            <div className="mt-3">
+              <button
+                onClick={onBackToCategories}
+                className="text-sm text-muted-foreground hover:text-foreground"
+              >
+                ← {t('stats.allCategories') || 'All categories'}
+              </button>
+            </div>
+          ) : null}
         </header>
 
-        {/* KPI Summary */}
+        {/* Balance chart */}
         <div className="mt-2">
-          <SummaryCard
-            dateRange={dateRange}
-            totalIncome={totals?.income ?? 0}
-            totalExpense={totals?.expense ?? 0}
-            netBalance={totals?.net ?? 0}
-            currencyCode={currencyCode}
-            locale={locale}
-            onPrev={onPrev}
-            onNext={onNext}
-            canGoPrev
-            canGoNext={canGoNext()}
-            onHeaderClick={() => setDateSheetOpen(true)}
-          />
-        </div>
-
-        {/* Trend */}
-        <div className="mt-5">
-          {errorTs ? (
+          {errorBal ? (
             <ErrorCard
-              title={t('stats.trendError') || 'Could not load trend'}
-              message={errorTs}
-              onRetry={() => fetchTimeseries()}
+              title={t('stats.trendError') || 'Could not load balance trend'}
+              message={errorBal}
+              onRetry={() => fetchBalance()}
             />
           ) : (
-            <TimeseriesChart
-              loading={loadingTs}
-              data={tsData}
+            <BalanceTimeseriesChart
+              title={t('stats.balanceOverTime') || 'Balance over time'}
+              loading={loadingBal}
+              data={bal}
               currencyCode={currencyCode}
               locale={locale}
               groupBy={groupBy}
-              title={t('stats.trend') || 'Trend'}
             />
           )}
         </div>
 
-        {/* Categories */}
+        {/* Explore donut */}
         <div className="mt-5">
-          {errorCat ? (
+          {errorExplore ? (
             <ErrorCard
-              title={t('stats.categoriesError') || 'Could not load categories'}
-              message={errorCat}
-              onRetry={() => fetchCategories()}
+              title={t('stats.distributionError') || 'Could not load distribution'}
+              message={errorExplore}
+              onRetry={() => fetchExplore()}
             />
           ) : (
-            <CategoryRankList
-              loading={loadingCat}
-              view={catData}
+            <ExploreDonut
+              title={
+                level === 'category'
+                  ? (txType === 'withdrawal' ? (t('stats.topExpenseCategories') || 'Top expense categories') : (t('stats.topIncomeCategories') || 'Top income categories'))
+                  : (t('stats.topSubcategories') || 'Top subcategories')
+              }
+              items={exploreItems}
+              totals={exploreTotals}
+              selectedId={selectedId}
+              onSelect={onSelectExplore}
               currencyCode={currencyCode}
               locale={locale}
-              title={
-                  type === 'income'
-                  ? (t('stats.topIncomeCategories') || 'Top income categories')
-                  : (t('stats.topExpenseCategories') || 'Top expense categories')
-              }
-              onSelectCategory={(categoryId) => {
-                  // find meta for nicer header
-                  const meta = catData?.items?.find((x) => x.category_id === categoryId);
-                  navigate(`/stats/category/${categoryId}`, {
-                  state: {
-                      dateRange,
-                      accountIds,
-                      categoryType: type === 'income' ? 'deposit' : 'withdrawal',
-                      categoryMeta: { name: meta?.name, emoji: meta?.emoji },
-                  },
-                  });
-              }}
             />
           )}
+        </div>
+
+        {/* Explore list */}
+        <div className="mt-4">
+          <ExploreRankList
+            title={level === 'category' ? (t('stats.leaders') || 'Leaders') : (t('stats.leaders') || 'Leaders')}
+            items={exploreItems}
+            totals={exploreTotals}
+            expanded={expanded}
+            onToggleExpanded={() => setExpanded((v) => !v)}
+            selectedId={selectedId}
+            onSelect={onSelectExplore}
+            currencyCode={currencyCode}
+            locale={locale}
+          />
         </div>
       </div>
 

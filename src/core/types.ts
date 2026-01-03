@@ -96,6 +96,7 @@ export interface BotUpdateTransactionRequest {
 
 export type StatsGroupBy = 'day' | 'week' | 'month';
 export type StatsTxType = 'deposit' | 'withdrawal' | 'transfer' | 'adjustment';
+export type BalanceTimeseriesMode = 'aggregate' | 'per_account';
 
 export type TimeseriesDataPoint = {
   ts: string;
@@ -162,4 +163,41 @@ export type SubcategoryStatsItem = {
 export type SubcategoryStatsTotals = {
   total: number;
   count: number;
+};
+
+export type BalanceTimeseriesPointView = {
+  ts: string;            // bucket timestamp (string)
+  balance_open: number;  // balance at bucket start
+  balance_close: number; // balance at bucket end
+  delta: number;         // close - open
+  min_balance: number;   // min within bucket
+  max_balance: number;   // max within bucket
+  tx_count: number;      // number of tx in bucket
+};
+
+export type BalanceTimeseriesTotalsView = {
+  start_balance: number;
+  end_balance: number;
+  change: number;
+  min_balance: number;
+  max_balance: number;
+  tx_count: number;
+};
+
+export type AccountBalanceSeriesView = {
+  account_id: string;
+  points: BalanceTimeseriesPointView[];
+};
+
+export type BalanceTimeseriesView = {
+  from: string;
+  to: string;
+  group_by: StatsGroupBy;
+  mode: BalanceTimeseriesMode;
+  account_ids?: string[];
+  // aggregate mode
+  points?: BalanceTimeseriesPointView[];
+  // per_account mode
+  series?: AccountBalanceSeriesView[];
+  totals: BalanceTimeseriesTotalsView;
 };

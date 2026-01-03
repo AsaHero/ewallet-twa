@@ -1,5 +1,5 @@
 import axios, { type AxiosInstance, type AxiosError } from 'axios';
-import type { Account, User, Transaction, TransactionsResponse, Category, Subcategory, StatsGroupBy, StatsTxType, TimeseriesStatsView, CategoryStatsView, SubcategoryStatsView } from '../core/types';
+import type { Account, User, Transaction, TransactionsResponse, Category, Subcategory, StatsGroupBy, StatsTxType, TimeseriesStatsView, CategoryStatsView, SubcategoryStatsView, BalanceTimeseriesMode, BalanceTimeseriesView } from '../core/types';
 import { authService } from '../services/auth.service';
 
 class APIClient {
@@ -185,10 +185,21 @@ class APIClient {
         return res.data;
     }
 
+    async getStatsBalanceTimeseries(params: {
+        from: string;
+        to: string;
+        group_by: StatsGroupBy;
+        mode?: BalanceTimeseriesMode; // default aggregate
+        account_ids?: string[];
+    }): Promise<BalanceTimeseriesView> {
+        const res = await this.client.get<BalanceTimeseriesView>('/stats/timeseries/balance', { params });
+        return res.data;
+    }
+
     async getStatsByCategory(params: {
         from: string;
         to: string;
-        type?: 'deposit' | 'withdrawal';
+        type?: StatsTxType;
         account_ids?: string[];
         category_ids?: number[];
     }): Promise<CategoryStatsView> {
@@ -199,7 +210,7 @@ class APIClient {
     async getStatsBySubcategory(params: {
         from: string;
         to: string;
-        type?: 'deposit' | 'withdrawal';
+        type?: StatsTxType;
         account_ids?: string[];
         category_ids?: number[];
     }): Promise<SubcategoryStatsView> {
