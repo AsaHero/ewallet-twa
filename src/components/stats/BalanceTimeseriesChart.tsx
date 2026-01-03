@@ -1,17 +1,19 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent} from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatCurrency } from '@/lib/formatters';
 import type { BalanceTimeseriesView, StatsGroupBy } from '@/core/types';
 import {
   ResponsiveContainer,
-  LineChart,
-  Line,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
   Tooltip,
+  CartesianGrid,
 } from 'recharts';
+import { EmptyStateIllustration } from './EmptyStateIllustration';
 
 function shortLabel(ts: string, groupBy: StatsGroupBy) {
   if (!ts) return '';
@@ -55,8 +57,8 @@ function CustomTooltip({
   const head = shortLabel(dateLabel, groupBy);
 
   return (
-    <div className="rounded-2xl border border-border/50 bg-background/95 backdrop-blur-xl shadow-lg px-3 py-2 min-w-[180px]">
-      <div className="text-[11px] text-muted-foreground mb-2">
+    <div className="rounded-2xl border border-border/50 bg-background/95 backdrop-blur-xl shadow-lg px-3 py-2.5 min-w-[180px]">
+      <div className="text-[11px] text-muted-foreground font-medium mb-2">
         {head || dateLabel}
       </div>
 
@@ -109,7 +111,7 @@ export function BalanceTimeseriesChart({
   }, [points]);
 
   return (
-    <Card className="border border-border/40 bg-card/40 overflow-hidden">
+    <Card className="border border-border/40 bg-card/40 overflow-hidden shadow-sm">
       <CardContent className="p-4">
         <div className="flex items-start justify-between gap-3">
           <div>
@@ -133,23 +135,30 @@ export function BalanceTimeseriesChart({
           {loading && !data ? (
             <Skeleton className="h-full w-full rounded-2xl" />
           ) : !data || !points.length ? (
-            <div className="h-full rounded-2xl bg-muted/30 flex items-center justify-center text-sm text-muted-foreground">
-              {t('stats.noData') || 'No data'}
-            </div>
+            <EmptyStateIllustration variant="no-data" />
           ) : (
             <>
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={points} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                <AreaChart data={points} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="balanceGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="hsl(142, 76%, 45%)" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="hsl(142, 76%, 45%)" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.2} />
+
                   <XAxis
                     dataKey="ts"
                     tickFormatter={(v) => shortLabel(String(v), groupBy)}
-                    tick={{ fontSize: 11 }}
+                    tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
                     interval={tickInterval}
                     axisLine={false}
                     tickLine={false}
                   />
                   <YAxis
-                    tick={{ fontSize: 11 }}
+                    tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
                     width={42}
                     axisLine={false}
                     tickLine={false}
@@ -166,21 +175,24 @@ export function BalanceTimeseriesChart({
                     }
                   />
 
-                  <Line
+                  <Area
                     type="monotone"
                     dataKey="balance_close"
+                    stroke="hsl(142, 76%, 45%)"
                     strokeWidth={2.5}
+                    fill="url(#balanceGradient)"
                     dot={false}
+                    activeDot={{ r: 5, fill: 'hsl(142, 76%, 45%)', strokeWidth: 0 }}
                     isAnimationActive={!loading}
-                    animationDuration={260}
+                    animationDuration={400}
                   />
-                </LineChart>
+                </AreaChart>
               </ResponsiveContainer>
 
               {loading ? (
                 <div className="absolute inset-0 pointer-events-none">
-                  <div className="absolute inset-0 bg-background/10" />
-                  <div className="absolute right-3 top-3 text-[11px] text-muted-foreground">
+                  <div className="absolute inset-0 bg-background/10 rounded-2xl" />
+                  <div className="absolute right-3 top-3 px-2 py-1 rounded-lg bg-background/80 backdrop-blur-sm text-[11px] text-muted-foreground font-medium">
                     {t('stats.updating') || 'Updating'}
                   </div>
                 </div>
@@ -190,7 +202,7 @@ export function BalanceTimeseriesChart({
         </div>
 
         {data?.totals ? (
-          <div className="mt-3 space-y-1">
+          <div className="mt-3 space-y-1 pt-3 border-t border-border/30">
             <Row label={t('stats.start') || 'Start'} value={formatCurrency(data.totals.start_balance ?? 0, currencyCode, locale)} />
             <Row label={t('stats.end') || 'End'} value={formatCurrency(data.totals.end_balance ?? 0, currencyCode, locale)} />
             <Row label={t('stats.min') || 'Min'} value={formatCurrency(data.totals.min_balance ?? 0, currencyCode, locale)} />

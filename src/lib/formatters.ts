@@ -231,3 +231,36 @@ export function getMonthDateRange(date: Date): { from: Date; to: Date } {
     const to = new Date(date.getFullYear(), date.getMonth() + 1, 0, 23, 59, 59, 999);
     return { from, to };
 }
+
+// Format percentage change with sign
+export function formatPercentChange(value: number, decimals: number = 1): string {
+    const formatted = Math.abs(value).toFixed(decimals);
+    const sign = value > 0 ? '+' : value < 0 ? '-' : '';
+    return `${sign}${formatted}%`;
+}
+
+// Format large numbers in compact form (1.2K, 1.5M)
+export function formatCompactNumber(value: number, locale?: string): string {
+    if (Math.abs(value) < 1000) {
+        return value.toFixed(0);
+    }
+
+    return new Intl.NumberFormat(locale || 'en-US', {
+        notation: 'compact',
+        maximumFractionDigits: 1,
+    }).format(value);
+}
+
+// Get trend icon based on change value
+export function getTrendIcon(change: number, threshold: number = 0.1): string {
+    if (Math.abs(change) < threshold) return '→';
+    return change > 0 ? '↑' : '↓';
+}
+
+// Calculate period comparison percentage
+export function calculatePeriodComparison(current: number, previous: number): number {
+    if (previous === 0) {
+        return current === 0 ? 0 : 100;
+    }
+    return ((current - previous) / Math.abs(previous)) * 100;
+}

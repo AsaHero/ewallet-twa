@@ -139,6 +139,39 @@
         "noCategories": "No categories",
         "noSubcategories": "No subcategories",
         "transactions_one": "{{count}} tx",
-        "transactions_other": "{{count}} tx"
+        "transactions_other": "{{count}} tx",
+        "overview": "Overview",
+        "totalTransactions": "Total Transactions",
+        "avgTransaction": "Avg Transaction",
+        "topCategory": "Top Category",
+        "periodChange": "vs last",
+        "balanceOverTime": "Balance over time",
+        "change": "Change",
+        "balanceOpen": "Open",
+        "balanceClose": "Close",
+        "delta": "Δ",
+        "min": "Min",
+        "max": "Max",
+        "txCount": "Transactions",
+        "start": "Start",
+        "end": "End",
+        "allCategories": "All categories",
+        "leaders": "Leaders",
+        "distributionError": "Could not load distribution",
+        "presets": {
+            "last7days": "Last 7 days",
+            "last30days": "Last 30 days",
+            "thisMonth": "This Month",
+            "lastMonth": "Last Month",
+            "thisQuarter": "This Quarter",
+            "thisYear": "This Year",
+            "custom": "Custom"
+        },
+        "emptyState": {
+            "noData": "No data available",
+            "noDataDesc": "Try selecting a different date range",
+            "noResults": "No results found",
+            "noResultsDesc": "Adjust your filters and try again"
+        }
     }
 }
