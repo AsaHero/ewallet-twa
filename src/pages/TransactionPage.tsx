@@ -200,7 +200,9 @@ function TransactionPage() {
         });
 
         WebApp.HapticFeedback.notificationOccurred('success');
+        WebApp.showAlert(t('transaction.updated'), () => {
         WebApp.close();
+        });
     } catch (err) {
         console.error('Failed to send data:', err);
         WebApp.HapticFeedback.notificationOccurred('error');
