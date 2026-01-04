@@ -153,16 +153,10 @@ class APIClient {
     }
 
     async updateTransaction(id: string, data: {
-        type: 'withdrawal' | 'deposit';
-        amount: number;
-        currency_code?: string;
         category_id?: number;
         subcategory_id?: number;
         note?: string;
         performed_at?: string;
-        original_amount?: number;
-        original_currency_code?: string;
-        fx_rate?: number;
     }): Promise<Transaction> {
         const res = await this.client.put<Transaction>(`/transactions/${id}`, data);
         return res.data;

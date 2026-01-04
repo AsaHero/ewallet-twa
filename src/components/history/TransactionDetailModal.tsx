@@ -1,9 +1,12 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import { X } from 'lucide-react';
+import { X, Edit2, Trash2, Save } from 'lucide-react';
+import { useState, useMemo, useEffect } from 'react';
 import type { Transaction, Category, Subcategory, Account } from '@/core/types';
 import { formatCurrency, formatDateTime } from '@/lib/formatters';
 import { cn } from '@/lib/utils';
+import { apiClient } from '@/api/client';
+import { useTelegramWebApp } from '@/hooks/useTelegramWebApp';
 
 interface TransactionDetailModalProps {
   transaction: Transaction | null;
@@ -13,6 +16,15 @@ interface TransactionDetailModalProps {
   locale?: string;
   timezone?: string;
   onClose: () => void;
+  onTransactionUpdated?: () => void;
+  onTransactionDeleted?: () => void;
+}
+
+interface EditableFields {
+  category_id?: number;
+  subcategory_id?: number;
+  note?: string;
+  performed_at?: string;
 }
 
 export function TransactionDetailModal({
@@ -23,9 +35,16 @@ export function TransactionDetailModal({
   locale,
   timezone,
   onClose,
+  onTransactionUpdated,
+  onTransactionDeleted,
 }: TransactionDetailModalProps) {
   const { t } = useTranslation();
+  const { WebApp } = useTelegramWebApp();
   const isOpen = !!transaction;
+
+  const [mode, setMode] = useState<'view' | 'edit'>('view');
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState<EditableFields>({});
 
   const category = transaction ? categories.find((c) => c.id === transaction.category_id) : undefined;
   const subcategory = transaction ? subcategories.find((s) => s.id === transaction.subcategory_id) : undefined;
@@ -42,6 +61,93 @@ export function TransactionDetailModal({
     transaction?.original_amount !== undefined &&
     !!transaction?.original_currency_code &&
     transaction?.original_currency_code !== transaction?.currency_code;
+
+  // Reset mode when transaction changes
+  useEffect(() => {
+    setMode('view');
+    if (transaction) {
+      setFormData({
+        category_id: transaction.category_id,
+        subcategory_id: transaction.subcategory_id,
+        note: transaction.note,
+        performed_at: transaction.performed_at || transaction.created_at,
+      });
+    }
+  }, [transaction]);
+
+  // Filter subcategories by selected category in edit mode
+  const filteredSubcategories = useMemo(() => {
+    if (!formData.category_id) return subcategories;
+    return subcategories.filter((s) => s.category_id === formData.category_id);
+  }, [formData.category_id, subcategories]);
+
+  const handleEdit = () => {
+    WebApp?.HapticFeedback?.impactOccurred('light');
+    setMode('edit');
+  };
+
+  const handleCancel = () => {
+    WebApp?.HapticFeedback?.impactOccurred('light');
+    setMode('view');
+    if (transaction) {
+      setFormData({
+        category_id: transaction.category_id,
+        subcategory_id: transaction.subcategory_id,
+        note: transaction.note,
+        performed_at: transaction.performed_at || transaction.created_at,
+      });
+    }
+  };
+
+  const handleSave = async () => {
+    if (!transaction) return;
+
+    WebApp?.HapticFeedback?.impactOccurred('medium');
+    setLoading(true);
+
+    try {
+      await apiClient.updateTransaction(transaction.id, formData);
+      WebApp?.HapticFeedback?.notificationOccurred('success');
+      WebApp?.showAlert(t('transaction.updateSuccess'));
+      setMode('view');
+      onTransactionUpdated?.();
+      onClose();
+    } catch (err) {
+      console.error('Failed to update transaction:', err);
+      WebApp?.HapticFeedback?.notificationOccurred('error');
+      WebApp?.showAlert(t('errors.updateFailed'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = () => {
+    if (!transaction) return;
+
+    WebApp?.HapticFeedback?.impactOccurred('medium');
+
+    WebApp?.showConfirm(
+      `${t('transaction.confirmDelete')}\n\n${t('transaction.confirmDeleteMessage')}`,
+      async (confirmed) => {
+        if (confirmed) {
+          setLoading(true);
+          try {
+            await apiClient.deleteTransaction(transaction.id);
+            WebApp?.HapticFeedback?.notificationOccurred('success');
+            WebApp?.showAlert(t('transaction.deleteSuccess'));
+            onTransactionDeleted?.();
+            onClose();
+          } catch (err) {
+            console.error('Failed to delete transaction:', err);
+            WebApp?.HapticFeedback?.notificationOccurred('error');
+            WebApp?.showAlert(t('errors.deleteFailed'));
+          } finally {
+            setLoading(false);
+          }
+        }
+      }
+    );
+  };
 
   return (
     <AnimatePresence>
@@ -80,7 +186,7 @@ export function TransactionDetailModal({
               </div>
 
               {/* Content */}
-              <div className="px-4 py-4 space-y-5 max-h-[72vh] overflow-y-auto overscroll-contain">
+              <div className="px-4 py-4 space-y-5 max-h-[65vh] overflow-y-auto overscroll-contain">
                 <div className="text-center space-y-2">
                   <div className="text-5xl">{displayEmoji}</div>
                   <h3 className="text-lg font-semibold text-foreground">{displayName}</h3>
@@ -122,21 +228,126 @@ export function TransactionDetailModal({
                 )}
 
                 <div className="bg-card/40 border border-border/50 rounded-2xl p-4 space-y-3">
-                  <DetailRow label={t('transaction.type')} value={isIncome ? t('transaction.income') : t('transaction.expense')} icon={isIncome ? '💰' : '💸'} />
-                  {category && <DetailRow label={t('transaction.category')} value={category.name} icon={category.emoji || '📁'} />}
-                  {subcategory && <DetailRow label={t('transaction.subcategory')} value={subcategory.name} icon={subcategory.emoji || '📌'} />}
-                  {account && <DetailRow label={t('transaction.account')} value={account.name} icon="📊" />}
                   <DetailRow
-                    label={t('transaction.dateTime')}
-                    value={formatDateTime(transaction.performed_at || transaction.created_at, timezone, locale)}
-                    icon="📅"
+                    label={t('transaction.type')}
+                    value={isIncome ? t('transaction.income') : t('transaction.expense')}
+                    icon={isIncome ? '💰' : '💸'}
+                    readOnly
                   />
+
+                  {mode === 'view' ? (
+                    <>
+                      {category && <DetailRow label={t('transaction.category')} value={category.name} icon={category.emoji || '📁'} />}
+                      {subcategory && <DetailRow label={t('transaction.subcategory')} value={subcategory.name} icon={subcategory.emoji || '📌'} />}
+                    </>
+                  ) : (
+                    <>
+                      <EditableSelectRow
+                        label={t('transaction.category')}
+                        value={formData.category_id}
+                        options={categories.map((c) => ({ id: c.id, name: c.name, emoji: c.emoji || '📁' }))}
+                        onChange={(id) => {
+                          setFormData((prev) => ({
+                            ...prev,
+                            category_id: id,
+                            subcategory_id: undefined,
+                          }));
+                        }}
+                        icon="📁"
+                      />
+                      <EditableSelectRow
+                        label={t('transaction.subcategory')}
+                        value={formData.subcategory_id}
+                        options={filteredSubcategories.map((s) => ({ id: s.id, name: s.name, emoji: s.emoji || '📌' }))}
+                        onChange={(id) => setFormData((prev) => ({ ...prev, subcategory_id: id }))}
+                        icon="📌"
+                        placeholder={t('transaction.noSubcategories')}
+                      />
+                    </>
+                  )}
+
+                  {account && <DetailRow label={t('transaction.account')} value={account.name} icon="📊" readOnly />}
+
+                  {mode === 'view' ? (
+                    <DetailRow
+                      label={t('transaction.dateTime')}
+                      value={formatDateTime(transaction.performed_at || transaction.created_at, timezone, locale)}
+                      icon="📅"
+                    />
+                  ) : (
+                    <EditableDateTimeRow
+                      label={t('transaction.dateTime')}
+                      value={formData.performed_at || ''}
+                      onChange={(value) => setFormData((prev) => ({ ...prev, performed_at: value }))}
+                      icon="📅"
+                    />
+                  )}
                 </div>
 
-                {transaction.note && (
+                {mode === 'view' ? (
+                  transaction.note && (
+                    <div className="bg-muted/40 rounded-2xl p-4 border border-border/50">
+                      <h4 className="text-sm font-semibold text-muted-foreground mb-2">{t('transaction.note')}</h4>
+                      <p className="text-sm text-foreground whitespace-pre-wrap">{transaction.note}</p>
+                    </div>
+                  )
+                ) : (
                   <div className="bg-muted/40 rounded-2xl p-4 border border-border/50">
-                    <h4 className="text-sm font-semibold text-muted-foreground mb-2">{t('transaction.note')}</h4>
-                    <p className="text-sm text-foreground whitespace-pre-wrap">{transaction.note}</p>
+                    <h4 className="text-sm font-semibold text-muted-foreground mb-2">
+                      {t('transaction.note')} ({t('common.optional')})
+                    </h4>
+                    <textarea
+                      value={formData.note || ''}
+                      onChange={(e) => setFormData((prev) => ({ ...prev, note: e.target.value }))}
+                      placeholder={t('transaction.notePlaceholder')}
+                      rows={3}
+                      className="w-full px-3 py-2 bg-background rounded-xl border-2 border-transparent focus:outline-none focus:border-primary resize-none text-sm"
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Action Buttons */}
+              <div className="px-4 pb-4 pt-2 space-y-2 border-t border-border/50">
+                {mode === 'view' ? (
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      onClick={handleEdit}
+                      className="flex items-center justify-center gap-2 px-4 py-3 bg-primary text-primary-foreground rounded-xl font-semibold transition-all hover:opacity-90 active:scale-[0.98]"
+                    >
+                      <Edit2 className="w-4 h-4" />
+                      {t('transaction.edit')}
+                    </button>
+                    <button
+                      onClick={handleDelete}
+                      disabled={loading}
+                      className="flex items-center justify-center gap-2 px-4 py-3 bg-red-500/10 text-red-500 rounded-xl font-semibold transition-all hover:bg-red-500/20 active:scale-[0.98] disabled:opacity-50"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      {t('transaction.delete')}
+                    </button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      onClick={handleCancel}
+                      disabled={loading}
+                      className="px-4 py-3 bg-muted text-foreground rounded-xl font-semibold transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-50"
+                    >
+                      {t('transaction.cancel')}
+                    </button>
+                    <button
+                      onClick={handleSave}
+                      disabled={loading}
+                      className="flex items-center justify-center gap-2 px-4 py-3 bg-primary text-primary-foreground rounded-xl font-semibold transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-50"
+                    >
+                      {loading ? (
+                        <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <Save className="w-4 h-4" />
+                      )}
+                      {t('transaction.save')}
+                    </button>
                   </div>
                 )}
               </div>
@@ -150,14 +361,81 @@ export function TransactionDetailModal({
   );
 }
 
-function DetailRow({ label, value, icon }: { label: string; value: string; icon: string }) {
+function DetailRow({ label, value, icon, readOnly }: { label: string; value: string; icon: string; readOnly?: boolean }) {
+  return (
+    <div className={cn("flex items-center justify-between py-1.5", readOnly && "opacity-60")}>
+      <div className="flex items-center gap-2 text-muted-foreground">
+        <span>{icon}</span>
+        <span className="text-sm">{label}</span>
+      </div>
+      <span className="text-sm font-medium text-foreground">{value}</span>
+    </div>
+  );
+}
+
+function EditableSelectRow({
+  label,
+  value,
+  options,
+  onChange,
+  icon,
+  placeholder,
+}: {
+  label: string;
+  value?: number;
+  options: { id: number; name: string; emoji: string }[];
+  onChange: (id?: number) => void;
+  icon: string;
+  placeholder?: string;
+}) {
   return (
     <div className="flex items-center justify-between py-1.5">
       <div className="flex items-center gap-2 text-muted-foreground">
         <span>{icon}</span>
         <span className="text-sm">{label}</span>
       </div>
-      <span className="text-sm font-medium text-foreground">{value}</span>
+      <select
+        value={value || ''}
+        onChange={(e) => onChange(e.target.value ? Number(e.target.value) : undefined)}
+        className="text-sm font-medium text-foreground bg-background border border-border rounded-lg px-2 py-1 focus:outline-none focus:border-primary max-w-[180px]"
+      >
+        <option value="">{placeholder || '—'}</option>
+        {options.map((opt) => (
+          <option key={opt.id} value={opt.id}>
+            {opt.emoji} {opt.name}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
+function EditableDateTimeRow({
+  label,
+  value,
+  onChange,
+  icon,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  icon: string;
+}) {
+  // Convert to local datetime-local format
+  const localValue = value ? new Date(value).toISOString().slice(0, 16) : '';
+
+  return (
+    <div className="flex items-center justify-between py-1.5">
+      <div className="flex items-center gap-2 text-muted-foreground">
+        <span>{icon}</span>
+        <span className="text-sm">{label}</span>
+      </div>
+      <input
+        type="datetime-local"
+        value={localValue}
+        onChange={(e) => onChange(new Date(e.target.value).toISOString())}
+        className="text-sm font-medium text-foreground bg-background border border-border rounded-lg px-2 py-1 focus:outline-none focus:border-primary"
+      />
     </div>
   );
 }

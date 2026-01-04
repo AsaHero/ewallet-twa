@@ -34,7 +34,9 @@
         "authenticationFailed": "Ошибка аутентификации",
         "invalidAmount": "Сумма должна быть больше 0",
         "selectAccount": "Выберите счет",
-        "saveFailed": "Не удалось отправить данные"
+        "saveFailed": "Не удалось отправить данные",
+        "updateFailed": "Не удалось обновить транзакцию",
+        "deleteFailed": "Не удалось удалить транзакцию"
     },
     "transaction": {
         "edit": "Редактировать транзакцию",
@@ -65,7 +67,15 @@
         "detail": "Транзакция",
         "currencyConversion": "Конвертация валют",
         "original": "Исходная сумма",
-        "dateTime": "Дата и время"
+        "dateTime": "Дата и время",
+        "delete": "Удалить",
+        "confirmDelete": "Удалить эту транзакцию?",
+        "confirmDeleteMessage": "Это действие нельзя отменить.",
+        "deleteSuccess": "Транзакция удалена",
+        "updateSuccess": "Транзакция обновлена",
+        "cancel": "Отмена",
+        "save": "Сохранить изменения",
+        "currency": "Валюта"
     },
     "history": {
         "title": "История",

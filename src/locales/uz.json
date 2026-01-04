@@ -32,7 +32,9 @@
         "authenticationFailed": "Autentifikatsiya xatosi",
         "invalidAmount": "Summa 0 dan katta bo'lishi kerak",
         "selectAccount": "Hisobni tanlang",
-        "saveFailed": "Ma'lumotlarni yuborishda xatolik"
+        "saveFailed": "Ma'lumotlarni yuborishda xatolik",
+        "updateFailed": "Tranzaksiyani yangilashda xatolik",
+        "deleteFailed": "Tranzaksiyani o'chirishda xatolik"
     },
     "transaction": {
         "edit": "Tranzaksiyani tahrirlash",
@@ -52,7 +54,19 @@
         "detail": "Tranzaksiya",
         "currencyConversion": "Valyuta konvertatsiyasi",
         "original": "Asl summa",
-        "dateTime": "Sana va vaqt"
+        "dateTime": "Sana va vaqt",
+        "delete": "O'chirish",
+        "confirmDelete": "Bu tranzaksiyani o'chirish?",
+        "confirmDeleteMessage": "Bu amalni bekor qilib bo'lmaydi.",
+        "deleteSuccess": "Tranzaksiya o'chirildi",
+        "updateSuccess": "Tranzaksiya yangilandi",
+        "cancel": "Bekor qilish",
+        "save": "O'zgarishlarni saqlash",
+        "currency": "Valyuta",
+        "subcategory": "Subkategoriya",
+        "selectSubcategory": "Subkategoriyani tanlang...",
+        "noSubcategories": "Subkategoriyalar yo'q",
+        "allSubcategories": "Barcha subkategoriyalar..."
     },
     "history": {
         "title": "Tarix",

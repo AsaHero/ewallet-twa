@@ -590,6 +590,17 @@ function HistoryPage() {
         locale={user?.language_code}
         timezone={user?.timezone}
         onClose={() => setSelectedTransaction(null)}
+        onTransactionUpdated={async () => {
+          // Refetch the current page of transactions to show updated data
+          // The useInfiniteTransactions hook should automatically refetch when query changes
+          // For immediate feedback, we just close the modal and let the hook refetch
+          setSelectedTransaction(null);
+        }}
+        onTransactionDeleted={async () => {
+          // Refetch transactions after deletion
+          setSelectedTransaction(null);
+          // The hook will automatically refetch on next render
+        }}
       />
 
       <div className="h-safe-bottom" />
