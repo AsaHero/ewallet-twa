@@ -37,7 +37,7 @@
         "deleteFailed": "Tranzaksiyani o'chirishda xatolik"
     },
     "transaction": {
-        "edit": "Tranzaksiyani tahrirlash",
+        "edit": "O'zgartirish",
         "new": "Yangi tranzaksiya",
         "type": "Tur",
         "expense": "Xarajat",
@@ -56,12 +56,12 @@
         "original": "Asl summa",
         "dateTime": "Sana va vaqt",
         "delete": "O'chirish",
-        "confirmDelete": "Bu tranzaksiyani o'chirish?",
+        "confirmDelete": "Bu tranzaksiyani o'chirmoqchimisiz?",
         "confirmDeleteMessage": "Bu amalni bekor qilib bo'lmaydi.",
         "deleteSuccess": "Tranzaksiya o'chirildi",
         "updateSuccess": "Tranzaksiya yangilandi",
         "cancel": "Bekor qilish",
-        "save": "O'zgarishlarni saqlash",
+        "save": "Saqlash",
         "currency": "Valyuta",
         "subcategory": "Subkategoriya",
         "selectSubcategory": "Subkategoriyani tanlang...",

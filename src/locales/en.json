@@ -37,7 +37,7 @@
         "deleteFailed": "Failed to delete transaction"
     },
     "transaction": {
-        "edit": "Edit Transaction",
+        "edit": "Edit",
         "new": "New Transaction",
         "type": "Type",
         "expense": "Expense",
@@ -47,7 +47,6 @@
         "selectCategory": "Select category...",
         "account": "Account",
         "selectAccount": "Select account...",
-
         "note": "Note",
         "notePlaceholder": "Add a note...",
         "date": "Date",
@@ -73,7 +72,7 @@
         "deleteSuccess": "Transaction deleted",
         "updateSuccess": "Transaction updated",
         "cancel": "Cancel",
-        "save": "Save Changes",
+        "save": "Save",
         "currency": "Currency"
     },
     "history": {
