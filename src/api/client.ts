@@ -41,6 +41,13 @@ class APIClient {
                     authService.clearToken();
                     // Could trigger re-authentication here
                 }
+
+                // Handle 404 on /users/me endpoint - invalid token
+                if (error.response?.status === 404 && error.config?.url?.includes('/users/me')) {
+                    // Token is invalid (user doesn't exist)
+                    authService.clearToken();
+                }
+
                 return Promise.reject(error);
             }
         );
