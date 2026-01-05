@@ -23,29 +23,58 @@ class APIClient {
             },
         });
 
-        // Add request interceptor to inject token
-        this.client.interceptors.request.use((config) => {
-            const token = authService.getToken();
-            if (token) {
-                config.headers.Authorization = `Bearer ${token}`;
-            }
-            return config;
-        });
+        // Add request interceptor to ensure we have a valid token
+        this.client.interceptors.request.use(
+            async (config) => {
+                try {
+                    // Ensure we have a valid token before making the request
+                    const token = await authService.ensureToken();
+                    config.headers.Authorization = `Bearer ${token}`;
+                } catch (error) {
+                    // If we can't get a token, let the request proceed without it
+                    // The response interceptor will handle the 401 if needed
+                    console.warn('Failed to ensure token for request:', error);
+                }
+                return config;
+            },
+            (error) => Promise.reject(error)
+        );
 
-        // Add response interceptor to handle auth errors
+        // Add response interceptor to handle auth errors with automatic retry
         this.client.interceptors.response.use(
             (response) => response,
             async (error: AxiosError) => {
-                if (error.response?.status === 401 || error.response?.status === 403) {
-                    // Token expired or invalid
-                    authService.clearToken();
-                    // Could trigger re-authentication here
-                }
+                const originalRequest = error.config as any;
 
-                // Handle 404 on /users/me endpoint - invalid token
-                if (error.response?.status === 404 && error.config?.url?.includes('/users/me')) {
-                    // Token is invalid (user doesn't exist)
-                    authService.clearToken();
+                // Handle token expiration (401/403) or missing user (404 on /users/me)
+                if (
+                    (error.response?.status === 401 ||
+                        error.response?.status === 403 ||
+                        (error.response?.status === 404 && originalRequest?.url?.includes('/users/me'))) &&
+                    !originalRequest?._isRetrying
+                ) {
+                    try {
+                        // Mark this request as retrying to prevent infinite loops
+                        originalRequest._isRetrying = true;
+
+                        // Clear expired/invalid token
+                        authService.clearToken();
+
+                        // Get a fresh token (will automatically re-authenticate)
+                        const newToken = await authService.ensureToken();
+
+                        // Update the Authorization header with new token
+                        if (originalRequest.headers) {
+                            originalRequest.headers.Authorization = `Bearer ${newToken}`;
+                        }
+
+                        // Retry the original request with the new token
+                        return this.client.request(originalRequest);
+                    } catch (refreshError) {
+                        console.error('Token refresh failed:', refreshError);
+                        // If refresh fails, reject with a user-friendly error
+                        return Promise.reject(new Error('Session expired. Please try again.'));
+                    }
                 }
 
                 return Promise.reject(error);

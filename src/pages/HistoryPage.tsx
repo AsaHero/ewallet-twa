@@ -197,6 +197,7 @@ function HistoryPage() {
     error: txError,
     hasNext,
     fetchNext,
+    refetch,
   } = useInfiniteTransactions(query);
 
   // Infinite scroll sentinel
@@ -591,15 +592,14 @@ function HistoryPage() {
         timezone={user?.timezone}
         onClose={() => setSelectedTransaction(null)}
         onTransactionUpdated={async () => {
-          // Refetch the current page of transactions to show updated data
-          // The useInfiniteTransactions hook should automatically refetch when query changes
-          // For immediate feedback, we just close the modal and let the hook refetch
+          // Refetch transactions from the beginning to show updated data
           setSelectedTransaction(null);
+          refetch();
         }}
         onTransactionDeleted={async () => {
-          // Refetch transactions after deletion
+          // Refetch transactions from the beginning after deletion
           setSelectedTransaction(null);
-          // The hook will automatically refetch on next render
+          refetch();
         }}
       />
 
