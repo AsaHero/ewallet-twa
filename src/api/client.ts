@@ -1,5 +1,5 @@
 import axios, { type AxiosInstance, type AxiosError } from 'axios';
-import type { Account, User, Transaction, TransactionsResponse, Category, Subcategory, StatsGroupBy, StatsTxType, TimeseriesStatsView, CategoryStatsView, SubcategoryStatsView, BalanceTimeseriesMode, BalanceTimeseriesView, Debt, DebtsResponse, ParseTextView, ParseTextDebtView, ParseImageView, ParseAudioView, AccountStatsItem, AccountStatsView, StatsCompareView } from '../core/types';
+import type { Account, User, Transaction, TransactionsResponse, Category, Subcategory, StatsGroupBy, StatsTxType, TimeseriesStatsView, CategoryStatsView, SubcategoryStatsView, BalanceTimeseriesMode, BalanceTimeseriesView, Debt, DebtsResponse, ParseTextView, ParseTextDebtView, ParseImageView, ParseAudioView, AccountStatsView, StatsCompareView } from '../core/types';
 import { authService } from '../services/auth.service';
 
 class APIClient {
