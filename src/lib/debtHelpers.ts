@@ -5,9 +5,9 @@ export type DebtUrgency = 'overdue' | 'urgent' | 'soon' | 'normal' | 'none';
 
 export function getDebtUrgency(debt: Debt): DebtUrgency {
   if (debt.status !== 'open') return 'none';
-  if (!debt.due_date) return 'none';
+  if (!debt.due_at) return 'none';
 
-  const dueDate = new Date(debt.due_date);
+  const dueDate = new Date(debt.due_at);
   const now = new Date();
 
   if (isPast(dueDate) && !isToday(dueDate)) return 'overdue';
@@ -74,13 +74,13 @@ export function sortDebtsByUrgency(debts: Debt[]): Debt[] {
     }
 
     // Then by due date (earliest first)
-    if (a.due_date && b.due_date) {
-      return new Date(a.due_date).getTime() - new Date(b.due_date).getTime();
+    if (a.due_at && b.due_at) {
+      return new Date(a.due_at).getTime() - new Date(b.due_at).getTime();
     }
 
     // Debts with due dates come before those without
-    if (a.due_date && !b.due_date) return -1;
-    if (!a.due_date && b.due_date) return 1;
+    if (a.due_at && !b.due_at) return -1;
+    if (!a.due_at && b.due_at) return 1;
 
     // Finally by creation date (newest first)
     return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
