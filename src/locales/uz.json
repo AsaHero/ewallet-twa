@@ -183,8 +183,8 @@
     },
     "debts": {
         "title": "Qarzlar",
-        "borrow": "Qarz oldim",
-        "lend": "Qarz berdim",
+        "borrow": "Oldim",
+        "lend": "Berdim",
         "noBorrows": "Ochiq qarzlar yo'q",
         "noLends": "Ochiq qarzlar yo'q",
         "dueIn": "{{days}} kun ichida",
@@ -210,8 +210,8 @@
             "cancelled": "Bekor qilingan"
         },
         "actions": {
-            "markPaid": "To'langan deb belgilash",
-            "cancel": "Qarzni bekor qilish",
+            "markPaid": "To'landi",
+            "cancel": "O'chirish",
             "edit": "O'zgartirish",
             "close": "Yopish",
             "save": "Saqlash",

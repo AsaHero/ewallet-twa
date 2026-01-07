@@ -217,11 +217,11 @@
             "cancelled": "Cancelled"
         },
         "actions": {
-            "markPaid": "Mark as Paid",
-            "cancel": "Cancel Debt",
-            "edit": "Edit Details",
+            "markPaid": "Paid",
+            "cancel": "Delete",
+            "edit": "Edit",
             "close": "Close",
-            "save": "Save Changes",
+            "save": "Save",
             "confirmPay": "Mark this debt as paid?",
             "confirmCancel": "Cancel this debt?",
             "paySuccess": "Debt marked as paid",

@@ -188,18 +188,15 @@ export function DebtDetailModal({
                     <div className="text-center space-y-2">
                       <div className="text-5xl">👤</div>
                       <h3 className="text-lg font-semibold text-foreground">{debt.name}</h3>
-                      <p
-                        className={cn(
-                          'text-3xl font-bold tabular-nums',
-                          isBorrow ? 'text-red-500' : 'text-green-500'
-                        )}
-                      >
-                        {isBorrow ? '-' : '+'}
-                        {formatCurrency(debt.amount, debt.currency_code, locale)}
-                      </p>
                     </div>
 
                     <div className="bg-card/40 border border-border/50 rounded-2xl p-4 space-y-3">
+                      <DetailRow
+                        label={t('debts.detail.amount')}
+                        value={formatCurrency(debt.amount, debt.currency_code, locale)}
+                        icon="💰"
+                      />
+
                       <DetailRow
                         label={t('debts.detail.status')}
                         value={t(`debts.status.${debt.status}`)}
