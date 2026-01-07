@@ -41,7 +41,7 @@ function DebtsPage() {
         ]);
 
         setUser(userData);
-        setDebts(debtsData.debts);
+        setDebts(debtsData.items || []);
       } catch (err) {
         console.error('Failed to fetch debts bootstrap:', err);
         setError(err instanceof Error ? err.message : 'Failed to load debts');
@@ -62,24 +62,25 @@ function DebtsPage() {
 
   // Filter debts by active tab
   const filteredDebts = useMemo(() => {
+    if (!debts || !Array.isArray(debts)) return [];
     const filtered = debts.filter((debt) => debt.type === activeTab);
     return sortDebtsByUrgency(filtered);
   }, [debts, activeTab]);
 
   // Count debts by type (for tab badges)
   const borrowCount = useMemo(
-    () => debts.filter((d) => d.type === 'borrow').length,
+    () => (debts || []).filter((d) => d.type === 'borrow').length,
     [debts]
   );
   const lendCount = useMemo(
-    () => debts.filter((d) => d.type === 'lend').length,
+    () => (debts || []).filter((d) => d.type === 'lend').length,
     [debts]
   );
 
   const refetchDebts = async () => {
     try {
       const debtsData = await apiClient.getDebts({ statuses: ['open'] });
-      setDebts(debtsData.debts);
+      setDebts(debtsData.items || []);
     } catch (err) {
       console.error('Failed to refetch debts:', err);
     }

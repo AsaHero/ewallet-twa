@@ -276,10 +276,12 @@ export interface Debt {
 }
 
 export interface DebtsResponse {
-    debts: Debt[];
-    total: number;
-    limit: number;
-    offset: number;
+    items: Debt[];
+    pagination: {
+        limit: number;
+        offset: number;
+        total: number;
+    };
 }
 
 // Parse
