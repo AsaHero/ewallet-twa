@@ -26,7 +26,7 @@ export function DebtCard({ debt, onClick, locale }: DebtCardProps) {
   const { t } = useTranslation();
   const urgency = getDebtUrgency(debt);
   const urgencyStyles = getUrgencyStyles(urgency);
-  const dueDateText = formatDueDate(debt.due_date, t);
+  const dueDateText = formatDueDate(debt.due_at, t);
 
   const handleClick = () => {
     hapticSelect();
@@ -51,7 +51,7 @@ export function DebtCard({ debt, onClick, locale }: DebtCardProps) {
             {/* Person name */}
             <div className="flex-1 min-w-0">
               <p className="font-semibold text-base text-foreground truncate">
-                👤 {debt.person_name}
+                👤 {debt.name}
               </p>
             </div>
 

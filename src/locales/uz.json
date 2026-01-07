@@ -183,8 +183,8 @@
     },
     "debts": {
         "title": "Qarzlar",
-        "borrow": "Men qarz oldim",
-        "lend": "Men qarz berdim",
+        "borrow": "Qarz oldim",
+        "lend": "Qarz berdim",
         "noBorrows": "Ochiq qarzlar yo'q",
         "noLends": "Ochiq qarzlar yo'q",
         "dueIn": "{{days}} kun ichida",

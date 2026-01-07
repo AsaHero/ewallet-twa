@@ -302,16 +302,17 @@ class APIClient {
     }
 
     async updateDebt(id: string, data: {
-        person_name?: string;
+        amount?: number;
+        name?: string;
         note?: string;
-        due_date?: string;
+        due_at?: string;
     }): Promise<Debt> {
         const res = await this.client.put<Debt>(`/debts/${id}`, data);
         return res.data;
     }
 
     async payDebt(id: string, data: {
-        transaction_id?: string;
+        paid_at?: string;
     }): Promise<Debt> {
         const res = await this.client.post<Debt>(`/debts/${id}/pay`, data);
         return res.data;

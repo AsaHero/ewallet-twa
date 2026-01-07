@@ -268,9 +268,9 @@ export interface Debt {
     status: 'open' | 'paid' | 'cancelled';
     amount: number;
     currency_code: string;
-    person_name: string;
+    name: string;
     note?: string;
-    due_date?: string;
+    due_at?: string;
     created_at: string;
     updated_at: string;
 }

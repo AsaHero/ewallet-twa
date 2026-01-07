@@ -1,13 +1,13 @@
-import { useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import { X } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-
+import { X, Edit2, Save } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import type { Debt } from '@/core/types';
-import { apiClient } from '@/api/client';
-import { Card, CardContent } from '@/components/ui/card';
 import { formatCurrency, formatDateTime } from '@/lib/formatters';
 import { cn } from '@/lib/utils';
+import { apiClient } from '@/api/client';
+import { useTelegramWebApp } from '@/hooks/useTelegramWebApp';
+import { formatDueDate } from '@/lib/debtHelpers';
 
 interface DebtDetailModalProps {
   debt: Debt | null;
@@ -17,14 +17,11 @@ interface DebtDetailModalProps {
   timezone?: string;
 }
 
-function hapticSelect() {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const tg = (window as any)?.Telegram?.WebApp;
-  try {
-    tg?.HapticFeedback?.selectionChanged?.();
-  } catch {
-    // ignore
-  }
+interface EditableFields {
+  amount?: number;
+  name?: string;
+  note?: string;
+  due_at?: string;
 }
 
 export function DebtDetailModal({
@@ -35,235 +32,415 @@ export function DebtDetailModal({
   timezone,
 }: DebtDetailModalProps) {
   const { t } = useTranslation();
+  const { WebApp } = useTelegramWebApp();
+  const isOpen = !!debt;
+
+  const [mode, setMode] = useState<'view' | 'edit'>('view');
   const [loading, setLoading] = useState(false);
-  const [showConfirmPay, setShowConfirmPay] = useState(false);
-  const [showConfirmCancel, setShowConfirmCancel] = useState(false);
+  const [formData, setFormData] = useState<EditableFields>({});
 
-  if (!debt) return null;
+  const isBorrow = debt?.type === 'borrow';
+  const dueDateText = debt?.due_at ? formatDueDate(debt.due_at, t) : t('debts.noDueDate');
 
-  const handleMarkPaid = async () => {
-    hapticSelect();
-    setShowConfirmPay(true);
+  // Reset mode when debt changes
+  useEffect(() => {
+    setMode('view');
+    if (debt) {
+      setFormData({
+        amount: debt.amount,
+        name: debt.name,
+        note: debt.note,
+        due_at: debt.due_at,
+      });
+    }
+  }, [debt]);
+
+  const handleEdit = () => {
+    WebApp?.HapticFeedback?.impactOccurred('light');
+    setMode('edit');
   };
 
-  const confirmMarkPaid = async () => {
+  const handleCancel = () => {
+    WebApp?.HapticFeedback?.impactOccurred('light');
+    setMode('view');
+    if (debt) {
+      setFormData({
+        amount: debt.amount,
+        name: debt.name,
+        note: debt.note,
+        due_at: debt.due_at,
+      });
+    }
+  };
+
+  const handleSave = async () => {
+    if (!debt) return;
+
+    WebApp?.HapticFeedback?.impactOccurred('medium');
+    setLoading(true);
+
     try {
-      setLoading(true);
-      await apiClient.payDebt(debt.id, {});
-      setShowConfirmPay(false);
+      await apiClient.updateDebt(debt.id, formData);
+      WebApp?.HapticFeedback?.notificationOccurred('success');
+      WebApp?.showAlert(t('debts.actions.updateSuccess'));
+      setMode('view');
       onDebtUpdated();
       onClose();
-      // Could show success toast here
-    } catch (error) {
-      console.error('Failed to mark debt as paid:', error);
-      alert('Failed to mark debt as paid');
+    } catch (err) {
+      console.error('Failed to update debt:', err);
+      WebApp?.HapticFeedback?.notificationOccurred('error');
+      WebApp?.showAlert('Failed to update debt');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleCancelDebt = async () => {
-    hapticSelect();
-    setShowConfirmCancel(true);
+  const handleMarkPaid = () => {
+    if (!debt) return;
+
+    WebApp?.HapticFeedback?.impactOccurred('medium');
+
+    WebApp?.showConfirm(t('debts.actions.confirmPay'), async (confirmed) => {
+      if (confirmed) {
+        setLoading(true);
+        try {
+          await apiClient.payDebt(debt.id, { paid_at: new Date().toISOString() });
+          WebApp?.HapticFeedback?.notificationOccurred('success');
+          WebApp?.showAlert(t('debts.actions.paySuccess'));
+          onDebtUpdated();
+          onClose();
+        } catch (err) {
+          console.error('Failed to mark debt as paid:', err);
+          WebApp?.HapticFeedback?.notificationOccurred('error');
+          WebApp?.showAlert('Failed to mark debt as paid');
+        } finally {
+          setLoading(false);
+        }
+      }
+    });
   };
 
-  const confirmCancelDebt = async () => {
-    try {
-      setLoading(true);
-      await apiClient.cancelDebt(debt.id);
-      setShowConfirmCancel(false);
-      onDebtUpdated();
-      onClose();
-      // Could show success toast here
-    } catch (error) {
-      console.error('Failed to cancel debt:', error);
-      alert('Failed to cancel debt');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const handleCancelDebt = () => {
+    if (!debt) return;
 
-  const handleClose = () => {
-    hapticSelect();
-    onClose();
+    WebApp?.HapticFeedback?.impactOccurred('medium');
+
+    WebApp?.showConfirm(t('debts.actions.confirmCancel'), async (confirmed) => {
+      if (confirmed) {
+        setLoading(true);
+        try {
+          await apiClient.cancelDebt(debt.id);
+          WebApp?.HapticFeedback?.notificationOccurred('success');
+          WebApp?.showAlert(t('debts.actions.cancelSuccess'));
+          onDebtUpdated();
+          onClose();
+        } catch (err) {
+          console.error('Failed to cancel debt:', err);
+          WebApp?.HapticFeedback?.notificationOccurred('error');
+          WebApp?.showAlert('Failed to cancel debt');
+        } finally {
+          setLoading(false);
+        }
+      }
+    });
   };
 
   return (
     <AnimatePresence>
-      <motion.div
-        className="fixed inset-0 z-50 flex items-end justify-center bg-black/50"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        onClick={handleClose}
-      >
-        <motion.div
-          className="w-full max-w-md bg-background rounded-t-3xl overflow-hidden shadow-xl"
-          initial={{ y: '100%' }}
-          animate={{ y: 0 }}
-          exit={{ y: '100%' }}
-          transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-border">
-            <h2 className="text-lg font-bold text-foreground">{t('debts.detail.title')}</h2>
-            <button
-              onClick={handleClose}
-              className="p-2 rounded-full hover:bg-muted transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
+      {isOpen && debt && (
+        <>
+          <motion.div
+            className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+          />
 
-          {/* Content */}
-          <div className="p-4 max-h-[70vh] overflow-y-auto">
-            {/* Main info card */}
-            <Card className="mb-4 border-border/40 bg-card/40">
-              <CardContent className="p-4 space-y-3">
-                {/* Person */}
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1">{t('debts.detail.person')}</p>
-                  <p className="text-base font-semibold text-foreground">👤 {debt.person_name}</p>
-                </div>
-
-                {/* Amount */}
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1">{t('debts.detail.amount')}</p>
-                  <p className="text-xl font-bold text-foreground">
-                    {formatCurrency(debt.amount, debt.currency_code, locale)}
-                  </p>
-                </div>
-
-                {/* Note */}
-                {debt.note && (
-                  <div>
-                    <p className="text-xs text-muted-foreground mb-1">{t('debts.detail.note')}</p>
-                    <p className="text-sm text-foreground">{debt.note}</p>
-                  </div>
-                )}
-
-                {/* Due date */}
-                {debt.due_date && (
-                  <div>
-                    <p className="text-xs text-muted-foreground mb-1">{t('debts.detail.dueDate')}</p>
-                    <p className="text-sm text-foreground">
-                      {formatDateTime(debt.due_date, timezone, locale, {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                      })}
-                    </p>
-                  </div>
-                )}
-
-                {/* Status */}
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1">{t('debts.detail.status')}</p>
-                  <span
-                    className={cn(
-                      'inline-block px-2 py-1 rounded-full text-xs font-semibold',
-                      debt.status === 'open' && 'bg-blue-500/10 text-blue-500',
-                      debt.status === 'paid' && 'bg-green-500/10 text-green-500',
-                      debt.status === 'cancelled' && 'bg-gray-500/10 text-gray-500'
-                    )}
+          <motion.div
+            className="fixed inset-x-0 bottom-0 z-50 mx-auto w-full max-w-md"
+            initial={{ y: '100%' }}
+            animate={{ y: 0 }}
+            exit={{ y: '100%' }}
+            transition={{ type: 'spring', stiffness: 380, damping: 36 }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="rounded-t-3xl bg-background shadow-2xl border border-border/50">
+              {/* Header */}
+              <div className="px-4 pt-3 pb-2 border-b border-border/50">
+                <div className="mx-auto h-1.5 w-10 rounded-full bg-muted" />
+                <div className="mt-3 flex items-center justify-between">
+                  <h2 className="text-base font-semibold text-foreground">{t('debts.detail.title')}</h2>
+                  <button
+                    onClick={onClose}
+                    className="p-2 rounded-full hover:bg-muted transition-colors"
+                    aria-label="Close"
                   >
-                    {t(`debts.status.${debt.status}`)}
-                  </span>
+                    <X className="w-5 h-5" />
+                  </button>
                 </div>
-              </CardContent>
-            </Card>
-
-            {/* Timestamps */}
-            <div className="space-y-2 text-xs text-muted-foreground mb-4">
-              <div className="flex justify-between">
-                <span>{t('debts.detail.createdAt')}:</span>
-                <span>{formatDateTime(debt.created_at, timezone, locale)}</span>
               </div>
-              {debt.updated_at !== debt.created_at && (
-                <div className="flex justify-between">
-                  <span>{t('debts.detail.updatedAt')}:</span>
-                  <span>{formatDateTime(debt.updated_at, timezone, locale)}</span>
-                </div>
-              )}
-            </div>
 
-            {/* Action buttons (only for open debts) */}
-            {debt.status === 'open' && !showConfirmPay && !showConfirmCancel && (
-              <div className="space-y-2">
-                <button
-                  onClick={handleMarkPaid}
-                  disabled={loading}
-                  className="w-full px-4 py-3 rounded-xl bg-green-500 text-white font-semibold hover:bg-green-600 transition-colors disabled:opacity-50"
-                >
-                  💰 {t('debts.actions.markPaid')}
-                </button>
-                <button
-                  onClick={handleCancelDebt}
-                  disabled={loading}
-                  className="w-full px-4 py-3 rounded-xl bg-red-500/10 text-red-500 font-semibold hover:bg-red-500/20 transition-colors disabled:opacity-50"
-                >
-                  ❌ {t('debts.actions.cancel')}
-                </button>
+              {/* Content */}
+              <div className="px-4 py-4 space-y-5 max-h-[65vh] overflow-y-auto overscroll-contain">
+                {mode === 'view' ? (
+                  <>
+                    <div className="text-center space-y-2">
+                      <div className="text-5xl">👤</div>
+                      <h3 className="text-lg font-semibold text-foreground">{debt.name}</h3>
+                      <p
+                        className={cn(
+                          'text-3xl font-bold tabular-nums',
+                          isBorrow ? 'text-red-500' : 'text-green-500'
+                        )}
+                      >
+                        {isBorrow ? '-' : '+'}
+                        {formatCurrency(debt.amount, debt.currency_code, locale)}
+                      </p>
+                    </div>
+
+                    <div className="bg-card/40 border border-border/50 rounded-2xl p-4 space-y-3">
+                      <DetailRow
+                        label={t('debts.detail.status')}
+                        value={t(`debts.status.${debt.status}`)}
+                        icon={debt.status === 'open' ? '🟢' : debt.status === 'paid' ? '✅' : '❌'}
+                      />
+
+                      <DetailRow
+                        label={t('transaction.type')}
+                        value={t(isBorrow ? 'debts.borrow' : 'debts.lend')}
+                        icon={isBorrow ? '📥' : '📤'}
+                      />
+
+                      <DetailRow
+                        label={t('debts.detail.dueDate')}
+                        value={dueDateText}
+                        icon="📅"
+                      />
+
+                      <DetailRow
+                        label={t('debts.detail.createdAt')}
+                        value={formatDateTime(debt.created_at, timezone, locale)}
+                        icon="🕐"
+                      />
+                    </div>
+
+                    {debt.note && (
+                      <div className="bg-muted/40 rounded-2xl p-4 border border-border/50">
+                        <h4 className="text-sm font-semibold text-muted-foreground mb-2">{t('debts.detail.note')}</h4>
+                        <p className="text-sm text-foreground whitespace-pre-wrap">{debt.note}</p>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <div className="text-center space-y-2">
+                      <div className="text-5xl">👤</div>
+                    </div>
+
+                    <div className="bg-card/40 border border-border/50 rounded-2xl p-4 space-y-3">
+                      <EditableTextRow
+                        label={t('debts.detail.person')}
+                        value={formData.name || ''}
+                        onChange={(value) => setFormData((prev) => ({ ...prev, name: value }))}
+                        icon="👤"
+                      />
+
+                      <EditableNumberRow
+                        label={t('debts.detail.amount')}
+                        value={formData.amount || 0}
+                        onChange={(value) => setFormData((prev) => ({ ...prev, amount: value }))}
+                        icon="💰"
+                      />
+
+                      <EditableDateRow
+                        label={t('debts.detail.dueDate')}
+                        value={formData.due_at || ''}
+                        onChange={(value) => setFormData((prev) => ({ ...prev, due_at: value }))}
+                        icon="📅"
+                      />
+
+                      <DetailRow
+                        label={t('transaction.type')}
+                        value={t(isBorrow ? 'debts.borrow' : 'debts.lend')}
+                        icon={isBorrow ? '📥' : '📤'}
+                        readOnly
+                      />
+                    </div>
+
+                    <div className="bg-muted/40 rounded-2xl p-4 border border-border/50">
+                      <h4 className="text-sm font-semibold text-muted-foreground mb-2">
+                        {t('debts.detail.note')} ({t('common.optional')})
+                      </h4>
+                      <textarea
+                        value={formData.note || ''}
+                        onChange={(e) => setFormData((prev) => ({ ...prev, note: e.target.value }))}
+                        placeholder={t('transaction.notePlaceholder')}
+                        rows={3}
+                        className="w-full px-3 py-2 bg-background rounded-xl border-2 border-transparent focus:outline-none focus:border-primary resize-none text-sm"
+                      />
+                    </div>
+                  </>
+                )}
               </div>
-            )}
 
-            {/* Confirm pay */}
-            {showConfirmPay && (
-              <Card className="border-yellow-500/50 bg-yellow-500/10">
-                <CardContent className="p-4 space-y-3">
-                  <p className="text-sm font-medium text-foreground">
-                    {t('debts.actions.confirmPay')}
-                  </p>
-                  <div className="flex gap-2">
+              {/* Action Buttons */}
+              {debt.status === 'open' && (
+                <div className="px-4 pb-4 pt-2 space-y-2 border-t border-border/50">
+                  {mode === 'view' ? (
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        onClick={handleEdit}
+                        className="flex items-center justify-center gap-2 px-4 py-3 bg-primary text-primary-foreground rounded-xl font-semibold transition-all hover:opacity-90 active:scale-[0.98]"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                        {t('debts.actions.edit')}
+                      </button>
+                      <button
+                        onClick={handleMarkPaid}
+                        disabled={loading}
+                        className="flex items-center justify-center gap-2 px-4 py-3 bg-green-500/10 text-green-500 rounded-xl font-semibold transition-all hover:bg-green-500/20 active:scale-[0.98] disabled:opacity-50"
+                      >
+                        💰 {t('debts.actions.markPaid')}
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        onClick={handleCancel}
+                        disabled={loading}
+                        className="px-4 py-3 bg-muted text-foreground rounded-xl font-semibold transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-50"
+                      >
+                        {t('transaction.cancel')}
+                      </button>
+                      <button
+                        onClick={handleSave}
+                        disabled={loading}
+                        className="flex items-center justify-center gap-2 px-4 py-3 bg-primary text-primary-foreground rounded-xl font-semibold transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-50"
+                      >
+                        {loading ? (
+                          <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <Save className="w-4 h-4" />
+                        )}
+                        {t('transaction.save')}
+                      </button>
+                    </div>
+                  )}
+                  {mode === 'view' && (
                     <button
-                      onClick={confirmMarkPaid}
+                      onClick={handleCancelDebt}
                       disabled={loading}
-                      className="flex-1 px-4 py-2 rounded-lg bg-green-500 text-white font-semibold hover:bg-green-600 transition-colors disabled:opacity-50"
-                    >
-                      {t('debts.actions.markPaid')}
-                    </button>
-                    <button
-                      onClick={() => setShowConfirmPay(false)}
-                      disabled={loading}
-                      className="flex-1 px-4 py-2 rounded-lg bg-muted text-foreground font-semibold hover:bg-muted/80 transition-colors disabled:opacity-50"
-                    >
-                      {t('transaction.cancel')}
-                    </button>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Confirm cancel */}
-            {showConfirmCancel && (
-              <Card className="border-red-500/50 bg-red-500/10">
-                <CardContent className="p-4 space-y-3">
-                  <p className="text-sm font-medium text-foreground">
-                    {t('debts.actions.confirmCancel')}
-                  </p>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={confirmCancelDebt}
-                      disabled={loading}
-                      className="flex-1 px-4 py-2 rounded-lg bg-red-500 text-white font-semibold hover:bg-red-600 transition-colors disabled:opacity-50"
+                      className="w-full px-4 py-2.5 bg-red-500/10 text-red-500 rounded-xl font-semibold transition-all hover:bg-red-500/20 active:scale-[0.98] disabled:opacity-50"
                     >
                       {t('debts.actions.cancel')}
                     </button>
-                    <button
-                      onClick={() => setShowConfirmCancel(false)}
-                      disabled={loading}
-                      className="flex-1 px-4 py-2 rounded-lg bg-muted text-foreground font-semibold hover:bg-muted/80 transition-colors disabled:opacity-50"
-                    >
-                      {t('common.back')}
-                    </button>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-          </div>
-        </motion.div>
-      </motion.div>
+                  )}
+                </div>
+              )}
+
+              <div className="h-safe-bottom" />
+            </div>
+          </motion.div>
+        </>
+      )}
     </AnimatePresence>
+  );
+}
+
+function DetailRow({ label, value, icon, readOnly }: { label: string; value: string; icon: string; readOnly?: boolean }) {
+  return (
+    <div className={cn("flex items-center justify-between py-1.5", readOnly && "opacity-60")}>
+      <div className="flex items-center gap-2 text-muted-foreground">
+        <span>{icon}</span>
+        <span className="text-sm">{label}</span>
+      </div>
+      <span className="text-sm font-medium text-foreground">{value}</span>
+    </div>
+  );
+}
+
+function EditableTextRow({
+  label,
+  value,
+  onChange,
+  icon,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  icon: string;
+}) {
+  return (
+    <div className="flex items-center justify-between py-1.5">
+      <div className="flex items-center gap-2 text-muted-foreground">
+        <span>{icon}</span>
+        <span className="text-sm">{label}</span>
+      </div>
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="text-sm font-medium text-foreground bg-background border border-border rounded-lg px-2 py-1 focus:outline-none focus:border-primary max-w-[180px]"
+      />
+    </div>
+  );
+}
+
+function EditableNumberRow({
+  label,
+  value,
+  onChange,
+  icon,
+}: {
+  label: string;
+  value: number;
+  onChange: (value: number) => void;
+  icon: string;
+}) {
+  return (
+    <div className="flex items-center justify-between py-1.5">
+      <div className="flex items-center gap-2 text-muted-foreground">
+        <span>{icon}</span>
+        <span className="text-sm">{label}</span>
+      </div>
+      <input
+        type="number"
+        step="0.01"
+        value={value}
+        onChange={(e) => onChange(parseFloat(e.target.value) || 0)}
+        className="text-sm font-medium text-foreground bg-background border border-border rounded-lg px-2 py-1 focus:outline-none focus:border-primary max-w-[120px]"
+      />
+    </div>
+  );
+}
+
+function EditableDateRow({
+  label,
+  value,
+  onChange,
+  icon,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  icon: string;
+}) {
+  // Convert to local date format
+  const localValue = value ? new Date(value).toISOString().slice(0, 10) : '';
+
+  return (
+    <div className="flex items-center justify-between py-1.5">
+      <div className="flex items-center gap-2 text-muted-foreground">
+        <span>{icon}</span>
+        <span className="text-sm">{label}</span>
+      </div>
+      <input
+        type="date"
+        value={localValue}
+        onChange={(e) => onChange(e.target.value ? new Date(e.target.value).toISOString() : '')}
+        className="text-sm font-medium text-foreground bg-background border border-border rounded-lg px-2 py-1 focus:outline-none focus:border-primary"
+      />
+    </div>
   );
 }

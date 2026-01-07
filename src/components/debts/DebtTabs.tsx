@@ -1,4 +1,5 @@
 import { cn } from '@/lib/utils';
+import { t } from 'i18next';
 
 interface DebtTabsProps {
   activeTab: 'borrow' | 'lend';
@@ -36,7 +37,7 @@ export function DebtTabs({ activeTab, onTabChange, borrowCount, lendCount }: Deb
             : 'text-muted-foreground hover:text-foreground'
         )}
       >
-        I Borrowed
+        {t("debts.borrow")}
         {borrowCount > 0 && (
           <span className="ml-1.5 px-1.5 py-0.5 text-xs rounded-full bg-red-500/20 text-red-500">
             {borrowCount}
@@ -53,7 +54,7 @@ export function DebtTabs({ activeTab, onTabChange, borrowCount, lendCount }: Deb
             : 'text-muted-foreground hover:text-foreground'
         )}
       >
-        I Lent
+        {t("debts.lend")}
         {lendCount > 0 && (
           <span className="ml-1.5 px-1.5 py-0.5 text-xs rounded-full bg-green-500/20 text-green-500">
             {lendCount}
