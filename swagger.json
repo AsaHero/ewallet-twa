@@ -299,6 +299,423 @@
                 }
             }
         },
+        "/categories/{id}": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Categories"
+                ],
+                "summary": "Delete a category",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Category ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/apierr.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/apierr.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/debts": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Debts"
+                ],
+                "summary": "Lists debts with pagination",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "limit",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "offset",
+                        "name": "offset",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "description": "transaction ids",
+                        "name": "transaction_ids",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "description": "debt types (borrow, lend)",
+                        "name": "types",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "description": "debt statuses (open, paid, cancelled)",
+                        "name": "statuses",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.DebtsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/apierr.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/apierr.Response"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Debts"
+                ],
+                "summary": "Creates a debt",
+                "parameters": [
+                    {
+                        "description": "request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.CreateDebtRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Debt"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/apierr.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/apierr.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/debts/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Debts"
+                ],
+                "summary": "Returns debt by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "debt id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Debt"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/apierr.Response"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Debts"
+                ],
+                "summary": "Updates a debt",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "debt id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.UpdateDebtRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Debt"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/apierr.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/apierr.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/debts/{id}/cancel": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Debts"
+                ],
+                "summary": "Cancels a debt",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "debt id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Debt"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/apierr.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/apierr.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/debts/{id}/pay": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Debts"
+                ],
+                "summary": "Marks a debt as paid",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "debt id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.PayDebtRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Debt"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/apierr.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/apierr.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/parse/debt/text": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Parse debt text",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Parse"
+                ],
+                "summary": "Parse debt text",
+                "parameters": [
+                    {
+                        "description": "Parse debt transaction request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.ParseDebtRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/parser.ParseTextDebtView"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/apierr.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/apierr.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/parse/image": {
             "post": {
                 "security": [
@@ -452,7 +869,7 @@
                 }
             }
         },
-        "/stats/summary": {
+        "/stats/by-account": {
             "get": {
                 "security": [
                     {
@@ -465,24 +882,26 @@
                 "tags": [
                     "Stats"
                 ],
-                "summary": "Returns aggregated statistics",
+                "summary": "Returns statistics grouped by account",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "From Date",
+                        "description": "From Date (YYYY-MM-DD)",
                         "name": "from",
-                        "in": "query"
+                        "in": "query",
+                        "required": true
                     },
                     {
                         "type": "string",
-                        "description": "To Date",
+                        "description": "To Date (YYYY-MM-DD)",
                         "name": "to",
-                        "in": "query"
+                        "in": "query",
+                        "required": true
                     },
                     {
                         "type": "string",
-                        "description": "Account ID",
-                        "name": "account_id",
+                        "description": "Transaction Type (deposit/withdrawal)",
+                        "name": "type",
                         "in": "query"
                     }
                 ],
@@ -490,7 +909,421 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/query.GetStatsView"
+                            "$ref": "#/definitions/query.AccountStatsView"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/apierr.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/apierr.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/stats/by-category": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Stats"
+                ],
+                "summary": "Returns statistics grouped by category",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "From Date (YYYY-MM-DD)",
+                        "name": "from",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "To Date (YYYY-MM-DD)",
+                        "name": "to",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "description": "Account IDs",
+                        "name": "account_ids",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Transaction Type (deposit/withdrawal)",
+                        "name": "type",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/query.CategoryStatsView"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/apierr.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/apierr.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/stats/by-subcategory": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Stats"
+                ],
+                "summary": "Returns statistics grouped by subcategory",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "From Date (YYYY-MM-DD)",
+                        "name": "from",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "To Date (YYYY-MM-DD)",
+                        "name": "to",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "description": "Account IDs",
+                        "name": "account_ids",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        },
+                        "collectionFormat": "csv",
+                        "description": "Category IDs",
+                        "name": "category_ids",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Transaction Type (deposit/withdrawal)",
+                        "name": "type",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/query.SubcategoryStatsView"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/apierr.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/apierr.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/stats/compare": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Stats"
+                ],
+                "summary": "Returns period-over-period comparison statistics",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Preset period: this_month_vs_last_month, last_7_days_vs_previous_7_days, this_year_vs_last_year",
+                        "name": "period",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Base period start date (YYYY-MM-DD)",
+                        "name": "base_from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Base period end date (YYYY-MM-DD)",
+                        "name": "base_to",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Compare period start date (YYYY-MM-DD)",
+                        "name": "compare_from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Compare period end date (YYYY-MM-DD)",
+                        "name": "compare_to",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "description": "Account IDs",
+                        "name": "account_ids",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Transaction Type (deposit/withdrawal)",
+                        "name": "type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 5,
+                        "description": "Number of top changes to return",
+                        "name": "top_limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/query.StatsCompareView"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/apierr.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/apierr.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/stats/timeseries": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Stats"
+                ],
+                "summary": "Returns time-series aggregated statistics",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "From Date (YYYY-MM-DD)",
+                        "name": "from",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "To Date (YYYY-MM-DD)",
+                        "name": "to",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "description": "Account IDs",
+                        "name": "account_ids",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        },
+                        "collectionFormat": "csv",
+                        "description": "Category IDs",
+                        "name": "category_ids",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        },
+                        "collectionFormat": "csv",
+                        "description": "Subcategory IDs",
+                        "name": "subcategory_ids",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Transaction Type (deposit/withdrawal/transfer/adjustment)",
+                        "name": "type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "default": "day",
+                        "description": "Group by (day/week/month)",
+                        "name": "group_by",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/query.TimeseriesStatsView"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/apierr.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/apierr.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/stats/timeseries/balance": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Stats"
+                ],
+                "summary": "Returns balance over time for accounts",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "From Date (YYYY-MM-DD)",
+                        "name": "from",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "To Date (YYYY-MM-DD)",
+                        "name": "to",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "day",
+                        "description": "Group by (day/week/month)",
+                        "name": "group_by",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "description": "Account IDs",
+                        "name": "account_ids",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "default": "aggregate",
+                        "description": "Mode (aggregate/per_account)",
+                        "name": "mode",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/query.BalanceTimeseriesView"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/apierr.Response"
                         }
                     },
                     "401": {
@@ -574,6 +1407,48 @@
                 }
             }
         },
+        "/subcategories/{id}": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Categories"
+                ],
+                "summary": "Delete a subcategory",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Subcategory ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/apierr.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/apierr.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/transactions": {
             "get": {
                 "security": [
@@ -599,6 +1474,72 @@
                         "type": "integer",
                         "description": "offset",
                         "name": "offset",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "from date (ISO 8601)",
+                        "name": "from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "to date (ISO 8601)",
+                        "name": "to",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "transaction type",
+                        "name": "type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        },
+                        "collectionFormat": "csv",
+                        "description": "category ids",
+                        "name": "category_ids",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        },
+                        "collectionFormat": "csv",
+                        "description": "subcategory ids",
+                        "name": "subcategory_ids",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "description": "account ids",
+                        "name": "account_ids",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "min amount",
+                        "name": "min_amount",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "max amount",
+                        "name": "max_amount",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "search term",
+                        "name": "search",
                         "in": "query"
                     }
                 ],
@@ -1014,6 +1955,26 @@
                 }
             }
         },
+        "models.CreateDebtRequest": {
+            "type": "object",
+            "properties": {
+                "due_at": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "note": {
+                    "type": "string"
+                },
+                "transaction_id": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
         "models.CreateSubcategoryRequest": {
             "type": "object",
             "properties": {
@@ -1063,8 +2024,71 @@
                 "performed_at": {
                     "type": "string"
                 },
+                "subcategory_id": {
+                    "type": "integer"
+                },
                 "type": {
                     "type": "string"
+                }
+            }
+        },
+        "models.Debt": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "number"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "currency_code": {
+                    "type": "string"
+                },
+                "due_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "note": {
+                    "type": "string"
+                },
+                "paid_at": {
+                    "type": "string"
+                },
+                "status": {
+                    "description": "open, paid, cancelled",
+                    "type": "string"
+                },
+                "transaction_id": {
+                    "type": "string"
+                },
+                "type": {
+                    "description": "borrow, lend",
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.DebtsResponse": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Debt"
+                    }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/models.PaginationResponse"
                 }
             }
         },
@@ -1093,6 +2117,17 @@
                 }
             }
         },
+        "models.ParseDebtRequest": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "transaction_id": {
+                    "type": "string"
+                }
+            }
+        },
         "models.ParseImageRequest": {
             "type": "object",
             "required": [
@@ -1111,6 +2146,14 @@
             ],
             "properties": {
                 "content": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.PayDebtRequest": {
+            "type": "object",
+            "properties": {
+                "paid_at": {
                     "type": "string"
                 }
             }
@@ -1203,8 +2246,17 @@
                         "$ref": "#/definitions/models.Transaction"
                     }
                 },
+                "net_balance": {
+                    "type": "number"
+                },
                 "pagination": {
                     "$ref": "#/definitions/models.PaginationResponse"
+                },
+                "total_expense": {
+                    "type": "number"
+                },
+                "total_income": {
+                    "type": "number"
                 }
             }
         },
@@ -1219,36 +2271,30 @@
                 }
             }
         },
-        "models.UpdateTransactionRequest": {
+        "models.UpdateDebtRequest": {
             "type": "object",
-            "required": [
-                "account_id",
-                "amount",
-                "type"
-            ],
             "properties": {
-                "account_id": {
-                    "type": "string"
-                },
                 "amount": {
                     "type": "number"
                 },
-                "category_id": {
-                    "type": "integer"
-                },
-                "currency_code": {
+                "due_at": {
                     "type": "string"
                 },
-                "fx_rate": {
-                    "type": "number"
+                "name": {
+                    "type": "string"
                 },
                 "note": {
                     "type": "string"
+                }
+            }
+        },
+        "models.UpdateTransactionRequest": {
+            "type": "object",
+            "properties": {
+                "category_id": {
+                    "type": "integer"
                 },
-                "original_amount": {
-                    "type": "number"
-                },
-                "original_currency_code": {
+                "note": {
                     "type": "string"
                 },
                 "performed_at": {
@@ -1256,9 +2302,6 @@
                 },
                 "subcategory_id": {
                     "type": "integer"
-                },
-                "type": {
-                    "type": "string"
                 }
             }
         },
@@ -1311,6 +2354,20 @@
                 }
             }
         },
+        "parser.DebtDetailsResult": {
+            "type": "object",
+            "properties": {
+                "confidence": {
+                    "type": "number"
+                },
+                "counterparty_name": {
+                    "type": "string"
+                },
+                "due_date": {
+                    "type": "string"
+                }
+            }
+        },
         "parser.ParseAudioView": {
             "type": "object",
             "properties": {
@@ -1328,6 +2385,9 @@
                 },
                 "currency": {
                     "type": "string"
+                },
+                "debt_details": {
+                    "$ref": "#/definitions/parser.DebtDetailsResult"
                 },
                 "fx_rate": {
                     "type": "number"
@@ -1370,6 +2430,9 @@
                 "currency": {
                     "type": "string"
                 },
+                "debt_details": {
+                    "$ref": "#/definitions/parser.DebtDetailsResult"
+                },
                 "fx_rate": {
                     "type": "number"
                 },
@@ -1387,6 +2450,32 @@
                 },
                 "subcategory_id": {
                     "type": "integer"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "parser.ParseTextDebtView": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "number"
+                },
+                "confidence": {
+                    "type": "number"
+                },
+                "counterparty_name": {
+                    "type": "string"
+                },
+                "currency": {
+                    "type": "string"
+                },
+                "due_at": {
+                    "type": "string"
+                },
+                "note": {
+                    "type": "string"
                 },
                 "type": {
                     "type": "string"
@@ -1411,6 +2500,9 @@
                 "currency": {
                     "type": "string"
                 },
+                "debt_details": {
+                    "$ref": "#/definitions/parser.DebtDetailsResult"
+                },
                 "fx_rate": {
                     "type": "number"
                 },
@@ -1434,6 +2526,172 @@
                 }
             }
         },
+        "query.AccountBalanceSeriesView": {
+            "type": "object",
+            "properties": {
+                "account_id": {
+                    "type": "string"
+                },
+                "points": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/query.BalanceTimeseriesPointView"
+                    }
+                },
+                "totals": {
+                    "$ref": "#/definitions/query.BalanceTimeseriesTotalsView"
+                }
+            }
+        },
+        "query.AccountStatsItem": {
+            "type": "object",
+            "properties": {
+                "account_id": {
+                    "type": "string"
+                },
+                "count": {
+                    "type": "integer"
+                },
+                "expense": {
+                    "type": "number"
+                },
+                "income": {
+                    "type": "number"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "net": {
+                    "type": "number"
+                }
+            }
+        },
+        "query.AccountStatsTotals": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "expense": {
+                    "type": "number"
+                },
+                "income": {
+                    "type": "number"
+                },
+                "net": {
+                    "type": "number"
+                }
+            }
+        },
+        "query.AccountStatsView": {
+            "type": "object",
+            "properties": {
+                "from": {
+                    "type": "string"
+                },
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/query.AccountStatsItem"
+                    }
+                },
+                "to": {
+                    "type": "string"
+                },
+                "totals": {
+                    "$ref": "#/definitions/query.AccountStatsTotals"
+                }
+            }
+        },
+        "query.BalanceTimeseriesPointView": {
+            "type": "object",
+            "properties": {
+                "balance_close": {
+                    "type": "number"
+                },
+                "balance_open": {
+                    "type": "number"
+                },
+                "delta": {
+                    "type": "number"
+                },
+                "max_balance": {
+                    "type": "number"
+                },
+                "min_balance": {
+                    "type": "number"
+                },
+                "ts": {
+                    "type": "string"
+                },
+                "tx_count": {
+                    "type": "integer"
+                }
+            }
+        },
+        "query.BalanceTimeseriesTotalsView": {
+            "type": "object",
+            "properties": {
+                "change": {
+                    "type": "number"
+                },
+                "end_balance": {
+                    "type": "number"
+                },
+                "max_balance": {
+                    "type": "number"
+                },
+                "min_balance": {
+                    "type": "number"
+                },
+                "start_balance": {
+                    "type": "number"
+                },
+                "tx_count": {
+                    "type": "integer"
+                }
+            }
+        },
+        "query.BalanceTimeseriesView": {
+            "type": "object",
+            "properties": {
+                "account_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "from": {
+                    "type": "string"
+                },
+                "group_by": {
+                    "type": "string"
+                },
+                "mode": {
+                    "type": "string"
+                },
+                "points": {
+                    "description": "for aggregate mode",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/query.BalanceTimeseriesPointView"
+                    }
+                },
+                "series": {
+                    "description": "for per_account mode",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/query.AccountBalanceSeriesView"
+                    }
+                },
+                "to": {
+                    "type": "string"
+                },
+                "totals": {
+                    "$ref": "#/definitions/query.BalanceTimeseriesTotalsView"
+                }
+            }
+        },
         "query.Category": {
             "type": "object",
             "properties": {
@@ -1454,46 +2712,151 @@
                 }
             }
         },
-        "query.CategoryStat": {
+        "query.CategoryChange": {
             "type": "object",
             "properties": {
-                "category_emoji": {
-                    "type": "string"
+                "base": {
+                    "type": "number"
                 },
                 "category_id": {
                     "type": "integer"
                 },
-                "category_name": {
+                "compare": {
+                    "type": "number"
+                },
+                "delta_abs": {
+                    "type": "number"
+                },
+                "delta_pct": {
+                    "type": "number"
+                },
+                "emoji": {
                     "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "query.CategoryStatsItem": {
+            "type": "object",
+            "properties": {
+                "category_id": {
+                    "type": "integer"
+                },
+                "count": {
+                    "type": "integer"
+                },
+                "emoji": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "share": {
+                    "type": "number"
                 },
                 "total": {
                     "type": "number"
                 }
             }
         },
-        "query.GetStatsView": {
+        "query.CategoryStatsTotals": {
             "type": "object",
             "properties": {
-                "balance": {
-                    "type": "number"
+                "count": {
+                    "type": "integer"
                 },
-                "expense_by_category": {
+                "total": {
+                    "type": "number"
+                }
+            }
+        },
+        "query.CategoryStatsView": {
+            "type": "object",
+            "properties": {
+                "from": {
+                    "type": "string"
+                },
+                "items": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/query.CategoryStat"
+                        "$ref": "#/definitions/query.CategoryStatsItem"
                     }
                 },
-                "income_by_category": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/query.CategoryStat"
-                    }
+                "to": {
+                    "type": "string"
                 },
-                "total_expense": {
+                "totals": {
+                    "$ref": "#/definitions/query.CategoryStatsTotals"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "query.DeltaStats": {
+            "type": "object",
+            "properties": {
+                "expense": {
+                    "$ref": "#/definitions/query.DeltaValue"
+                },
+                "income": {
+                    "$ref": "#/definitions/query.DeltaValue"
+                },
+                "net": {
+                    "$ref": "#/definitions/query.DeltaValue"
+                }
+            }
+        },
+        "query.DeltaValue": {
+            "type": "object",
+            "properties": {
+                "abs": {
                     "type": "number"
                 },
-                "total_income": {
+                "pct": {
                     "type": "number"
+                }
+            }
+        },
+        "query.PeriodStats": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "expense": {
+                    "type": "number"
+                },
+                "from": {
+                    "type": "string"
+                },
+                "income": {
+                    "type": "number"
+                },
+                "net": {
+                    "type": "number"
+                },
+                "to": {
+                    "type": "string"
+                }
+            }
+        },
+        "query.StatsCompareView": {
+            "type": "object",
+            "properties": {
+                "base": {
+                    "$ref": "#/definitions/query.PeriodStats"
+                },
+                "compare": {
+                    "$ref": "#/definitions/query.PeriodStats"
+                },
+                "delta": {
+                    "$ref": "#/definitions/query.DeltaStats"
+                },
+                "top_changes": {
+                    "$ref": "#/definitions/query.TopChanges"
                 }
             }
         },
@@ -1517,6 +2880,137 @@
                 },
                 "user_id": {
                     "type": "string"
+                }
+            }
+        },
+        "query.SubcategoryStatsItem": {
+            "type": "object",
+            "properties": {
+                "category_id": {
+                    "type": "integer"
+                },
+                "count": {
+                    "type": "integer"
+                },
+                "emoji": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "share": {
+                    "type": "number"
+                },
+                "subcategory_id": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "number"
+                }
+            }
+        },
+        "query.SubcategoryStatsTotals": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "number"
+                }
+            }
+        },
+        "query.SubcategoryStatsView": {
+            "type": "object",
+            "properties": {
+                "from": {
+                    "type": "string"
+                },
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/query.SubcategoryStatsItem"
+                    }
+                },
+                "to": {
+                    "type": "string"
+                },
+                "totals": {
+                    "$ref": "#/definitions/query.SubcategoryStatsTotals"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "query.TimeseriesDataPoint": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "expense": {
+                    "type": "number"
+                },
+                "income": {
+                    "type": "number"
+                },
+                "net": {
+                    "type": "number"
+                },
+                "ts": {
+                    "type": "string"
+                }
+            }
+        },
+        "query.TimeseriesStatsView": {
+            "type": "object",
+            "properties": {
+                "from": {
+                    "type": "string"
+                },
+                "group_by": {
+                    "type": "string"
+                },
+                "points": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/query.TimeseriesDataPoint"
+                    }
+                },
+                "to": {
+                    "type": "string"
+                },
+                "totals": {
+                    "$ref": "#/definitions/query.TimeseriesTotals"
+                }
+            }
+        },
+        "query.TimeseriesTotals": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "expense": {
+                    "type": "number"
+                },
+                "income": {
+                    "type": "number"
+                },
+                "net": {
+                    "type": "number"
+                }
+            }
+        },
+        "query.TopChanges": {
+            "type": "object",
+            "properties": {
+                "expense_by_category": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/query.CategoryChange"
+                    }
                 }
             }
         }

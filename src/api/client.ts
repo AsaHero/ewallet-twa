@@ -1,5 +1,5 @@
 import axios, { type AxiosInstance, type AxiosError } from 'axios';
-import type { Account, User, Transaction, TransactionsResponse, Category, Subcategory, StatsGroupBy, StatsTxType, TimeseriesStatsView, CategoryStatsView, SubcategoryStatsView, BalanceTimeseriesMode, BalanceTimeseriesView } from '../core/types';
+import type { Account, User, Transaction, TransactionsResponse, Category, Subcategory, StatsGroupBy, StatsTxType, TimeseriesStatsView, CategoryStatsView, SubcategoryStatsView, BalanceTimeseriesMode, BalanceTimeseriesView, Debt, DebtsResponse, ParseTextView, ParseTextDebtView, ParseImageView, ParseAudioView, AccountStatsItem, AccountStatsView, StatsCompareView } from '../core/types';
 import { authService } from '../services/auth.service';
 
 class APIClient {
@@ -245,6 +245,113 @@ class APIClient {
         category_ids?: number[];
     }): Promise<SubcategoryStatsView> {
         const res = await this.client.get<SubcategoryStatsView>('/stats/by-subcategory', { params });
+        return res.data;
+    }
+
+    async getStatsByAccount(params: {
+        from: string;
+        to: string;
+        type?: StatsTxType;
+    }): Promise<AccountStatsView> {
+        const res = await this.client.get<AccountStatsView>('/stats/by-account', { params });
+        return res.data;
+    }
+
+    async getStatsCompare(params: {
+        period?: 'this_month_vs_last_month' | 'last_7_days_vs_previous_7_days' | 'this_year_vs_last_year';
+        base_from?: string;
+        base_to?: string;
+        compare_from?: string;
+        compare_to?: string;
+        account_ids?: string[];
+        type?: StatsTxType;
+        top_limit?: number;
+    }): Promise<StatsCompareView> {
+        const res = await this.client.get<StatsCompareView>('/stats/compare', { params });
+        return res.data;
+    }
+
+    // --- Debts ---
+    async getDebts(params?: {
+        limit?: number;
+        offset?: number;
+        transaction_ids?: string[];
+        types?: ('borrow' | 'lend')[];
+        statuses?: ('open' | 'paid' | 'cancelled')[];
+    }): Promise<DebtsResponse> {
+        const res = await this.client.get<DebtsResponse>('/debts', { params });
+        return res.data;
+    }
+
+    async getDebt(id: string): Promise<Debt> {
+        const res = await this.client.get<Debt>(`/debts/${id}`);
+        return res.data;
+    }
+
+    async createDebt(data: {
+        type: 'borrow' | 'lend';
+        amount: number;
+        currency_code?: string;
+        person_name: string;
+        note?: string;
+        due_date?: string;
+        transaction_id?: string;
+    }): Promise<Debt> {
+        const res = await this.client.post<Debt>('/debts', data);
+        return res.data;
+    }
+
+    async updateDebt(id: string, data: {
+        person_name?: string;
+        note?: string;
+        due_date?: string;
+    }): Promise<Debt> {
+        const res = await this.client.put<Debt>(`/debts/${id}`, data);
+        return res.data;
+    }
+
+    async payDebt(id: string, data: {
+        transaction_id?: string;
+    }): Promise<Debt> {
+        const res = await this.client.post<Debt>(`/debts/${id}/pay`, data);
+        return res.data;
+    }
+
+    async cancelDebt(id: string): Promise<Debt> {
+        const res = await this.client.post<Debt>(`/debts/${id}/cancel`);
+        return res.data;
+    }
+
+    // --- Parse ---
+    async parseText(data: {
+        text: string;
+        language_code?: string;
+    }): Promise<ParseTextView> {
+        const res = await this.client.post<ParseTextView>('/parse/text', data);
+        return res.data;
+    }
+
+    async parseDebtText(data: {
+        text: string;
+        language_code?: string;
+    }): Promise<ParseTextDebtView> {
+        const res = await this.client.post<ParseTextDebtView>('/parse/debt/text', data);
+        return res.data;
+    }
+
+    async parseImage(data: {
+        image_url: string;
+        language_code?: string;
+    }): Promise<ParseImageView> {
+        const res = await this.client.post<ParseImageView>('/parse/image', data);
+        return res.data;
+    }
+
+    async parseVoice(data: {
+        audio_url: string;
+        language_code?: string;
+    }): Promise<ParseAudioView> {
+        const res = await this.client.post<ParseAudioView>('/parse/voice', data);
         return res.data;
     }
 }

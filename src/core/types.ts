@@ -201,3 +201,113 @@ export type BalanceTimeseriesView = {
   series?: AccountBalanceSeriesView[];
   totals: BalanceTimeseriesTotalsView;
 };
+
+export interface AccountStatsItem {
+    account_id: string;
+    account_name: string;
+    total_amount: number;
+    share: number;
+    transaction_count: number;
+}
+
+export interface AccountStatsView {
+    accounts: AccountStatsItem[];
+    total_amount: number;
+    total_transactions: number;
+}
+
+export interface StatsCompareView {
+    base_period: {
+        from: string;
+        to: string;
+        total_income: number;
+        total_expense: number;
+        net: number;
+    };
+    compare_period: {
+        from: string;
+        to: string;
+        total_income: number;
+        total_expense: number;
+        net: number;
+    };
+    changes: {
+        income_change: number;
+        expense_change: number;
+        net_change: number;
+        income_change_percent: number;
+        expense_change_percent: number;
+        net_change_percent: number;
+    };
+    top_increases?: Array<{
+        category_id: number;
+        category_name: string;
+        emoji: string;
+        base_amount: number;
+        compare_amount: number;
+        change: number;
+        change_percent: number;
+    }>;
+    top_decreases?: Array<{
+        category_id: number;
+        category_name: string;
+        emoji: string;
+        base_amount: number;
+        compare_amount: number;
+        change: number;
+        change_percent: number;
+    }>;
+}
+
+// Debts
+export interface Debt {
+    id: string;
+    user_id: string;
+    transaction_id?: string;
+    type: 'borrow' | 'lend';
+    status: 'open' | 'paid' | 'cancelled';
+    amount: number;
+    currency_code: string;
+    person_name: string;
+    note?: string;
+    due_date?: string;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface DebtsResponse {
+    debts: Debt[];
+    total: number;
+    limit: number;
+    offset: number;
+}
+
+// Parse
+export interface ParseTextView {
+    amount?: number;
+    currency?: string;
+    category?: string;
+    note?: string;
+    confidence?: number;
+}
+
+export interface ParseTextDebtView {
+    amount?: number;
+    currency?: string;
+    person_name?: string;
+    note?: string;
+    type?: 'borrow' | 'lend';
+    due_date?: string;
+    confidence?: number;
+}
+
+export interface ParseImageView {
+    text: string;
+    parsed?: ParseTextView;
+}
+
+export interface ParseAudioView {
+    text: string;
+    parsed?: ParseTextView;
+}
+

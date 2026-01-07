@@ -187,5 +187,52 @@
         "other": "Others",
         "total": "Total",
         "tapAgainToOpen": "Tap again to open"
+    },
+    "debts": {
+        "title": "Debts",
+        "borrow": "I Borrowed",
+        "lend": "I Lent",
+        "noBorrows": "No open debts",
+        "noLends": "No open debts",
+        "dueIn": "Due in {{days}} days",
+        "dueToday": "Due today",
+        "dueTomorrow": "Due tomorrow",
+        "overdue": "Overdue {{days}} days",
+        "noDueDate": "No due date",
+        "detail": {
+            "title": "Debt Details",
+            "amount": "Amount",
+            "person": "Person",
+            "note": "Note",
+            "dueDate": "Due Date",
+            "linkedTransaction": "Linked Transaction",
+            "createdAt": "Created",
+            "updatedAt": "Updated",
+            "paidAt": "Paid",
+            "status": "Status"
+        },
+        "status": {
+            "open": "Open",
+            "paid": "Paid",
+            "cancelled": "Cancelled"
+        },
+        "actions": {
+            "markPaid": "Mark as Paid",
+            "cancel": "Cancel Debt",
+            "edit": "Edit Details",
+            "close": "Close",
+            "save": "Save Changes",
+            "confirmPay": "Mark this debt as paid?",
+            "confirmCancel": "Cancel this debt?",
+            "paySuccess": "Debt marked as paid",
+            "cancelSuccess": "Debt cancelled",
+            "updateSuccess": "Debt updated"
+        },
+        "edit": {
+            "title": "Edit Debt",
+            "personName": "Person Name",
+            "note": "Note",
+            "dueDate": "Due Date"
+        }
     }
 }

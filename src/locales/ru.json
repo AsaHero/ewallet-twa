@@ -190,5 +190,52 @@
         },
         "uncategorized": "Без подкатегории",
         "distribution": "Распределение"
+    },
+    "debts": {
+        "title": "Долги",
+        "borrow": "Я занял",
+        "lend": "Я дал в долг",
+        "noBorrows": "Нет открытых долгов",
+        "noLends": "Нет открытых долгов",
+        "dueIn": "Через {{days}} дн.",
+        "dueToday": "Сегодня",
+        "dueTomorrow": "Завтра",
+        "overdue": "Просрочено на {{days}} дн.",
+        "noDueDate": "Без срока",
+        "detail": {
+            "title": "Детали долга",
+            "amount": "Сумма",
+            "person": "Имя",
+            "note": "Заметка",
+            "dueDate": "Срок",
+            "linkedTransaction": "Связанная транзакция",
+            "createdAt": "Создано",
+            "updatedAt": "Обновлено",
+            "paidAt": "Погашено",
+            "status": "Статус"
+        },
+        "status": {
+            "open": "Открыт",
+            "paid": "Погашен",
+            "cancelled": "Отменён"
+        },
+        "actions": {
+            "markPaid": "Отметить оплаченным",
+            "cancel": "Отменить долг",
+            "edit": "Изменить",
+            "close": "Закрыть",
+            "save": "Сохранить",
+            "confirmPay": "Отметить долг как оплаченный?",
+            "confirmCancel": "Отменить этот долг?",
+            "paySuccess": "Долг отмечен как погашенный",
+            "cancelSuccess": "Долг отменён",
+            "updateSuccess": "Долг обновлён"
+        },
+        "edit": {
+            "title": "Изменить долг",
+            "personName": "Имя",
+            "note": "Заметка",
+            "dueDate": "Срок"
+        }
     }
 }

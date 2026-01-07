@@ -180,5 +180,52 @@
         "other": "Boshqalar",
         "total": "Jami",
         "tapAgainToOpen": "Ochish uchun yana bosing"
+    },
+    "debts": {
+        "title": "Qarzlar",
+        "borrow": "Men qarz oldim",
+        "lend": "Men qarz berdim",
+        "noBorrows": "Ochiq qarzlar yo'q",
+        "noLends": "Ochiq qarzlar yo'q",
+        "dueIn": "{{days}} kun ichida",
+        "dueToday": "Bugun",
+        "dueTomorrow": "Ertaga",
+        "overdue": "{{days}} kun kechikdi",
+        "noDueDate": "Muddat yo'q",
+        "detail": {
+            "title": "Qarz tafsilotlari",
+            "amount": "Summa",
+            "person": "Shaxs",
+            "note": "Izoh",
+            "dueDate": "Muddat",
+            "linkedTransaction": "Bog'langan tranzaksiya",
+            "createdAt": "Yaratilgan",
+            "updatedAt": "Yangilangan",
+            "paidAt": "To'langan",
+            "status": "Holat"
+        },
+        "status": {
+            "open": "Ochiq",
+            "paid": "To'langan",
+            "cancelled": "Bekor qilingan"
+        },
+        "actions": {
+            "markPaid": "To'langan deb belgilash",
+            "cancel": "Qarzni bekor qilish",
+            "edit": "O'zgartirish",
+            "close": "Yopish",
+            "save": "Saqlash",
+            "confirmPay": "Qarz to'langan deb belgilansinmi?",
+            "confirmCancel": "Bu qarzni bekor qilasizmi?",
+            "paySuccess": "Qarz to'langan deb belgilandi",
+            "cancelSuccess": "Qarz bekor qilindi",
+            "updateSuccess": "Qarz yangilandi"
+        },
+        "edit": {
+            "title": "Qarzni o'zgartirish",
+            "personName": "Shaxs nomi",
+            "note": "Izoh",
+            "dueDate": "Muddat"
+        }
     }
 }
