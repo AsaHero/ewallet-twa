@@ -46,12 +46,20 @@ export function AccountListCard({
                             key={account.id}
                             onClick={() => onAccountTap(account)}
                             className={cn(
-                                'w-full text-left',
+                                'relative w-full text-left',
                                 'px-4 py-4',
                                 'transition-colors active:bg-muted/40 hover:bg-muted/25',
                                 !isLast && 'border-b border-border/30'
                             )}
                         >
+                            {/* Default indicator (subtle left rail, no width competition) */}
+                            {account.is_default && (
+                                <span
+                                    className="absolute left-0 top-3 bottom-3 w-0.5 rounded-full bg-primary"
+                                    aria-hidden="true"
+                                />
+                            )}
+
                             <div className="flex items-start justify-between gap-3">
                                 <div className="min-w-0 flex-1">
                                     <div className="flex items-center gap-2 min-w-0">
@@ -59,11 +67,13 @@ export function AccountListCard({
                                             {account.name}
                                         </span>
 
-                                        {account.is_default && (
-                                            <span className="shrink-0 text-[11px] px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
-                                                {t('accounts.default')}
-                                            </span>
-                                        )}
+                                        {/* Optional: very subtle label WITHOUT stealing layout
+                        - kept off by default, uncomment if you really want it
+                        - it will still take width, so only use if needed
+                    */}
+                                        {/* {account.is_default && (
+                      <span className="sr-only">{t('accounts.default')}</span>
+                    )} */}
                                     </div>
 
                                     {/* Progress bar */}
@@ -75,11 +85,11 @@ export function AccountListCard({
                                     </div>
                                 </div>
 
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-2 shrink-0">
                                     <span className="text-[15px] font-semibold text-foreground tabular-nums whitespace-nowrap">
                                         {formatCurrency(account.balance, currencyCode, locale)}
                                     </span>
-                                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                                    <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
                                 </div>
                             </div>
                         </button>
