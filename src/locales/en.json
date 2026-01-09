@@ -188,6 +188,38 @@
         "total": "Total",
         "tapAgainToOpen": "Tap again to open"
     },
+    "settings": {
+        "title": "Settings",
+        "profile": "Profile",
+        "language": "Language",
+        "timezone": "Timezone",
+        "dangerZone": "Danger Zone",
+        "deleteAccount": "Delete Account",
+        "deleteConfirm": "Delete your account?",
+        "deleteMessage": "This will permanently delete your account and all data. This action cannot be undone.",
+        "deleteSuccess": "Account deleted",
+        "languageUpdated": "Language updated",
+        "timezoneUpdated": "Timezone updated",
+        "selectTimezone": "Select timezone...",
+        "searchTimezone": "Search timezones...",
+        "cancel": "Cancel"
+    },
+    "accounts": {
+        "title": "Accounts",
+        "totalBalance": "Total Balance",
+        "createNew": "New Account",
+        "accountName": "Account Name",
+        "initialBalance": "Initial Balance",
+        "makeDefault": "Make default",
+        "create": "Create",
+        "deleteConfirm": "Delete this account?",
+        "deleteMessage": "This action cannot be undone.",
+        "deleteSuccess": "Account deleted",
+        "createSuccess": "Account created",
+        "noAccounts": "No accounts",
+        "namePlaceholder": "Enter account name...",
+        "cancel": "Cancel"
+    },
     "debts": {
         "title": "Debts",
         "borrow": "I Borrowed",

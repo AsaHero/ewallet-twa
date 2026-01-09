@@ -189,7 +189,42 @@
             "noResultsDesc": "Измените фильтры и попробуйте снова"
         },
         "uncategorized": "Без подкатегории",
-        "distribution": "Распределение"
+        "distribution": "Распределение",
+        "other": "Другие",
+        "total": "Всего",
+        "tapAgainToOpen": "Нажмите снова, чтобы открыть"
+    },
+    "settings": {
+        "title": "Настройки",
+        "profile": "Профиль",
+        "language": "Язык",
+        "timezone": "Часовой пояс",
+        "dangerZone": "Опасная зона",
+        "deleteAccount": "Удалить аккаунт",
+        "deleteConfirm": "Удалить ваш аккаунт?",
+        "deleteMessage": "Это навсегда удалит ваш аккаунт и все данные. Это действие нельзя отменить.",
+        "deleteSuccess": "Аккаунт удалён",
+        "languageUpdated": "Язык обновлён",
+        "timezoneUpdated": "Часовой пояс обновлён",
+        "selectTimezone": "Выберите часовой пояс...",
+        "searchTimezone": "Поиск часовых поясов...",
+        "cancel": "Отмена"
+    },
+    "accounts": {
+        "title": "Счета",
+        "totalBalance": "Общий баланс",
+        "createNew": "Новый счёт",
+        "accountName": "Название счёта",
+        "initialBalance": "Начальный баланс",
+        "makeDefault": "Сделать основным",
+        "create": "Создать",
+        "deleteConfirm": "Удалить этот счёт?",
+        "deleteMessage": "Это действие нельзя отменить.",
+        "deleteSuccess": "Счёт удалён",
+        "createSuccess": "Счёт создан",
+        "noAccounts": "Нет счетов",
+        "namePlaceholder": "Введите название...",
+        "cancel": "Отмена"
     },
     "debts": {
         "title": "Долги",

@@ -7,6 +7,8 @@ const TransactionPage = lazy(() => import('./pages/TransactionPage'));
 const StatsPage = lazy(() => import('./pages/StatsPage'));
 const CategoryStatsPage = lazy(() => import('./pages/CategoryStatsPage'));
 const DebtsPage = lazy(() => import('./pages/DebtsPage'));
+const AccountsPage = lazy(() => import('./pages/AccountsPage'));
+const SettingsPage = lazy(() => import('./pages/SettingsPage'));
 
 // Loading fallback component
 function LoadingFallback() {
@@ -28,6 +30,8 @@ function App() {
           <Route path="/stats" element={<StatsPage />} />
           <Route path="/stats/category/:categoryId" element={<CategoryStatsPage />} />
           <Route path="/debts" element={<DebtsPage />} />
+          <Route path="/accounts" element={<AccountsPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
         </Routes>
       </Suspense>
     </BrowserRouter>

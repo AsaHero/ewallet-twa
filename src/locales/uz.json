@@ -181,6 +181,38 @@
         "total": "Jami",
         "tapAgainToOpen": "Ochish uchun yana bosing"
     },
+    "settings": {
+        "title": "Sozlamalar",
+        "profile": "Profil",
+        "language": "Til",
+        "timezone": "Vaqt mintaqasi",
+        "dangerZone": "Xavfli zona",
+        "deleteAccount": "Akkauntni o'chirish",
+        "deleteConfirm": "Akkauntingizni o'chirmoqchimisiz?",
+        "deleteMessage": "Bu akkauntingiz va barcha ma'lumotlarni butunlay o'chiradi. Bu amalni bekor qilib bo'lmaydi.",
+        "deleteSuccess": "Akkaunt o'chirildi",
+        "languageUpdated": "Til yangilandi",
+        "timezoneUpdated": "Vaqt mintaqasi yangilandi",
+        "selectTimezone": "Vaqt mintaqasini tanlang...",
+        "searchTimezone": "Vaqt mintaqalarini qidirish...",
+        "cancel": "Bekor qilish"
+    },
+    "accounts": {
+        "title": "Hisoblar",
+        "totalBalance": "Umumiy balans",
+        "createNew": "Yangi hisob",
+        "accountName": "Hisob nomi",
+        "initialBalance": "Boshlang'ich balans",
+        "makeDefault": "Asosiy qilish",
+        "create": "Yaratish",
+        "deleteConfirm": "Bu hisobni o'chirmoqchimisiz?",
+        "deleteMessage": "Bu amalni bekor qilib bo'lmaydi.",
+        "deleteSuccess": "Hisob o'chirildi",
+        "createSuccess": "Hisob yaratildi",
+        "noAccounts": "Hisoblar yo'q",
+        "namePlaceholder": "Hisob nomini kiriting...",
+        "cancel": "Bekor qilish"
+    },
     "debts": {
         "title": "Qarzlar",
         "borrow": "Oldim",

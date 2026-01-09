@@ -92,13 +92,26 @@ class APIClient {
         return res.data;
     }
 
+    async updateUser(data: { currency_code?: string; language_code?: string; timezone?: string }): Promise<User> {
+        const res = await this.client.patch<User>('/users/me', data);
+        return res.data;
+    }
+
+    async deleteUser(): Promise<void> {
+        await this.client.delete('/users/me');
+    }
+
     // --- Accounts ---
     async getAccounts(): Promise<Account[]> {
         const res = await this.client.get<Account[]>('/accounts');
         return res.data;
     }
 
-    async createAccount(data: { name: string; is_default?: boolean }): Promise<Account> {
+    async createAccount(data: {
+        name: string;
+        balance?: number;
+        is_default?: boolean;
+    }): Promise<Account> {
         const res = await this.client.post<Account>('/accounts', data);
         return res.data;
     }
@@ -193,12 +206,6 @@ class APIClient {
 
     async deleteTransaction(id: string): Promise<void> {
         await this.client.delete(`/transactions/${id}`);
-    }
-
-    // --- User ---
-    async updateUser(data: { currency_code?: string; language_code?: string; timezone?: string }): Promise<User> {
-        const res = await this.client.patch<User>('/users/me', data);
-        return res.data;
     }
 
     // --- Stats ---
