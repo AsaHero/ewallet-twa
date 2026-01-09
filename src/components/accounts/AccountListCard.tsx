@@ -39,6 +39,7 @@ export function AccountListCard({
 
                     // NOTE: if you allow negatives and want share-of-assets, consider Math.abs
                     const rawPct = totalBalance > 0 ? (account.balance / totalBalance) * 100 : 0;
+                    console.log(`[AccountListCard] Account: ${account.name}, Balance: ${account.balance}, Total: ${totalBalance}, RawPct: ${rawPct}`);
                     const pct = clampPct(rawPct);
 
                     return (

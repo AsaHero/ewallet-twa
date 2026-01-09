@@ -28,7 +28,10 @@ export default function AccountsPage() {
   const locale = user?.language_code;
 
   const totalBalance = useMemo(() => {
-    return accounts.reduce((sum, acc) => sum + acc.balance, 0);
+    const total = accounts.reduce((sum, acc) => sum + acc.balance, 0);
+    console.log('[AccountsPage] Accounts:', accounts.map(a => ({ name: a.name, balance: a.balance })));
+    console.log('[AccountsPage] Total Balance:', total);
+    return total;
   }, [accounts]);
 
   // Init load (me + accounts)
@@ -127,18 +130,10 @@ export default function AccountsPage() {
       {/* Sticky header that owns safe-area */}
       <header className="sticky top-0 z-20 bg-background/80 backdrop-blur-xl border-b border-border/40">
         <div className="h-safe-top" />
-        <div className="px-4 py-3 max-w-lg mx-auto flex items-center justify-between">
-          <h1 className="text-xl font-semibold tracking-tight">
+        <div className="px-4 py-3 max-w-lg mx-auto">
+          <h1 className="text-xl font-semibold tracking-tight text-center">
             {t('accounts.title')}
           </h1>
-
-          <button
-            type="button"
-            onClick={handleAddAccountTap}
-            className="text-sm font-semibold text-primary hover:opacity-90 active:opacity-80"
-          >
-            {t('accounts.add')}
-          </button>
         </div>
       </header>
 

@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { History } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 import { apiClient } from '@/api/client';
@@ -189,7 +188,6 @@ function HistoryPage() {
 
   const {
     items: transactions,
-    total,
     total_income,
     total_expense,
     netBalance,
@@ -339,17 +337,7 @@ function HistoryPage() {
         <header className="sticky top-0 z-10 bg-background/85 backdrop-blur-md -mx-4 px-4 border-b border-border/40">
           <div className="h-safe-top" />
           <div className="pt-2 pb-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <History className="w-6 h-6 text-primary" />
-                <h1 className="text-xl font-bold text-foreground">{t('common.history')}</h1>
-              </div>
-              {total > 0 && (
-                <div className="text-xs text-muted-foreground">
-                  {transactions.length}/{total}
-                </div>
-              )}
-            </div>
+            <h1 className="text-xl font-bold text-foreground text-center">{t('common.history')}</h1>
           </div>
         </header>
 

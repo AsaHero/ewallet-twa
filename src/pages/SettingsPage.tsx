@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Settings, Globe, Clock, Trash2, Check } from 'lucide-react';
+import { Globe, Clock, Trash2, Check } from 'lucide-react';
 
 import { apiClient } from '@/api/client';
 import type { User as UserType } from '@/core/types';
@@ -241,10 +241,7 @@ export default function SettingsPage() {
         <header className="sticky top-0 z-10 bg-background/85 backdrop-blur-md -mx-4 px-4 border-b border-border/40">
           <div className="h-safe-top" />
           <div className="pt-2 pb-4">
-            <div className="flex items-center gap-3">
-              <Settings className="w-6 h-6 text-primary" />
-              <h1 className="text-xl font-bold">{t('settings.title')}</h1>
-            </div>
+            <h1 className="text-xl font-bold text-center">{t('settings.title')}</h1>
           </div>
         </header>
 
