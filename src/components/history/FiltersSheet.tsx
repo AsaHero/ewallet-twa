@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { AnimatePresence, motion } from 'framer-motion';
-import { X } from 'lucide-react';
+import { Check, SlidersHorizontal } from 'lucide-react';
+
 import type { Account, Category } from '@/core/types';
 import { cn } from '@/lib/utils';
+import { BottomSheetShell } from '@/components/ui/BottomSheetShell';
 
 export type HistoryFilters = {
   search: string;
@@ -25,9 +26,20 @@ type Props = {
   onApply: (v: HistoryFilters) => void;
 };
 
-function clampNumber(value: string) {
-  if (!value.trim()) return undefined;
-  const n = Number(value);
+function normalizeDecimalInput(v: string) {
+  const raw = v.replace(/[^\d.,]/g, '');
+  const firstSepIndex = raw.search(/[.,]/);
+  if (firstSepIndex === -1) return raw;
+
+  const intPart = raw.slice(0, firstSepIndex).replace(/[.,]/g, '');
+  const fracPart = raw.slice(firstSepIndex + 1).replace(/[.,]/g, '');
+  return `${intPart}.${fracPart}`;
+}
+
+function parseOptionalNumber(raw: string): number | undefined {
+  const trimmed = raw.trim();
+  if (!trimmed) return undefined;
+  const n = Number(trimmed);
   return Number.isFinite(n) ? n : undefined;
 }
 
@@ -40,12 +52,23 @@ export function FiltersSheet({
   onApply,
 }: Props) {
   const { t } = useTranslation();
+
   const [draft, setDraft] = useState<HistoryFilters>(value);
+
+  // UI-only states
   const [catSearch, setCatSearch] = useState('');
   const [accSearch, setAccSearch] = useState('');
+  const [minAmountRaw, setMinAmountRaw] = useState('');
+  const [maxAmountRaw, setMaxAmountRaw] = useState('');
 
   useEffect(() => {
-    if (open) setDraft(value);
+    if (!open) return;
+
+    setDraft(value);
+    setCatSearch('');
+    setAccSearch('');
+    setMinAmountRaw(value.min_amount !== undefined ? String(value.min_amount) : '');
+    setMaxAmountRaw(value.max_amount !== undefined ? String(value.max_amount) : '');
   }, [open, value]);
 
   const filteredCategories = useMemo(() => {
@@ -78,199 +101,263 @@ export function FiltersSheet({
     }));
   };
 
-  const reset = () => {
-    setDraft({ search: '', account_ids: [], category_ids: [], subcategory_ids: [], min_amount: undefined, max_amount: undefined });
+  const handleReset = () => {
+    setDraft({
+      search: '',
+      account_ids: [],
+      category_ids: [],
+      subcategory_ids: [],
+      min_amount: undefined,
+      max_amount: undefined,
+    });
     setCatSearch('');
     setAccSearch('');
+    setMinAmountRaw('');
+    setMaxAmountRaw('');
   };
 
-  const apply = () => {
+  const handleApply = () => {
+    const minN = parseOptionalNumber(normalizeDecimalInput(minAmountRaw));
+    const maxN = parseOptionalNumber(normalizeDecimalInput(maxAmountRaw));
+
     onApply({
       search: draft.search ?? '',
       account_ids: draft.account_ids ?? [],
       category_ids: draft.category_ids ?? [],
       subcategory_ids: draft.subcategory_ids ?? [],
-      min_amount: draft.min_amount,
-      max_amount: draft.max_amount,
+      min_amount: minN,
+      max_amount: maxN,
     });
+
     onOpenChange(false);
   };
 
+  const footer = (
+    <div className="grid grid-cols-2 gap-2">
+      <button
+        type="button"
+        onClick={handleReset}
+        className={cn(
+          'h-12 rounded-2xl font-semibold',
+          'bg-muted text-foreground hover:opacity-90 active:scale-[0.99] transition-all'
+        )}
+      >
+        {t('history.filters.reset')}
+      </button>
+
+      <button
+        type="button"
+        onClick={handleApply}
+        className={cn(
+          'h-12 rounded-2xl font-semibold shadow-lg',
+          'bg-primary text-primary-foreground active:scale-[0.99] transition-all shadow-primary/20'
+        )}
+      >
+        {t('history.filters.apply')}
+      </button>
+
+      <div className="h-safe-bottom col-span-2" />
+    </div>
+  );
+
   return (
-    <AnimatePresence>
-      {open && (
-        <>
-          {/* Backdrop */}
-          <motion.div
-            className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => onOpenChange(false)}
+    <BottomSheetShell
+      open={open}
+      onOpenChange={onOpenChange}
+      title={t('history.filters.title')}
+      subtitle={t('history.filters.subtitle')}
+      icon={<SlidersHorizontal className="w-5 h-5 text-primary" />}
+      footer={footer}
+    >
+      <div className="space-y-6">
+        {/* Search */}
+        <div className="space-y-2">
+          <div className="text-sm font-semibold text-foreground">
+            {t('history.filters.search')}
+          </div>
+          <input
+            value={draft.search}
+            onChange={(e) => setDraft((d) => ({ ...d, search: e.target.value }))}
+            placeholder={t('history.filters.searchPlaceholder')}
+            className={cn(
+              'w-full h-11 px-4 rounded-2xl bg-muted/25 border border-border/50',
+              'focus:outline-none focus:ring-2 focus:ring-primary/25 text-sm'
+            )}
+          />
+        </div>
+
+        {/* Amount */}
+        <div className="space-y-2">
+          <div className="text-sm font-semibold text-foreground">
+            {t('history.filters.amount')}
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground ml-1">
+                {t('history.filters.min')}
+              </label>
+              <input
+                type="text"
+                inputMode="decimal"
+                placeholder="0"
+                value={minAmountRaw}
+                onChange={(e) => setMinAmountRaw(e.target.value)}
+                className={cn(
+                  'h-11 w-full px-4 rounded-2xl bg-muted/25 border border-border/50',
+                  'focus:outline-none focus:ring-2 focus:ring-primary/25 text-sm tabular-nums'
+                )}
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground ml-1">
+                {t('history.filters.max')}
+              </label>
+              <input
+                type="text"
+                inputMode="decimal"
+                placeholder="0"
+                value={maxAmountRaw}
+                onChange={(e) => setMaxAmountRaw(e.target.value)}
+                className={cn(
+                  'h-11 w-full px-4 rounded-2xl bg-muted/25 border border-border/50',
+                  'focus:outline-none focus:ring-2 focus:ring-primary/25 text-sm tabular-nums'
+                )}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Accounts */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <div className="text-sm font-semibold text-foreground">
+              {t('history.filters.accounts')}
+            </div>
+            <div className="text-xs text-muted-foreground">
+              {t('history.filters.selected', { count: draft.account_ids.length })}
+            </div>
+          </div>
+
+          <input
+            value={accSearch}
+            onChange={(e) => setAccSearch(e.target.value)}
+            placeholder={t('history.filters.findAccount')}
+            className={cn(
+              'w-full h-10 px-4 rounded-2xl bg-muted/25 border border-border/50',
+              'focus:outline-none focus:ring-2 focus:ring-primary/25 text-sm'
+            )}
           />
 
-          {/* Sheet */}
-          <motion.div
-            className="fixed inset-x-0 bottom-0 z-50 mx-auto w-full max-w-md"
-            initial={{ y: '100%' }}
-            animate={{ y: 0 }}
-            exit={{ y: '100%' }}
-            transition={{ type: 'spring', stiffness: 380, damping: 36 }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="rounded-t-3xl bg-background shadow-2xl border border-border/50">
-              {/* Header */}
-              <div className="px-4 pt-3 pb-2 border-b border-border/50">
-                <div className="mx-auto h-1.5 w-10 rounded-full bg-muted" />
-                <div className="mt-3 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-base font-semibold text-foreground">{t('history.filters.title')}</h2>
-                    <button
-                      onClick={reset}
-                      className="text-xs px-2 py-1 rounded-full bg-muted/60 hover:bg-muted transition-colors"
-                    >
-                      {t('history.filters.reset')}
-                    </button>
-                  </div>
+          <div className="rounded-3xl border border-border/40 bg-card/30 overflow-hidden">
+            {filteredAccounts.length === 0 ? (
+              <div className="px-4 py-3 text-sm text-muted-foreground">
+                {t('history.filters.noAccounts')}
+              </div>
+            ) : (
+              filteredAccounts.map((a, idx) => {
+                const on = draft.account_ids.includes(a.id);
+                const isLast = idx === filteredAccounts.length - 1;
+
+                return (
                   <button
-                    onClick={() => onOpenChange(false)}
-                    className="p-2 rounded-full hover:bg-muted transition-colors"
-                    aria-label="Close"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
-              </div>
-
-              {/* Content */}
-              <div className="px-4 py-4 max-h-[72vh] overflow-y-auto overscroll-contain space-y-5">
-                {/* Search */}
-                <div className="space-y-2">
-                  <div className="text-sm font-medium text-foreground">{t('history.filters.search')}</div>
-                  <input
-                    value={draft.search}
-                    onChange={(e) => setDraft((d) => ({ ...d, search: e.target.value }))}
-                    placeholder={t('history.filters.searchPlaceholder')}
+                    key={a.id}
+                    type="button"
+                    onClick={() => toggleAccount(a.id)}
                     className={cn(
-                      'w-full h-11 px-3 rounded-2xl bg-muted/40 border border-border/50',
-                      'focus:outline-none focus:ring-2 focus:ring-primary/30'
+                      'w-full px-4 py-3 text-left flex items-center justify-between gap-3',
+                      'transition-colors hover:bg-muted/20 active:bg-muted/30',
+                      !isLast && 'border-b border-border/30'
                     )}
-                  />
-                </div>
+                  >
+                    <span className="text-sm font-medium text-foreground truncate">
+                      {a.name}
+                    </span>
 
-                {/* Amount */}
-                <div className="space-y-2">
-                  <div className="text-sm font-medium text-foreground">{t('history.filters.amount')}</div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <input
-                      inputMode="decimal"
-                      placeholder={t('history.filters.min')}
-                      value={draft.min_amount ?? ''}
-                      onChange={(e) => setDraft((d) => ({ ...d, min_amount: clampNumber(e.target.value) }))}
-                      className="h-11 px-3 rounded-2xl bg-muted/40 border border-border/50 focus:outline-none focus:ring-2 focus:ring-primary/30"
-                    />
-                    <input
-                      inputMode="decimal"
-                      placeholder={t('history.filters.max')}
-                      value={draft.max_amount ?? ''}
-                      onChange={(e) => setDraft((d) => ({ ...d, max_amount: clampNumber(e.target.value) }))}
-                      className="h-11 px-3 rounded-2xl bg-muted/40 border border-border/50 focus:outline-none focus:ring-2 focus:ring-primary/30"
-                    />
-                  </div>
-                </div>
+                    <span
+                      className={cn(
+                        'w-6 h-6 rounded-full border flex items-center justify-center shrink-0',
+                        on
+                          ? 'bg-primary border-primary text-primary-foreground'
+                          : 'border-border/50 text-transparent'
+                      )}
+                    >
+                      <Check className="w-4 h-4" />
+                    </span>
+                  </button>
+                );
+              })
+            )}
+          </div>
+        </div>
 
-                {/* Accounts */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div className="text-sm font-medium text-foreground">{t('history.filters.accounts')}</div>
-                    <div className="text-xs text-muted-foreground">
-                      {t('history.filters.selected', { count: draft.account_ids.length })}
-                    </div>
-                  </div>
-                  <input
-                    value={accSearch}
-                    onChange={(e) => setAccSearch(e.target.value)}
-                    placeholder={t('history.filters.findAccount')}
-                    className="w-full h-10 px-3 rounded-2xl bg-muted/40 border border-border/50 focus:outline-none focus:ring-2 focus:ring-primary/30"
-                  />
-                  <div className="flex flex-wrap gap-2">
-                    {filteredAccounts.map((a) => {
-                      const on = draft.account_ids.includes(a.id);
-                      return (
-                        <button
-                          key={a.id}
-                          onClick={() => toggleAccount(a.id)}
-                          className={cn(
-                            'px-3 py-2 rounded-2xl text-sm border transition-all',
-                            on
-                              ? 'bg-primary text-primary-foreground border-primary/30'
-                              : 'bg-card/50 hover:bg-card/70 border-border/50'
-                          )}
-                        >
-                          {a.name}
-                        </button>
-                      );
-                    })}
-                    {filteredAccounts.length === 0 && (
-                      <div className="text-sm text-muted-foreground py-2">{t('history.filters.noAccounts')}</div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Categories */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div className="text-sm font-medium text-foreground">{t('history.filters.categories')}</div>
-                    <div className="text-xs text-muted-foreground">
-                      {t('history.filters.selected', { count: draft.category_ids.length })}
-                    </div>
-                  </div>
-                  <input
-                    value={catSearch}
-                    onChange={(e) => setCatSearch(e.target.value)}
-                    placeholder={t('history.filters.findCategory')}
-                    className="w-full h-10 px-3 rounded-2xl bg-muted/40 border border-border/50 focus:outline-none focus:ring-2 focus:ring-primary/30"
-                  />
-                  <div className="flex flex-wrap gap-2">
-                    {filteredCategories.map((c) => {
-                      const on = draft.category_ids.includes(c.id);
-                      return (
-                        <button
-                          key={c.id}
-                          onClick={() => toggleCategory(c.id)}
-                          className={cn(
-                            'px-3 py-2 rounded-2xl text-sm border transition-all flex items-center gap-2',
-                            on
-                              ? 'bg-primary text-primary-foreground border-primary/30'
-                              : 'bg-card/50 hover:bg-card/70 border-border/50'
-                          )}
-                        >
-                          <span>{c.emoji || '📁'}</span>
-                          <span>{c.name}</span>
-                        </button>
-                      );
-                    })}
-                    {filteredCategories.length === 0 && (
-                      <div className="text-sm text-muted-foreground py-2">{t('history.filters.noCategories')}</div>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Footer */}
-              <div className="px-4 pb-4 pt-3 border-t border-border/50">
-                <button
-                  onClick={apply}
-                  className="w-full h-12 rounded-2xl bg-primary text-primary-foreground font-semibold active:scale-[0.99] transition-transform"
-                >
-                  {t('history.filters.apply')}
-                </button>
-                <div className="h-safe-bottom" />
-              </div>
+        {/* Categories */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <div className="text-sm font-semibold text-foreground">
+              {t('history.filters.categories')}
             </div>
-          </motion.div>
-        </>
-      )}
-    </AnimatePresence>
+            <div className="text-xs text-muted-foreground">
+              {t('history.filters.selected', { count: draft.category_ids.length })}
+            </div>
+          </div>
+
+          <input
+            value={catSearch}
+            onChange={(e) => setCatSearch(e.target.value)}
+            placeholder={t('history.filters.findCategory')}
+            className={cn(
+              'w-full h-10 px-4 rounded-2xl bg-muted/25 border border-border/50',
+              'focus:outline-none focus:ring-2 focus:ring-primary/25 text-sm'
+            )}
+          />
+
+          <div className="rounded-3xl border border-border/40 bg-card/30 overflow-hidden">
+            {filteredCategories.length === 0 ? (
+              <div className="px-4 py-3 text-sm text-muted-foreground">
+                {t('history.filters.noCategories')}
+              </div>
+            ) : (
+              filteredCategories.map((c, idx) => {
+                const on = draft.category_ids.includes(c.id);
+                const isLast = idx === filteredCategories.length - 1;
+
+                return (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => toggleCategory(c.id)}
+                    className={cn(
+                      'w-full px-4 py-3 text-left flex items-center justify-between gap-3',
+                      'transition-colors hover:bg-muted/20 active:bg-muted/30',
+                      !isLast && 'border-b border-border/30'
+                    )}
+                  >
+                    <div className="min-w-0 flex items-center gap-2">
+                      <span className="text-base">{c.emoji || '📁'}</span>
+                      <span className="text-sm font-medium text-foreground truncate">
+                        {c.name}
+                      </span>
+                    </div>
+
+                    <span
+                      className={cn(
+                        'w-6 h-6 rounded-full border flex items-center justify-center shrink-0',
+                        on
+                          ? 'bg-primary border-primary text-primary-foreground'
+                          : 'border-border/50 text-transparent'
+                      )}
+                    >
+                      <Check className="w-4 h-4" />
+                    </span>
+                  </button>
+                );
+              })
+            )}
+          </div>
+        </div>
+      </div>
+    </BottomSheetShell>
   );
 }

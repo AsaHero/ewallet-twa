@@ -35,27 +35,19 @@ function formatDateRange(from: Date, to: Date, locale?: string) {
   const fromDay = from.getDate();
   const toDay = to.getDate();
 
-  // Full month
-  if (
-    isSameMonth(from, to) &&
-    fromDay === 1 &&
-    toDay === endOfMonth(from).getDate()
-  ) {
+  if (isSameMonth(from, to) && fromDay === 1 && toDay === endOfMonth(from).getDate()) {
     return format(from, 'LLLL yyyy', { locale: loc });
   }
 
-  // Same year
   if (isSameYear(from, to)) {
     if (isSameMonth(from, to)) {
-      return `${format(from, 'd', { locale: loc })} - ${format(to, 'd MMMM yyyy', { locale: loc })}`;
+      return `${format(from, 'd', { locale: loc })} – ${format(to, 'd MMMM yyyy', { locale: loc })}`;
     }
-    return `${format(from, 'd MMM', { locale: loc })} - ${format(to, 'd MMM yyyy', { locale: loc })}`;
+    return `${format(from, 'd MMM', { locale: loc })} – ${format(to, 'd MMM yyyy', { locale: loc })}`;
   }
 
-  // Different years
-  return `${format(from, 'd MMM yyyy', { locale: loc })} - ${format(to, 'd MMM yyyy', { locale: loc })}`;
+  return `${format(from, 'd MMM yyyy', { locale: loc })} – ${format(to, 'd MMM yyyy', { locale: loc })}`;
 }
-
 
 export function SummaryCard({
   dateRange,
@@ -73,6 +65,7 @@ export function SummaryCard({
   const { t } = useTranslation();
 
   const isPositive = netBalance >= 0;
+
   const headerText = useMemo(
     () => formatDateRange(dateRange.from, dateRange.to, locale),
     [dateRange.from, dateRange.to, locale]
@@ -92,64 +85,73 @@ export function SummaryCard({
   );
 
   return (
-    <Card className="border-0 bg-gradient-to-br from-primary/10 to-primary/5 backdrop-blur-sm overflow-hidden">
-      <CardContent className="p-5 overflow-hidden">
-        {/* Date Selector Header */}
-        <div className="flex items-center justify-between mb-5 gap-2">
+    <Card className="rounded-3xl border border-border/40 bg-card/40 overflow-hidden">
+      <CardContent className="p-5">
+        {/* Header / Period selector */}
+        <div className="flex items-center justify-between gap-2">
           <button
             onClick={onPrev}
             disabled={!canGoPrev}
             className={cn(
-              'p-2 rounded-full transition-all',
+              'h-10 w-10 rounded-full flex items-center justify-center',
+              'transition-colors active:scale-[0.99]',
               canGoPrev
-                ? 'hover:bg-primary/10 text-foreground active:scale-[0.98]'
+                ? 'hover:bg-muted/30 text-foreground'
                 : 'opacity-30 cursor-not-allowed text-muted-foreground'
             )}
-            aria-label="Previous period"
+            aria-label={t('history.prevPeriod')}
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
 
           <button
             onClick={onHeaderClick}
-            className="min-w-0 flex-1 flex items-center justify-center gap-2 px-3 py-1.5 rounded-xl hover:bg-primary/10 active:scale-95 transition-all group"
-            aria-label="Select date range"
+            className={cn(
+              'min-w-0 flex-1',
+              'h-10 px-3 rounded-full',
+              'flex items-center justify-center gap-2',
+              'transition-colors active:scale-[0.99]',
+              'hover:bg-muted/30'
+            )}
+            aria-label={t('history.selectDateRange')}
           >
-            <h2 className="min-w-0 text-[15px] font-bold text-foreground tracking-tight capitalize truncate">
+            <h2 className="min-w-0 text-[15px] font-semibold text-foreground tracking-tight capitalize truncate">
               {headerText}
             </h2>
-            <ChevronDown className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
+            <ChevronDown className="w-4 h-4 text-muted-foreground flex-shrink-0" />
           </button>
 
           <button
             onClick={onNext}
             disabled={!canGoNext}
             className={cn(
-              'p-2 rounded-full transition-all',
+              'h-10 w-10 rounded-full flex items-center justify-center',
+              'transition-colors active:scale-[0.99]',
               canGoNext
-                ? 'hover:bg-primary/10 text-foreground active:scale-[0.98]'
+                ? 'hover:bg-muted/30 text-foreground'
                 : 'opacity-30 cursor-not-allowed text-muted-foreground'
             )}
-            aria-label="Next period"
+            aria-label={t('history.nextPeriod')}
           >
             <ArrowRight className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 gap-3 mb-4">
+        {/* Stats */}
+        <div className="mt-5 grid grid-cols-2 gap-3">
           {/* Income */}
-          <div className="space-y-1 min-w-0">
+          <div className="min-w-0">
             <div className="flex items-center gap-1 text-xs text-muted-foreground">
-              <span className="text-green-500">↗</span>
+              <span className="opacity-80">↗</span>
               <span>{t('common.income')}</span>
             </div>
 
             <p
               className={cn(
-                'text-green-500 font-extrabold tabular-nums tracking-tight leading-tight',
+                'mt-1 font-extrabold tabular-nums tracking-tight leading-tight min-w-0',
                 'text-[clamp(14px,4.8vw,22px)]',
-                'whitespace-normal break-words overflow-hidden'
+                'break-words',
+                'text-emerald-500'
               )}
             >
               +{incomeText}
@@ -157,17 +159,18 @@ export function SummaryCard({
           </div>
 
           {/* Expenses */}
-          <div className="space-y-1 min-w-0 text-right">
+          <div className="min-w-0 text-right">
             <div className="flex items-center justify-end gap-1 text-xs text-muted-foreground">
-              <span className="text-red-500">↘</span>
+              <span className="opacity-80">↘</span>
               <span>{t('common.expense')}</span>
             </div>
 
             <p
               className={cn(
-                'text-red-500 font-extrabold tabular-nums tracking-tight leading-tight',
+                'mt-1 font-extrabold tabular-nums tracking-tight leading-tight min-w-0',
                 'text-[clamp(14px,4.8vw,22px)]',
-                'whitespace-normal break-words overflow-hidden'
+                'break-words',
+                'text-rose-500'
               )}
             >
               -{expenseText}
@@ -175,8 +178,8 @@ export function SummaryCard({
           </div>
         </div>
 
-        {/* Net Balance */}
-        <div className="pt-4 border-t border-border/50 min-w-0 overflow-hidden">
+        {/* Net */}
+        <div className="mt-4 pt-4 border-t border-border/40 min-w-0">
           <div className="flex items-start justify-between gap-3 min-w-0">
             <span className="text-sm text-muted-foreground pt-[2px]">
               {t('history.netBalance')}
@@ -184,10 +187,11 @@ export function SummaryCard({
 
             <span
               className={cn(
-                'font-extrabold tabular-nums tracking-tight leading-tight text-right min-w-0',
+                'min-w-0 text-right',
+                'font-extrabold tabular-nums tracking-tight leading-tight',
                 'text-[clamp(13px,4.3vw,18px)]',
-                'whitespace-normal break-words overflow-hidden',
-                isPositive ? 'text-green-500' : 'text-red-500'
+                'break-words',
+                isPositive ? 'text-emerald-500' : 'text-rose-500'
               )}
             >
               {isPositive ? '+' : ''}
