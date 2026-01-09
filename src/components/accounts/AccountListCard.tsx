@@ -39,7 +39,6 @@ export function AccountListCard({
 
                     // NOTE: if you allow negatives and want share-of-assets, consider Math.abs
                     const rawPct = totalBalance > 0 ? (account.balance / totalBalance) * 100 : 0;
-                    console.log(`[AccountListCard] Account: ${account.name}, Balance: ${account.balance}, Total: ${totalBalance}, RawPct: ${rawPct}`);
                     const pct = clampPct(rawPct);
 
                     return (
@@ -61,36 +60,27 @@ export function AccountListCard({
                                 />
                             )}
 
-                            <div className="flex items-start justify-between gap-3">
-                                <div className="min-w-0 flex-1">
-                                    <div className="flex items-center gap-2 min-w-0">
-                                        <span className="text-[15px] font-semibold text-foreground truncate">
-                                            {account.name}
+                            <div className="space-y-2">
+                                {/* Account name and amount row */}
+                                <div className="flex items-center justify-between gap-3">
+                                    <span className="text-[15px] font-semibold text-foreground truncate min-w-0">
+                                        {account.name}
+                                    </span>
+
+                                    <div className="flex items-center gap-2 shrink-0">
+                                        <span className="text-[15px] font-semibold text-foreground tabular-nums whitespace-nowrap">
+                                            {formatCurrency(account.balance, currencyCode, locale)}
                                         </span>
-
-                                        {/* Optional: very subtle label WITHOUT stealing layout
-                        - kept off by default, uncomment if you really want it
-                        - it will still take width, so only use if needed
-                    */}
-                                        {/* {account.is_default && (
-                      <span className="sr-only">{t('accounts.default')}</span>
-                    )} */}
-                                    </div>
-
-                                    {/* Progress bar */}
-                                    <div className="mt-2 w-full h-1.5 bg-muted/40 rounded-full overflow-hidden">
-                                        <div
-                                            className="h-full bg-primary/80 rounded-full transition-[width] duration-300 ease-out"
-                                            style={{ width: `${pct}%` }}
-                                        />
+                                        <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
                                     </div>
                                 </div>
 
-                                <div className="flex items-center gap-2 shrink-0">
-                                    <span className="text-[15px] font-semibold text-foreground tabular-nums whitespace-nowrap">
-                                        {formatCurrency(account.balance, currencyCode, locale)}
-                                    </span>
-                                    <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+                                {/* Progress bar - full width */}
+                                <div className="w-full h-1.5 bg-muted/40 rounded-full overflow-hidden">
+                                    <div
+                                        className="h-full bg-primary/80 rounded-full transition-[width] duration-300 ease-out"
+                                        style={{ width: `${pct}%` }}
+                                    />
                                 </div>
                             </div>
                         </button>

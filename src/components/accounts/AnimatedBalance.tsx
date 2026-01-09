@@ -57,7 +57,7 @@ export function AnimatedBalance({
         "
             >
                 {formatCurrency(
-                    Math.round(motionValue.get()),
+                    motionValue.get(),
                     currencyCode,
                     locale
                 )}

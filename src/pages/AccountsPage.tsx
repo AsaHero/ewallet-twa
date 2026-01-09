@@ -28,10 +28,7 @@ export default function AccountsPage() {
   const locale = user?.language_code;
 
   const totalBalance = useMemo(() => {
-    const total = accounts.reduce((sum, acc) => sum + acc.balance, 0);
-    console.log('[AccountsPage] Accounts:', accounts.map(a => ({ name: a.name, balance: a.balance })));
-    console.log('[AccountsPage] Total Balance:', total);
-    return total;
+    return accounts.reduce((sum, acc) => sum + acc.balance, 0);
   }, [accounts]);
 
   // Init load (me + accounts)
