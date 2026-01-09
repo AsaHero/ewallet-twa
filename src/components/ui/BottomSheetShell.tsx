@@ -2,6 +2,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { ReactNode } from 'react';
+import { useEffect } from 'react';
 
 type BottomSheetShellProps = {
     open: boolean;
@@ -39,6 +40,16 @@ export function BottomSheetShell({
     closeOnBackdrop = true,
 }: BottomSheetShellProps) {
     const handleClose = () => onOpenChange(false);
+
+    // Lock body scroll when bottom sheet is open
+    useEffect(() => {
+        if (open) {
+            document.body.style.overflow = 'hidden';
+            return () => {
+                document.body.style.overflow = '';
+            };
+        }
+    }, [open]);
 
     return (
         <AnimatePresence>
@@ -111,7 +122,7 @@ export function BottomSheetShell({
                             {/* Content */}
                             <div
                                 className={cn(
-                                    'px-4 py-4 max-h-[72vh] overflow-y-auto overscroll-contain',
+                                    'px-4 py-4 max-h-[65vh] overflow-y-auto overscroll-contain',
                                     contentClassName
                                 )}
                             >

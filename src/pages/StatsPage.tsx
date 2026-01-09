@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { TrendingUp } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, differenceInCalendarDays } from 'date-fns';
 
 import { apiClient } from '@/api/client';
@@ -235,10 +236,10 @@ export default function StatsPage() {
       avgAmount,
       topCategory: topCategory
         ? {
-            name: topCategory.name,
-            emoji: topCategory.emoji,
-            total: topCategory.total,
-          }
+          name: topCategory.name,
+          emoji: topCategory.emoji,
+          total: topCategory.total,
+        }
         : null,
     };
   }, [exploreTotals, exploreItems]);
@@ -334,41 +335,44 @@ export default function StatsPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <div className="h-safe-top" />
-      <div className="h-14" />
-
       <div className="px-4 pb-8 max-w-lg mx-auto">
         {/* Sticky header */}
-        <header className="pt-2 pb-4 sticky top-0 z-10 bg-background/80 backdrop-blur-xl">
-          <div className="mt-3 flex items-center justify-between gap-2">
-            <h1 className="text-2xl font-bold">{t('common.stats') || 'Stats'}</h1>
+        <header className="sticky top-0 z-20 bg-background/80 backdrop-blur-xl border-b border-border/40 -mx-4 px-4">
+          <div className="h-safe-top" />
+          <div className="py-3">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-3">
+                <TrendingUp className="w-6 h-6 text-primary" />
+                <h1 className="text-xl font-bold">{t('common.stats') || 'Stats'}</h1>
+              </div>
 
-            <button
-              onClick={() => setAccountSheetOpen(true)}
-              className="px-3 py-2 rounded-xl bg-card/50 hover:bg-card/70 border border-border/50 text-sm font-semibold transition-colors"
-            >
-              {accountIds.length
-                ? (t('stats.accountCount', { count: accountIds.length }) as string)
-                : (t('common.all') || 'All')}
-            </button>
-          </div>
+              <button
+                onClick={() => setAccountSheetOpen(true)}
+                className="px-3 py-2 rounded-xl bg-card/50 hover:bg-card/70 border border-border/50 text-sm font-semibold transition-colors"
+              >
+                {accountIds.length
+                  ? (t('stats.accountCount', { count: accountIds.length }) as string)
+                  : (t('common.all') || 'All')}
+              </button>
+            </div>
 
-          <div className="mt-3 flex gap-2">
-            <button
-              onClick={() => setDateSheetOpen(true)}
-              className="flex-1 h-11 rounded-2xl bg-card/50 hover:bg-card/70 border border-border/50 text-sm font-semibold transition-colors"
-            >
-              {toYMD(dateRange.from)} → {toYMD(dateRange.to)}
-            </button>
+            <div className="mt-3 flex gap-2">
+              <button
+                onClick={() => setDateSheetOpen(true)}
+                className="flex-1 h-11 rounded-2xl bg-card/50 hover:bg-card/70 border border-border/50 text-sm font-semibold transition-colors"
+              >
+                {toYMD(dateRange.from)} → {toYMD(dateRange.to)}
+              </button>
 
-            <button
-              onClick={onToggleTxType}
-              className="h-11 px-4 rounded-2xl border text-sm font-semibold bg-background/40 border-border/50 hover:bg-background/60"
-            >
-              {txType === 'withdrawal'
-                ? (t('common.expense') || 'Expenses')
-                : (t('common.income') || 'Income')}
-            </button>
+              <button
+                onClick={onToggleTxType}
+                className="h-11 px-4 rounded-2xl border text-sm font-semibold bg-background/40 border-border/50 hover:bg-background/60"
+              >
+                {txType === 'withdrawal'
+                  ? (t('common.expense') || 'Expenses')
+                  : (t('common.income') || 'Income')}
+              </button>
+            </div>
           </div>
         </header>
 

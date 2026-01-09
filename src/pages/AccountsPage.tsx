@@ -128,7 +128,7 @@ export default function AccountsPage() {
       <header className="sticky top-0 z-20 bg-background/80 backdrop-blur-xl border-b border-border/40">
         <div className="h-safe-top" />
         <div className="px-4 py-3 max-w-lg mx-auto flex items-center justify-between">
-          <h1 className="text-[17px] font-semibold tracking-tight">
+          <h1 className="text-xl font-semibold tracking-tight">
             {t('accounts.title')}
           </h1>
 

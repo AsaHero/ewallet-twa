@@ -236,15 +236,15 @@ export default function SettingsPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <div className="h-safe-top" />
-      <div className="h-14" />
-
       <div className="px-4 pb-8 max-w-md mx-auto">
         {/* Header */}
-        <header className="pt-2 pb-4">
-          <div className="mt-3 flex items-center gap-3">
-            <Settings className="w-6 h-6 text-primary" />
-            <h1 className="text-2xl font-bold">{t('settings.title')}</h1>
+        <header className="sticky top-0 z-10 bg-background/85 backdrop-blur-md -mx-4 px-4 border-b border-border/40">
+          <div className="h-safe-top" />
+          <div className="pt-2 pb-4">
+            <div className="flex items-center gap-3">
+              <Settings className="w-6 h-6 text-primary" />
+              <h1 className="text-xl font-bold">{t('settings.title')}</h1>
+            </div>
           </div>
         </header>
 
@@ -329,6 +329,7 @@ export default function SettingsPage() {
                 )}
               >
                 <select
+                  key={user?.timezone || 'UTC'}
                   value={currentTz}
                   onChange={(e) => handleTimezoneChange(e.target.value)}
                   disabled={updatingTimezone}
