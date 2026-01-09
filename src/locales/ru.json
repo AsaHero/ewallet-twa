@@ -25,7 +25,9 @@
         "back": "Назад",
         "prev": "Назад",
         "next": "Вперед",
-        "stats": "Статистика"
+        "stats": "Статистика",
+        "save": "Сохранить",
+        "close": "Закрыть"
     },
     "errors": {
         "failedToLoad": "Не удалось загрузить данные",
@@ -224,7 +226,28 @@
         "createSuccess": "Счёт создан",
         "noAccounts": "Нет счетов",
         "namePlaceholder": "Введите название...",
-        "cancel": "Отмена"
+        "cancel": "Отмена",
+        "editAccount": "Редактировать счёт",
+        "balance": "Баланс",
+        "comingSoon": "Скоро",
+        "balanceAdjustmentInfo": "Корректировка баланса будет доступна в будущих обновлениях",
+        "defaultAccount": "Установить основным",
+        "defaultAccountDescription": "Использовать этот счёт для новых транзакций",
+        "updateSuccess": "Счёт обновлён",
+        "add": "Добавить",
+        "accountsCount_one": "{{count}} счёт",
+        "accountsCount_few": "{{count}} счёта",
+        "accountsCount_many": "{{count}} счётов",
+        "accountsCount_other": "{{count}} счётов",
+        "emptyTitle": "Нет счетов",
+        "emptySubtitle": "Создайте первый счёт для отслеживания финансов",
+        "createSubtitle": "Добавить новый счёт",
+        "initialBalanceHint": "Введите текущий баланс счёта",
+        "makeDefaultDescription": "Новые транзакции будут использовать этот счёт по умолчанию",
+        "manageAccountSubtitle": "Управление {{name}}",
+        "default": "По умолчанию",
+        "addAccount": "Добавить счёт",
+        "addAccountSubtitle": "Создать новый счёт"
     },
     "debts": {
         "title": "Долги",

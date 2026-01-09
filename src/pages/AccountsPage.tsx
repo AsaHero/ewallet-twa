@@ -1,16 +1,17 @@
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Plus } from 'lucide-react';
 
 import { apiClient } from '@/api/client';
 import type { User, Account } from '@/core/types';
 
 import { useTelegramWebApp } from '@/hooks/useTelegramWebApp';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
 
-import { ExploreDonut, type ExploreItem } from '@/components/stats/ExploreDonut';
-import { ExploreRankList } from '@/components/stats/ExploreRankList';
+import { AnimatedBalance } from '@/components/accounts/AnimatedBalance';
+import { AccountListCard } from '@/components/accounts/AccountListCard';
 import { CreateAccountSheet } from '@/components/accounts/CreateAccountSheet';
+import { AccountActionsSheet } from '@/components/accounts/AccountActionsSheet';
 
 export default function AccountsPage() {
   const { t } = useTranslation();
@@ -19,12 +20,16 @@ export default function AccountsPage() {
   const [user, setUser] = useState<User | null>(null);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [loadingInit, setLoadingInit] = useState(true);
-  const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
-  const [expanded, setExpanded] = useState(false);
+
   const [createSheetOpen, setCreateSheetOpen] = useState(false);
+  const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
 
   const currencyCode = user?.currency_code || 'USD';
   const locale = user?.language_code;
+
+  const totalBalance = useMemo(() => {
+    return accounts.reduce((sum, acc) => sum + acc.balance, 0);
+  }, [accounts]);
 
   // Init load (me + accounts)
   useEffect(() => {
@@ -40,166 +45,177 @@ export default function AccountsPage() {
     })();
   }, [isReady]);
 
-  // Convert accounts to donut items
-  const accountItems: ExploreItem[] = useMemo(() => {
-    const totalBalance = accounts.reduce((sum, acc) => sum + acc.balance, 0);
+  const handleCreateAccount = useCallback(
+    async (data: { name: string; balance?: number; is_default?: boolean }) => {
+      try {
+        const newAccount = await apiClient.createAccount(data);
+        setAccounts((prev) => [...prev, newAccount]);
+        haptic?.notificationOccurred?.('success');
+        WebApp.showAlert?.(t('accounts.createSuccess'));
+      } catch (error) {
+        console.error('Failed to create account:', error);
+        haptic?.notificationOccurred?.('error');
+        WebApp.showAlert?.(t('errors.saveFailed'));
+        throw error;
+      }
+    },
+    [haptic, WebApp, t]
+  );
 
-    return accounts.map((acc) => ({
-      id: acc.id as unknown as number, // ExploreItem expects number id
-      name: acc.name,
-      emoji: acc.is_default ? '⭐' : '💳',
-      total: acc.balance,
-      count: 1, // We'll show "Default" instead of tx count
-      share: totalBalance > 0 ? acc.balance / totalBalance : 0,
-    }));
-  }, [accounts]);
+  const handleUpdateAccount = useCallback(
+    async (accountId: string, data: { name?: string; is_default?: boolean }) => {
+      try {
+        const updatedAccount = await apiClient.updateAccount(accountId, data);
+        setAccounts((prev) => prev.map((a) => (a.id === accountId ? updatedAccount : a)));
+        haptic?.notificationOccurred?.('success');
+        WebApp.showAlert?.(t('accounts.updateSuccess'));
+      } catch (error) {
+        console.error('Failed to update account:', error);
+        haptic?.notificationOccurred?.('error');
+        WebApp.showAlert?.(t('errors.saveFailed'));
+        throw error;
+      }
+    },
+    [haptic, WebApp, t]
+  );
 
-  const totals = useMemo(() => {
-    const total = accounts.reduce((sum, acc) => sum + acc.balance, 0);
-    return { total, count: accounts.length };
-  }, [accounts]);
+  const handleAccountTap = useCallback(
+    (account: Account) => {
+      haptic?.selectionChanged?.();
+      setSelectedAccount(account);
+    },
+    [haptic]
+  );
 
-  // Create account handler
-  const handleCreateAccount = useCallback(async (data: { name: string; balance?: number; is_default?: boolean }) => {
-    try {
-      const newAccount = await apiClient.createAccount(data);
-      setAccounts((prev) => [...prev, newAccount]);
-      haptic?.notificationOccurred?.('success');
-      WebApp.showAlert?.(t('accounts.createSuccess'));
-    } catch (error) {
-      console.error('Failed to create account:', error);
-      haptic?.notificationOccurred?.('error');
-      WebApp.showAlert?.(t('errors.saveFailed'));
-      throw error;
-    }
-  }, [haptic, WebApp, t]);
-
-  // Delete account handler
-  const handleDeleteAccount = useCallback(async (accountId: string) => {
-    const account = accounts.find((a) => a.id === accountId);
-    if (!account) return;
-
-    // Confirm deletion
-    const confirmed = confirm(
-      `${t('accounts.deleteConfirm')}\n\n${t('accounts.deleteMessage')}`
-    );
-    if (!confirmed) return;
-
-    try {
-      await apiClient.deleteAccount(accountId);
-      setAccounts((prev) => prev.filter((a) => a.id !== accountId));
-      setSelectedAccountId(null);
-      haptic?.notificationOccurred?.('success');
-      WebApp.showAlert?.(t('accounts.deleteSuccess'));
-    } catch (error) {
-      console.error('Failed to delete account:', error);
-      haptic?.notificationOccurred?.('error');
-      WebApp.showAlert?.(t('errors.deleteFailed'));
-    }
-  }, [accounts, haptic, WebApp, t]);
-
-  // Donut select handler
-  const onSelectDonut = (id: number | null) => {
+  const handleAddAccountTap = useCallback(() => {
     haptic?.selectionChanged?.();
-    setSelectedAccountId(id !== null ? String(id) : null);
-  };
+    setCreateSheetOpen(true);
+  }, [haptic]);
 
-  // Donut drill-down (second tap) = delete
-  const onDrillDownDonut = (id: number) => {
-    haptic?.impactOccurred?.('light');
-    handleDeleteAccount(String(id));
-  };
-
-  // List tap handler (tap once to select, second tap to delete)
-  const onSelectFromList = (id: number) => {
-    const accountId = String(id);
-
-    if (selectedAccountId === accountId) {
-      // Second tap = delete
-      haptic?.impactOccurred?.('light');
-      handleDeleteAccount(accountId);
-      return;
-    }
-
-    // First tap = select
-    haptic?.selectionChanged?.();
-    setSelectedAccountId(accountId);
-  };
-
+  // Loading skeleton (closer to final layout)
   if (!isReady || loadingInit) {
     return (
-      <div className="min-h-screen bg-background">
-        <div className="h-safe-top" />
-        <div className="h-14" />
-        <div className="px-4 pb-8 max-w-md mx-auto space-y-4">
-          <Skeleton className="h-8 w-40" />
-          <Skeleton className="h-72 w-full rounded-2xl" />
-          <Skeleton className="h-64 w-full rounded-2xl" />
-        </div>
+      <div className="min-h-screen bg-background text-foreground">
+        <header className="sticky top-0 z-20 bg-background/80 backdrop-blur-xl border-b border-border/40">
+          <div className="h-safe-top" />
+          <div className="px-4 py-3 max-w-lg mx-auto">
+            <Skeleton className="h-7 w-32" />
+          </div>
+        </header>
+
+        <main className="px-4 pb-10 max-w-lg mx-auto">
+          <div className="pt-6">
+            <Skeleton className="h-4 w-28 mx-auto mb-3" />
+            <Skeleton className="h-14 w-[min(420px,100%)] mx-auto rounded-2xl" />
+          </div>
+
+          <div className="mt-8">
+            <Skeleton className="h-4 w-24 mb-3" />
+            <Skeleton className="h-64 w-full rounded-3xl" />
+          </div>
+
+          <div className="h-safe-bottom" />
+        </main>
       </div>
     );
   }
 
+  const isEmpty = accounts.length === 0;
+
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <div className="h-safe-top" />
-      <div className="h-14" />
+      {/* Sticky header that owns safe-area */}
+      <header className="sticky top-0 z-20 bg-background/80 backdrop-blur-xl border-b border-border/40">
+        <div className="h-safe-top" />
+        <div className="px-4 py-3 max-w-lg mx-auto flex items-center justify-between">
+          <h1 className="text-[17px] font-semibold tracking-tight">
+            {t('accounts.title')}
+          </h1>
 
-      <div className="px-4 pb-8 max-w-lg mx-auto">
-        {/* Header */}
-        <header className="pt-2 pb-4 sticky top-0 z-10 bg-background/80 backdrop-blur-xl">
-          <div className="mt-3 flex items-center justify-between gap-2">
-            <h1 className="text-2xl font-bold">{t('accounts.title')}</h1>
+          <button
+            type="button"
+            onClick={handleAddAccountTap}
+            className="text-sm font-semibold text-primary hover:opacity-90 active:opacity-80"
+          >
+            {t('accounts.add')}
+          </button>
+        </div>
+      </header>
 
-            <button
-              onClick={() => setCreateSheetOpen(true)}
-              className="px-4 py-2 rounded-xl bg-primary text-primary-foreground hover:opacity-90 text-sm font-semibold transition-all flex items-center gap-2 shadow-lg shadow-primary/20 active:scale-95"
-            >
-              <Plus className="w-4 h-4" />
-              {t('accounts.createNew')}
-            </button>
+      <main className="px-4 pb-10 max-w-lg mx-auto">
+        {/* Hero */}
+        <section className="pt-6">
+          <p className="text-xs uppercase tracking-wider text-muted-foreground text-center">
+            {t('accounts.totalBalance')}
+          </p>
+
+          <div className="mt-2 flex justify-center">
+            <AnimatedBalance
+              value={totalBalance}
+              currencyCode={currencyCode}
+              locale={locale}
+              className="w-full"
+            />
           </div>
-        </header>
 
-        {/* Donut Chart */}
-        <div className="mt-4">
-          <ExploreDonut
-            title={t('accounts.totalBalance')}
-            loading={false}
-            items={accountItems}
-            totals={totals}
-            selectedId={selectedAccountId !== null ? Number(selectedAccountId) : null}
-            onSelect={onSelectDonut}
-            onDrillDown={onDrillDownDonut}
-            currencyCode={currencyCode}
-            locale={locale}
-          />
-        </div>
+          {/* Optional subtle meta */}
+          <p className="mt-2 text-xs text-muted-foreground text-center">
+            {t('accounts.accountsCount', { count: accounts.length })}
+          </p>
+        </section>
 
-        {/* Account List */}
-        <div className="mt-4">
-          <ExploreRankList
-            title={t('common.accounts')}
-            items={accountItems}
-            totals={totals}
-            expanded={expanded}
-            onToggleExpanded={() => setExpanded((v) => !v)}
-            selectedId={selectedAccountId !== null ? Number(selectedAccountId) : null}
-            onSelect={onSelectFromList}
-            currencyCode={currencyCode}
-            locale={locale}
-          />
-        </div>
-      </div>
+        {/* Accounts section */}
+        <section className="mt-8">
+          <div className="flex items-center justify-between mb-3 px-1">
+            <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+              {t('common.accounts')}
+            </h2>
+          </div>
 
-      {/* Create Account Sheet */}
+          {isEmpty ? (
+            <div className="rounded-3xl border border-border/40 bg-card/30 p-6 text-center">
+              <p className="text-base font-semibold text-foreground">
+                {t('accounts.emptyTitle')}
+              </p>
+              <p className="text-sm text-muted-foreground mt-2">
+                {t('accounts.emptySubtitle')}
+              </p>
+
+              <div className="mt-5 flex justify-center">
+                <Button onClick={handleAddAccountTap} className="rounded-2xl">
+                  {t('accounts.create')}
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <AccountListCard
+              accounts={accounts}
+              totalBalance={totalBalance}
+              currencyCode={currencyCode}
+              locale={locale}
+              onAccountTap={handleAccountTap}
+              onAddAccountTap={handleAddAccountTap}
+            />
+          )}
+        </section>
+
+        <div className="h-safe-bottom" />
+      </main>
+
+      {/* Sheets */}
       <CreateAccountSheet
         open={createSheetOpen}
         onOpenChange={setCreateSheetOpen}
         onCreate={handleCreateAccount}
       />
 
-      <div className="h-safe-bottom" />
+      <AccountActionsSheet
+        account={selectedAccount}
+        currencyCode={currencyCode}
+        locale={locale}
+        onClose={() => setSelectedAccount(null)}
+        onSave={handleUpdateAccount}
+      />
     </div>
   );
 }

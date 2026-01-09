@@ -23,7 +23,9 @@
         "back": "Orqaga",
         "prev": "Oldingi",
         "next": "Keyingi",
-        "stats": "Statistika"
+        "stats": "Statistika",
+        "save": "Saqlash",
+        "close": "Yopish"
     },
     "errors": {
         "failedToLoad": "Ma'lumotlarni yuklashda xatolik",
@@ -211,7 +213,26 @@
         "createSuccess": "Hisob yaratildi",
         "noAccounts": "Hisoblar yo'q",
         "namePlaceholder": "Hisob nomini kiriting...",
-        "cancel": "Bekor qilish"
+        "cancel": "Bekor qilish",
+        "editAccount": "Hisobni tahrirlash",
+        "balance": "Balans",
+        "comingSoon": "Tez orada",
+        "balanceAdjustmentInfo": "Balansni o'zgartirish keyingi yangilanishlarda mavjud bo'ladi",
+        "defaultAccount": "Asosiy qilish",
+        "defaultAccountDescription": "Yangi tranzaksiyalar uchun ushbu hisobdan foydalanilsin",
+        "updateSuccess": "Hisob yangilandi",
+        "add": "Qo'shish",
+        "accountsCount_one": "{{count}} hisob",
+        "accountsCount_other": "{{count}} hisob",
+        "emptyTitle": "Hisoblar yo'q",
+        "emptySubtitle": "Moliyangizni kuzatish uchun birinchi hisobni yarating",
+        "createSubtitle": "Yangi hisob qo'shish",
+        "initialBalanceHint": "Ushbu hisobning joriy balansini kiriting",
+        "makeDefaultDescription": "Yangi tranzaksiyalar sukut bo'yicha ushbu hisobdan foydalanadi",
+        "manageAccountSubtitle": "{{name}} boshqarish",
+        "default": "Asosiy",
+        "addAccount": "Hisob qo'shish",
+        "addAccountSubtitle": "Yangi hisob yaratish"
     },
     "debts": {
         "title": "Qarzlar",
