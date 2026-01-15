@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { AnimatePresence, motion } from 'framer-motion';
-import { X, Calendar as CalendarIcon, Check } from 'lucide-react';
+import { Calendar as CalendarIcon, Check } from 'lucide-react';
 import {
   startOfMonth,
   endOfMonth,
@@ -14,9 +13,11 @@ import {
   endOfDay,
   format,
   isValid,
+  parse,
 } from 'date-fns';
+
 import { cn } from '@/lib/utils';
-import { Card } from '@/components/ui/card';
+import { BottomSheetShell } from '@/components/ui/BottomSheetShell';
 
 export type DateRange = {
   from: Date;
@@ -44,9 +45,8 @@ function toInputDate(d: Date) {
 }
 
 function parseInputDate(s: string) {
-  // new Date('yyyy-mm-dd') is OK in modern browsers (treated as UTC sometimes),
-  // but for date-only UX, we normalize with start/endOfDay later.
-  const d = new Date(s);
+  if (!s?.trim()) return null;
+  const d = parse(s, 'yyyy-MM-dd', new Date()); // safe, no UTC shift surprises
   return isValid(d) ? d : null;
 }
 
@@ -87,6 +87,15 @@ function computePreset(key: PresetKey) {
   }
 }
 
+function formatPreview(from: Date, to: Date) {
+  const sameYear = from.getFullYear() === to.getFullYear();
+  const sameMonth = sameYear && from.getMonth() === to.getMonth();
+
+  if (sameMonth) return `${format(from, 'MMM d')} – ${format(to, 'd, yyyy')}`;
+  if (sameYear) return `${format(from, 'MMM d')} – ${format(to, 'MMM d, yyyy')}`;
+  return `${format(from, 'MMM d, yyyy')} – ${format(to, 'MMM d, yyyy')}`;
+}
+
 export function DateRangeSheet({ open, onOpenChange, value, onApply }: Props) {
   const { t } = useTranslation();
 
@@ -105,10 +114,10 @@ export function DateRangeSheet({ open, onOpenChange, value, onApply }: Props) {
   const [fromDate, setFromDate] = useState<string>(toInputDate(value.from));
   const [toDate, setToDate] = useState<string>(toInputDate(value.to));
   const [activePreset, setActivePreset] = useState<PresetKey>(
-    (value.label as PresetKey) || 'custom'
+    ((value.label as PresetKey) || 'custom') as PresetKey
   );
 
-  // ✅ Keep local state in sync when sheet opens or parent value changes.
+  // keep local state in sync when opening
   useEffect(() => {
     if (!open) return;
     setFromDate(toInputDate(value.from));
@@ -116,163 +125,138 @@ export function DateRangeSheet({ open, onOpenChange, value, onApply }: Props) {
     setActivePreset(((value.label as PresetKey) || 'custom') as PresetKey);
   }, [open, value.from, value.to, value.label]);
 
-  const handlePresetSelect = (key: PresetKey) => {
-    setActivePreset(key);
-
-    const computed = computePreset(key);
-    if (!computed) return; // custom => don't overwrite input
-
-    setFromDate(toInputDate(computed.from));
-    setToDate(toInputDate(computed.to));
-  };
-
   const parsedFrom = useMemo(() => parseInputDate(fromDate), [fromDate]);
   const parsedTo = useMemo(() => parseInputDate(toDate), [toDate]);
 
   const canApply = !!parsedFrom && !!parsedTo;
 
+  const previewText = useMemo(() => {
+    if (!parsedFrom || !parsedTo) return t('history.dateRange.previewPlaceholder');
+    const a = parsedFrom <= parsedTo ? parsedFrom : parsedTo;
+    const b = parsedFrom <= parsedTo ? parsedTo : parsedFrom;
+    return formatPreview(a, b);
+  }, [parsedFrom, parsedTo, t]);
+
+  const handlePresetSelect = (key: PresetKey) => {
+    setActivePreset(key);
+
+    const computed = computePreset(key);
+    if (!computed) return;
+
+    setFromDate(toInputDate(computed.from));
+    setToDate(toInputDate(computed.to));
+  };
+
   const handleApply = () => {
     if (!parsedFrom || !parsedTo) return;
 
-    // Ensure from <= to
     const a = parsedFrom;
     const b = parsedTo;
 
     const finalFrom = startOfDay(a <= b ? a : b);
     const finalTo = endOfDay(a <= b ? b : a);
 
-    onApply({
-      from: finalFrom,
-      to: finalTo,
-      label: activePreset,
-    });
+    onApply({ from: finalFrom, to: finalTo, label: activePreset });
     onOpenChange(false);
   };
 
   return (
-    <AnimatePresence>
-      {open && (
-        <>
-          {/* Backdrop */}
-          <motion.div
-            className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => onOpenChange(false)}
-          />
+    <BottomSheetShell
+      open={open}
+      onOpenChange={onOpenChange}
+      title={t('history.dateRange.title')}
+      subtitle={previewText}
+      icon={<CalendarIcon className="w-5 h-5 text-primary" />}
+      footer={
+        <button
+          type="button"
+          onClick={handleApply}
+          disabled={!canApply}
+          className={cn(
+            'w-full h-12 rounded-2xl font-semibold transition-all shadow-lg',
+            canApply
+              ? 'bg-primary text-primary-foreground active:scale-[0.99] shadow-primary/20'
+              : 'bg-muted text-muted-foreground cursor-not-allowed shadow-transparent'
+          )}
+        >
+          {t('history.dateRange.apply')}
+        </button>
+      }
+    >
+      <div className="space-y-5">
+        {/* Presets (premium pills) */}
+        <div className="flex flex-wrap gap-2">
+          {presets.map((preset) => {
+            const selected = activePreset === preset.key;
 
-          {/* Sheet */}
-          <motion.div
-            className="fixed inset-x-0 bottom-0 z-50 mx-auto w-full max-w-md"
-            initial={{ y: '100%' }}
-            animate={{ y: 0 }}
-            exit={{ y: '100%' }}
-            transition={{ type: 'spring', stiffness: 380, damping: 36 }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="rounded-t-3xl bg-background shadow-2xl border border-border/50 overflow-hidden">
-              {/* Header */}
-              <div className="px-4 pt-3 pb-2 border-b border-border/50">
-                <div className="mx-auto h-1.5 w-10 rounded-full bg-muted" />
-                <div className="mt-3 flex items-center justify-between">
-                  <h2 className="text-base font-semibold text-foreground flex items-center gap-2">
-                    <CalendarIcon className="w-5 h-5 text-primary" />
-                    {t('history.dateRange.title')}
-                  </h2>
-                  <button
-                    onClick={() => onOpenChange(false)}
-                    className="p-2 rounded-full hover:bg-muted transition-colors active:scale-95"
-                    aria-label="Close"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
-              </div>
+            return (
+              <button
+                key={preset.key}
+                type="button"
+                onClick={() => handlePresetSelect(preset.key)}
+                className={cn(
+                  'relative h-10 px-4 rounded-full text-sm font-semibold',
+                  'transition-colors active:scale-[0.99]',
+                  'focus:outline-none focus:ring-2 focus:ring-primary/25',
+                  selected
+                    ? 'text-primary-foreground'
+                    : 'text-foreground bg-card/40 hover:bg-card/60 border border-border/40'
+                )}
+              >
+                {selected && (
+                  <span className="absolute inset-0 rounded-full bg-primary shadow-sm shadow-primary/15" />
+                )}
 
-              {/* Content */}
-              <div className="px-4 py-4 max-h-[72vh] overflow-y-auto overscroll-contain space-y-5">
-                {/* Presets Grid */}
-                <div className="grid grid-cols-2 gap-2">
-                  {presets.map((preset) => (
-                    <button
-                      key={preset.key}
-                      onClick={() => handlePresetSelect(preset.key)}
-                      className={cn(
-                        'relative px-4 py-3 rounded-2xl text-sm font-medium transition-all text-left',
-                        activePreset === preset.key
-                          ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/25'
-                          : 'bg-muted/30 text-foreground hover:bg-muted/50 border border-transparent'
-                      )}
-                    >
-                      {preset.label}
-                      {activePreset === preset.key && (
-                        <motion.div
-                          layoutId="date-preset-check"
-                          className="absolute right-3 top-3.5"
-                        >
-                          <Check className="w-4 h-4" />
-                        </motion.div>
-                      )}
-                    </button>
-                  ))}
-                </div>
+                <span className="relative z-10 flex items-center gap-2 whitespace-nowrap">
+                  {selected && <Check className="w-4 h-4" />}
+                  {preset.label}
+                </span>
+              </button>
+            );
+          })}
+        </div>
 
-                {/* Custom Date Inputs */}
-                <Card className="p-4 bg-muted/20 border-border/40">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-medium text-muted-foreground ml-1">
-                        {t('history.dateRange.from')}
-                      </label>
-                      <input
-                        type="date"
-                        value={fromDate}
-                        onChange={(e) => {
-                          setFromDate(e.target.value);
-                          setActivePreset('custom');
-                        }}
-                        className="w-full h-11 px-3 rounded-xl bg-background border border-border/50 focus:outline-none focus:ring-2 focus:ring-primary/30 text-sm"
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-medium text-muted-foreground ml-1">
-                        {t('history.dateRange.to')}
-                      </label>
-                      <input
-                        type="date"
-                        value={toDate}
-                        onChange={(e) => {
-                          setToDate(e.target.value);
-                          setActivePreset('custom');
-                        }}
-                        className="w-full h-11 px-3 rounded-xl bg-background border border-border/50 focus:outline-none focus:ring-2 focus:ring-primary/30 text-sm"
-                      />
-                    </div>
-                  </div>
-                </Card>
-              </div>
-
-              {/* Footer */}
-              <div className="px-4 pb-4 pt-3 border-t border-border/50 bg-background/50 backdrop-blur-xl">
-                <button
-                  onClick={handleApply}
-                  disabled={!canApply}
-                  className={cn(
-                    'w-full h-12 rounded-2xl font-semibold transition-transform shadow-lg',
-                    canApply
-                      ? 'bg-primary text-primary-foreground active:scale-[0.99] shadow-primary/20'
-                      : 'bg-muted text-muted-foreground cursor-not-allowed shadow-transparent'
-                  )}
-                >
-                  {t('history.dateRange.apply')}
-                </button>
-                <div className="h-safe-bottom" />
-              </div>
+        {/* Custom inputs */}
+        <div className="rounded-3xl border border-border/40 bg-card/30 p-4">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5 min-w-0">
+              <label className="text-xs font-medium text-muted-foreground ml-1">
+                {t('history.dateRange.from')}
+              </label>
+              <input
+                type="date"
+                value={fromDate}
+                onChange={(e) => {
+                  setFromDate(e.target.value);
+                  setActivePreset('custom');
+                }}
+                className={cn(
+                  'w-full h-11 px-3 rounded-2xl bg-background border border-border/50',
+                  'focus:outline-none focus:ring-2 focus:ring-primary/25 text-sm'
+                )}
+              />
             </div>
-          </motion.div>
-        </>
-      )}
-    </AnimatePresence>
+
+            <div className="space-y-1.5 min-w-0">
+              <label className="text-xs font-medium text-muted-foreground ml-1">
+                {t('history.dateRange.to')}
+              </label>
+              <input
+                type="date"
+                value={toDate}
+                onChange={(e) => {
+                  setToDate(e.target.value);
+                  setActivePreset('custom');
+                }}
+                className={cn(
+                  'w-full h-11 px-3 rounded-2xl bg-background border border-border/50',
+                  'focus:outline-none focus:ring-2 focus:ring-primary/25 text-sm'
+                )}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </BottomSheetShell>
   );
 }

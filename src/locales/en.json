@@ -23,7 +23,9 @@
         "back": "Back",
         "prev": "Prev",
         "next": "Next",
-        "stats": "Stats"
+        "stats": "Stats",
+        "save": "Save",
+        "close": "Close"
     },
     "errors": {
         "failedToLoad": "Failed to load data",
@@ -216,9 +218,28 @@
         "deleteMessage": "This action cannot be undone.",
         "deleteSuccess": "Account deleted",
         "createSuccess": "Account created",
+        "updateSuccess": "Account updated",
         "noAccounts": "No accounts",
         "namePlaceholder": "Enter account name...",
-        "cancel": "Cancel"
+        "cancel": "Cancel",
+        "editAccount": "Edit Account",
+        "balance": "Balance",
+        "comingSoon": "Coming soon",
+        "balanceAdjustmentInfo": "Balance adjustment will be available in future updates",
+        "defaultAccount": "Set as default account",
+        "defaultAccountDescription": "Use this account for new transactions",
+        "add": "Add",
+        "accountsCount_one": "{{count}} account",
+        "accountsCount_other": "{{count}} accounts",
+        "emptyTitle": "No accounts yet",
+        "emptySubtitle": "Create your first account to start tracking your finances",
+        "createSubtitle": "Add a new account",
+        "initialBalanceHint": "Enter the current balance of this account",
+        "makeDefaultDescription": "New transactions will use this account by default",
+        "manageAccountSubtitle": "Manage {{name}}",
+        "default": "Default",
+        "addAccount": "Add account",
+        "addAccountSubtitle": "Create a new account"
     },
     "debts": {
         "title": "Debts",

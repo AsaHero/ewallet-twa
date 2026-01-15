@@ -188,7 +188,6 @@ function HistoryPage() {
 
   const {
     items: transactions,
-    total,
     total_income,
     total_expense,
     netBalance,
@@ -204,7 +203,8 @@ function HistoryPage() {
   const sentinelRef = useRef<HTMLDivElement>(null);
   useIntersection(
     sentinelRef,
-    () => {1
+    () => {
+      1
       if (hasNext) fetchNext();
     },
     { rootMargin: '300px 0px 300px 0px' }
@@ -223,29 +223,29 @@ function HistoryPage() {
     const { from, to, label } = dateRange;
 
     if (label === 'thisMonth' || label === 'lastMonth') {
-        const newFrom = subMonths(from, 1);
-        const newTo = endOfMonth(newFrom);
-        setDateRange({ from: newFrom, to: newTo, label });
+      const newFrom = subMonths(from, 1);
+      const newTo = endOfMonth(newFrom);
+      setDateRange({ from: newFrom, to: newTo, label });
     } else if (label === 'thisWeek' || label === 'lastWeek') {
 
-        // Easier: sub 1 week from both keys
-        // But date-fns `subWeeks` preserves day of week?
-        // Let's just shift by 7 days
-        setDateRange({
-            from: subWeeks(from, 1),
-            to: subWeeks(to, 1),
-            label
-        });
+      // Easier: sub 1 week from both keys
+      // But date-fns `subWeeks` preserves day of week?
+      // Let's just shift by 7 days
+      setDateRange({
+        from: subWeeks(from, 1),
+        to: subWeeks(to, 1),
+        label
+      });
     } else {
-        // Custom or 30 days: shift by duration
-        const diff = differenceInCalendarDays(to, from);
-        // shift by (diff + 1) days
-        const shift = diff + 1;
-        setDateRange({
-            from: addDays(from, -shift),
-            to: addDays(to, -shift),
-            label: 'custom'
-        });
+      // Custom or 30 days: shift by duration
+      const diff = differenceInCalendarDays(to, from);
+      // shift by (diff + 1) days
+      const shift = diff + 1;
+      setDateRange({
+        from: addDays(from, -shift),
+        to: addDays(to, -shift),
+        label: 'custom'
+      });
     }
   };
 
@@ -254,23 +254,23 @@ function HistoryPage() {
     const { from, to, label } = dateRange;
 
     if (label === 'thisMonth' || label === 'lastMonth') {
-        const newFrom = addMonths(from, 1);
-        const newTo = endOfMonth(newFrom);
-        setDateRange({ from: newFrom, to: newTo, label });
+      const newFrom = addMonths(from, 1);
+      const newTo = endOfMonth(newFrom);
+      setDateRange({ from: newFrom, to: newTo, label });
     } else if (label === 'thisWeek' || label === 'lastWeek') {
-        setDateRange({
-            from: addWeeks(from, 1),
-            to: addWeeks(to, 1),
-            label
-        });
+      setDateRange({
+        from: addWeeks(from, 1),
+        to: addWeeks(to, 1),
+        label
+      });
     } else {
-        const diff = differenceInCalendarDays(to, from);
-        const shift = diff + 1;
-        setDateRange({
-            from: addDays(from, shift),
-            to: addDays(to, shift),
-            label: 'custom'
-        });
+      const diff = differenceInCalendarDays(to, from);
+      const shift = diff + 1;
+      setDateRange({
+        from: addDays(from, shift),
+        to: addDays(to, shift),
+        label: 'custom'
+      });
     }
   };
 
@@ -332,19 +332,12 @@ function HistoryPage() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.18 }}
     >
-      <div className="h-safe-top" />
-      <div className="h-14" />
-
       <div className="px-4 pt-3 pb-8 max-w-md mx-auto">
         {/* Header */}
-        <header className="sticky top-0 z-10 bg-background/85 backdrop-blur-md -mx-4 px-4 pt-2 pb-3 border-b border-border/40">
-          <div className="mt-2 flex items-end justify-between">
-            <h1 className="text-xl font-bold text-foreground">{t('common.history')}</h1>
-            {total > 0 && (
-              <div className="text-xs text-muted-foreground">
-                {transactions.length}/{total}
-              </div>
-            )}
+        <header className="sticky top-0 z-10 bg-background/85 backdrop-blur-md -mx-4 px-4 border-b border-border/40">
+          <div className="h-safe-top" />
+          <div className="pt-2 pb-3">
+            <h1 className="text-xl font-bold text-foreground text-center">{t('common.history')}</h1>
           </div>
         </header>
 
@@ -438,8 +431,8 @@ function HistoryPage() {
                 {selectedFilter === 'all'
                   ? t('common.noTransactions')
                   : selectedFilter === 'income'
-                  ? t('history.noIncome')
-                  : t('history.noExpense')}
+                    ? t('history.noIncome')
+                    : t('history.noExpense')}
               </p>
             </div>
           ) : (
@@ -577,8 +570,8 @@ function HistoryPage() {
         onOpenChange={setDatePickerOpen}
         value={dateRange}
         onApply={(v) => {
-            hapticSelect();
-            setDateRange(v);
+          hapticSelect();
+          setDateRange(v);
         }}
       />
 

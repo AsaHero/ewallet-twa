@@ -125,13 +125,13 @@ function DebtsPage() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.18 }}
     >
-      <div className="h-safe-top" />
-      <div className="h-14" />
-
-      <div className="px-4 pt-3 pb-8 max-w-md mx-auto">
+      <div className="px-4 pb-8 max-w-md mx-auto">
         {/* Header */}
-        <header className="mb-4">
-          <h1 className="text-xl font-bold text-foreground">💸 {t('debts.title')}</h1>
+        <header className="sticky top-0 z-10 bg-background/85 backdrop-blur-md -mx-4 px-4 border-b border-border/40">
+          <div className="h-safe-top" />
+          <div className="pt-3 pb-3">
+            <h1 className="text-xl font-bold text-foreground text-center">{t('debts.title')}</h1>
+          </div>
         </header>
 
         {/* Tabs */}

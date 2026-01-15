@@ -235,10 +235,10 @@ export default function StatsPage() {
       avgAmount,
       topCategory: topCategory
         ? {
-            name: topCategory.name,
-            emoji: topCategory.emoji,
-            total: topCategory.total,
-          }
+          name: topCategory.name,
+          emoji: topCategory.emoji,
+          total: topCategory.total,
+        }
         : null,
     };
   }, [exploreTotals, exploreItems]);
@@ -334,26 +334,27 @@ export default function StatsPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <div className="h-safe-top" />
-      <div className="h-14" />
-
       <div className="px-4 pb-8 max-w-lg mx-auto">
         {/* Sticky header */}
-        <header className="pt-2 pb-4 sticky top-0 z-10 bg-background/80 backdrop-blur-xl">
-          <div className="mt-3 flex items-center justify-between gap-2">
-            <h1 className="text-2xl font-bold">{t('common.stats') || 'Stats'}</h1>
-
-            <button
-              onClick={() => setAccountSheetOpen(true)}
-              className="px-3 py-2 rounded-xl bg-card/50 hover:bg-card/70 border border-border/50 text-sm font-semibold transition-colors"
-            >
-              {accountIds.length
-                ? (t('stats.accountCount', { count: accountIds.length }) as string)
-                : (t('common.all') || 'All')}
-            </button>
+        <header className="sticky top-0 z-20 bg-background/80 backdrop-blur-xl border-b border-border/40 -mx-4 px-4">
+          <div className="h-safe-top" />
+          <div className="py-3">
+            <h1 className="text-xl font-bold text-center">{t('common.stats') || 'Stats'}</h1>
           </div>
+        </header>
 
-          <div className="mt-3 flex gap-2">
+        {/* Filters */}
+        <div className="mt-4 space-y-3">
+          <button
+            onClick={() => setAccountSheetOpen(true)}
+            className="w-full px-3 py-2 rounded-xl bg-card/50 hover:bg-card/70 border border-border/50 text-sm font-semibold transition-colors"
+          >
+            {accountIds.length
+              ? (t('stats.accountCount', { count: accountIds.length }) as string)
+              : (t('common.all') || 'All')}
+          </button>
+
+          <div className="flex gap-2">
             <button
               onClick={() => setDateSheetOpen(true)}
               className="flex-1 h-11 rounded-2xl bg-card/50 hover:bg-card/70 border border-border/50 text-sm font-semibold transition-colors"
@@ -370,7 +371,7 @@ export default function StatsPage() {
                 : (t('common.income') || 'Income')}
             </button>
           </div>
-        </header>
+        </div>
 
         {/* Overview Card */}
         <div className="mt-4">
