@@ -236,15 +236,6 @@ function TransactionPage() {
     WebApp.MainButton.setText(buttonText);
     WebApp.MainButton.show();
 
-<<<<<<< HEAD
-=======
-    const amount = getValues('amount');
-    const canSubmit = (amount ?? 0) > 0 && !!getValues('account_id');
-
-    if (canSubmit) WebApp.MainButton.enable();
-    else WebApp.MainButton.disable();
-
->>>>>>> 6d8c8fe37bc737d893b91923788a1e90d5619c90
     const handler = () => {
       handleSubmit(onSubmit)();
     };
