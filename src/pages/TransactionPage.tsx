@@ -48,7 +48,7 @@ function TransactionPage() {
     mode: "onChange",
   });
 
-  const { watch, setValue, getValues, handleSubmit, reset, formState, register } = form;
+  const { watch, setValue, handleSubmit, reset, formState, register } = form;
 
   const categoryId = watch("category_id");
   const subcategoryId = watch("subcategory_id");
@@ -210,27 +210,35 @@ function TransactionPage() {
     }
   }, [WebApp, tgUser, user, t, validateBeforeSubmit]);
 
-  // MainButton
+  // MainButton - setup once and update state via subscription
   useEffect(() => {
     if (!isReady) return;
+
     const buttonText = t('common.done');
     WebApp.MainButton.setText(buttonText);
     WebApp.MainButton.show();
-
-    // We can rely on formState.isValid, but manual check often safer with complex validation
-    const canSubmit = (getValues("amount") ?? 0) > 0 && !!getValues("account_id");
-    if (canSubmit) WebApp.MainButton.enable();
-    else WebApp.MainButton.disable();
 
     const handler = () => {
         handleSubmit(onSubmit)();
     };
     WebApp.MainButton.onClick(handler);
+
     return () => {
         WebApp.MainButton.hide();
         WebApp.MainButton.offClick(handler);
     };
-  }, [isReady, t, WebApp, handleSubmit, onSubmit, getValues, formState]); // re-run on form checks
+  }, [isReady, t, WebApp, handleSubmit, onSubmit]);
+
+  // Update button state based on form changes
+  const amount = watch("amount");
+  const accountId = watch("account_id");
+
+  useEffect(() => {
+    if (!isReady) return;
+    const canSubmit = (amount ?? 0) > 0 && !!accountId;
+    if (canSubmit) WebApp.MainButton.enable();
+    else WebApp.MainButton.disable();
+  }, [isReady, amount, accountId, WebApp]);
 
   // BackButton
   useEffect(() => {
