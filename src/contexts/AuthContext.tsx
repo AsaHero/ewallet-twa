@@ -16,7 +16,8 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const { user: tgUser, isReady, initData } = useTelegramWebApp();
+  const { user: tgUser, isReady } = useTelegramWebApp();
+
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -26,35 +27,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(true);
       setError(null);
 
-      // 1. Check for token in URL (bot-provided)
+      // 1) token from URL (?token=...)
       let token = authService.getTokenFromURL();
 
-      // 2. If no token, authenticate with initData or user ID
+      // 2) token from storage
+      if (!token) token = authService.getToken();
+
+      // 3) if no token -> BAD auth by tg_user_id
       if (!token) {
-        token = authService.getToken();
-
-        if (!token && initData) {
-          if (tgUser) {
-            await authService.authenticateWithUserId(tgUser.id, {
-              first_name: tgUser.first_name,
-              last_name: tgUser.last_name,
-              username: tgUser.username,
-              language_code: tgUser.language_code,
-            });
-          } else {
-            throw new Error('No Telegram user data available');
-          }
-        }
+        if (!tgUser) throw new Error('Telegram user is not available');
+        await authService.authenticateWithUserId(tgUser.id, {
+          first_name: tgUser.first_name,
+          last_name: tgUser.last_name,
+          username: tgUser.username,
+          language_code: tgUser.language_code,
+        });
       }
 
-      // 3. Fetch user data
-      const userData = await apiClient.getMe();
-      if (userData.language_code) {
-        i18n.changeLanguage(userData.language_code);
+      // 4) fetch user
+      const me = await apiClient.getMe();
+      if (me.language_code) {
+        await i18n.changeLanguage(me.language_code);
       }
-      setUser(userData);
+      setUser(me);
     } catch (err) {
       console.error('Authentication failed:', err);
+      setUser(null);
       setError(err instanceof Error ? err.message : 'Failed to authenticate');
     } finally {
       setLoading(false);
@@ -64,7 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!isReady) return;
     authenticate();
-  }, [isReady, initData, tgUser]);
+  }, [isReady, tgUser?.id]);
 
   return (
     <AuthContext.Provider value={{ user, loading, error, refetch: authenticate }}>
