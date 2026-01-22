@@ -24,9 +24,9 @@ export function FilterChips({
   const filters = useMemo(
     () =>
       [
-        { value: 'all' as const, label: t('history.filters.chips.all') },
-        { value: 'income' as const, label: t('history.filters.chips.income') },
-        { value: 'expense' as const, label: t('history.filters.chips.expense') },
+        { value: 'all' as const, label: t('common.all') },
+        { value: 'income' as const, label: t('common.income') },
+        { value: 'expense' as const, label: t('common.expense') },
       ] as const,
     [t]
   );
